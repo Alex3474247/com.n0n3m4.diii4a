@@ -3810,13 +3810,13 @@ bool idPlayer::Give( const char *statname, const char *value ) {
 		}
 
 	} else if ( !idStr::Icmp( statname, "stamina" ) ) {
-		if ( stamina >= 100 ) {
+		/*if ( stamina >= 100 ) {
 			return false;
-		}
+		}*/
 		stamina += atof( value );
-		if ( stamina > 100 ) {
+		/*if ( stamina > 100 ) {
 			stamina = 100;
-		}
+		}*/
 
 	} else if ( !idStr::Icmp( statname, "heartRate" ) ) {
 		heartRate += atoi( value );
@@ -3825,13 +3825,13 @@ bool idPlayer::Give( const char *statname, const char *value ) {
 		}
 
 	} else if ( !idStr::Icmp( statname, "air" ) ) {
-		if ( airTics >= pm_airTics.GetInteger() ) {
+		/*if ( airTics >= pm_airTics.GetInteger() ) {
 			return false;
-		}
+		}*/
 		airTics += atoi( value ) / 100.0 * pm_airTics.GetInteger();
-		if ( airTics > pm_airTics.GetInteger() ) {
+		/*if ( airTics > pm_airTics.GetInteger() ) {
 			airTics = pm_airTics.GetInteger();
-		}
+		}*/
 	} 
 	
 	//ivan start
@@ -5730,7 +5730,7 @@ bool idPlayer::HandleSingleGuiCommand( idEntity *entityGui, idLexer *src ) {
 	}
 
 	if ( token.Icmp( "addhealth" ) == 0 ) {
-		if ( entityGui && health < 100 ) {
+		if ( entityGui && health < 10000 ) {
 			int _health = entityGui->spawnArgs.GetInt( "gui_parm1" );
 			int amt = ( _health >= HEALTH_PER_DOSE ) ? HEALTH_PER_DOSE : _health;
 			_health -= amt;
@@ -5739,8 +5739,8 @@ bool idPlayer::HandleSingleGuiCommand( idEntity *entityGui, idLexer *src ) {
 				entityGui->GetRenderEntity()->gui[ 0 ]->SetStateInt( "gui_parm1", _health );
 			}
 			health += amt;
-			if ( health > 100 ) {
-				health = 100;
+			if ( health > 10000 ) {
+				health = 10000;
 			}
 		}
 		return true;

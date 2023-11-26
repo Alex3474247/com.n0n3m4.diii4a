@@ -42,7 +42,7 @@ void rvHealingStation::Spawn ( void ) {
 	healthDispensed	= 0;
 	soundStartTime	= 0;
 	soundLength		= 0;
-	maxHealth		= spawnArgs.GetInt( "max_health", "100" );
+	maxHealth		= spawnArgs.GetInt( "max_health", "10000" );
 
 	dispenseAnim	= GetAnimator()->GetAnim( spawnArgs.GetString( "dispense_anim", "dispense" ) );
 
