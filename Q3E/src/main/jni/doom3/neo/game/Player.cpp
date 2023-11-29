@@ -4544,7 +4544,7 @@ bool idPlayer::HandleSingleGuiCommand(idEntity *entityGui, idLexer *src)
 	}
 
 	if (token.Icmp("addhealth") == 0) {
-		if (entityGui && health < 10000) {
+		if (entityGui && health < 19000) {
 			int _health = entityGui->spawnArgs.GetInt("gui_parm1");
 			int amt = (_health >= HEALTH_PER_DOSE) ? HEALTH_PER_DOSE : _health;
 			_health -= amt;
@@ -4556,8 +4556,8 @@ bool idPlayer::HandleSingleGuiCommand(idEntity *entityGui, idLexer *src)
 
 			health += amt;
 
-			if (health > 10000) {
-				health = 10000;
+			if (health > 19000) {
+				health = 19000;
 			}
 		}
 
