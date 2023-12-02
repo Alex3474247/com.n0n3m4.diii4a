@@ -4154,13 +4154,13 @@ bool idPlayer::Give( const char *statname, const char *value, bool dropped ) {
 		}
 		nextArmorPulse = gameLocal.time + ARMOR_PULSE;
 	} else if ( !idStr::Icmp( statname, "air" ) ) {
-		/*if ( airTics >= pm_airTics.GetInteger() ) {
+		if ( airTics >= pm_airTics.GetInteger() ) {
 			return false;
-		}*/
+		}
 		airTics += atoi( value ) / 100.0 * pm_airTics.GetInteger();
-		/*if ( airTics > pm_airTics.GetInteger() ) {
+		if ( airTics > pm_airTics.GetInteger() ) {
 			airTics = pm_airTics.GetInteger();
-		}*/
+		}
 	} else if ( !idStr::Icmp ( statname, "weaponmod" ) ) {
 		if( !idStr::Icmp( value, "all" ) ) {
 			for( int i = 0; i < MAX_WEAPONS; i++ ) {
@@ -7342,7 +7342,7 @@ void idPlayer::UpdateFocus( void ) {
 				focusBracketsTime = gameLocal.time + 2000;
 			}
 		}
-#ifdef _QUAKE4 //k: focus gui, because calc 2d coord before this, so add harm_2d_calc for mark
+#ifdef _QUAKE4xxx //k: focus gui, because calc 2d coord before this, so add harm_2d_calc for mark // NOT used in game code now, logic move to renderer/tr_guisurf.cpp
 		if(focusBrackets->GetStateBool("harm_2d_calc"))
 		{
 			focusBrackets->SetStateBool ( "harm_2d_calc", false );
@@ -7942,10 +7942,10 @@ void idPlayer::UpdateAir( void ) {
 				hud->HandleNamedEvent( "Air" );
 			}
 		}
-		/*airTics+=2;	// regain twice as fast as lose
+		airTics+=2;	// regain twice as fast as lose
 		if ( airTics > pm_airTics.GetInteger() ) {
 			airTics = pm_airTics.GetInteger();
-		}*/
+		}
 	}
 
 	airless = newAirless;
