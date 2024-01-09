@@ -1,7 +1,7 @@
 {
-    "release":35,
-    "update":"2023-10-29",
-    "version":"1.1.0harmattan35",
-    "apk_url":"https://github.com/glKarin/com.n0n3m4.diii4a/releases/download/v1.1.0harmattan35/idTech4A++_1.1.0harmattan35.apk",
-    "changes":"  * Optimize soft shadow with shadow mapping. Add shadow map with depth texture in OpenGLES2.0.\n  * Add OpenAL(soft) and EFX Reverb support.\n  * Beam rendering optimization in Prey(2006) by lvonasek/PreyVR.\n  * Add subtitle support in Prey(2006).\n  * Fixed gyroscope in invert-landscape mode.\n  * Fixed bot head and add bot level control(cvar `harm_si_botLevel`, need extract new `sabot_a9.pk4` resource) in Quake4 MP game."
+    "release":37,
+    "update":"2024-01-06",
+    "version":"1.1.0harmattan37",
+    "apk_url":"https://github.com/glKarin/com.n0n3m4.diii4a/releases/download/v1.1.0harmattan37/idTech4A++_1.1.0harmattan37.apk",
+    "changes":"  * Fixed on-screen buttons initial keycodes.\n  * On-screen slider button can setup clickable.\n  * Add dds screenshot support.\n  * Add cvar `r_scaleMenusTo43` for 4:3 menu."
 }

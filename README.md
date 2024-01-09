@@ -1,9 +1,9 @@
 ## idTech4A++ (Harmattan Edition)
 #### DIII4A++, com.n0n3m4.diii4a, DOOM III/Quake 4/Prey(2006) for Android, 毁灭战士3/雷神之锤4/掠食(2006)安卓移植版
 **Latest version:**
-1.1.0harmattan35(natasha)  
+1.1.0harmattan37(natasha)  
 **Last update release:**
-2023-10-29  
+2024-01-06  
 **Arch:**
 arm64 armv7-a  
 **Platform:**
@@ -15,17 +15,17 @@ GPLv3
 ### Feature
 * multi-threading renderer
 * png/dds texture image
-* jpeg/png/bmp format of screenshot
+* jpeg/png/bmp/dds format of screenshot
 * obj format static model
 * dae format static model
-* shadow with shadow-mapping
+* pure soft shadow with shadow-mapping
 * OpenGLES2.0/OpenGLES3.0
 * OpenAL(soft) and EFX Reverb
 * no-lighting rendering and no-lighting material
 * translucent stencil shadow
-* DOOM3 mods: The Lost Mission; Classic DOOM; Rivensin; Hardcorps; Overthinked; SABot-a7x; HexenEOC; Fragging-Free
-* Quake4 and Raven's idTech4 engine
-* Prey(2006) and HumanHead's idTech4 engine
+* DOOM3 mods: DOOM3(with full body awareness mod); The Lost Mission; Classic DOOM; Rivensin; Hardcorps; Overthinked; SABot-a7x; HexenEOC; Fragging-Free
+* Quake4(with bot mod, full body awareness mod) and Raven's idTech4 engine
+* Prey(2006)(with full body awareness mod) and HumanHead's idTech4 engine
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
      alt="Get it on F-Droid"
@@ -41,12 +41,10 @@ Tag with `-free` only for F-Droid update.
 ----------------------------------------------------------------------------------
 ### Update
 
-* Optimize soft shadow with shadow mapping. Add shadow map with depth texture in OpenGLES2.0.
-* Add OpenAL(soft) and EFX Reverb support.
-* Beam rendering optimization in Prey(2006) by [lvonasek/PreyVR](https://github.com/lvonasek/PreyVR).
-* Add subtitle support in Prey(2006).
-* Fixed gyroscope in invert-landscape mode.
-* Fixed bot head and add bot level control(cvar `harm_si_botLevel`, need extract new `sabot_a9.pk4` resource) in Quake4 MP game.
+* Fixed on-screen buttons initial keycodes.
+* On-screen slider button can setup clickable.
+* Add dds screenshot support.
+* Add cvar `r_scaleMenusTo43` for 4:3 menu.
 
 ----------------------------------------------------------------------------------
 
@@ -117,8 +115,8 @@ Tag with `-free` only for F-Droid update.
 > 7. _SHADOW_MAPPING: Add Shadow mapping support.
 > 8. _OPENGLES3: Add OpenGLES3.0 support.
 > 9. _OPENAL _OPENAL_EFX: Add OpenAL(soft) and EFX Reverb support.
-> 10. TRANSLUCENT_STENCIL_SHADOW: Add no lighting support.
-> 11. TRANSLUCENT_STENCIL_SHADOW: Add translucent stencil shadow support.
+> 10. _NO_LIGHT: Add no lighting support.
+> 11. _TRANSLUCENT_STENCIL_SHADOW: Add translucent stencil shadow support.
 
 #### If want to port `Quake4` or `Prey(2006)` to PC or other platform of based on `DOOM3` engine open-source version, because DIII4A based on Android platform and OpenGL ES2.0, so has some differences with original version. But I mark some macros in source as patches at all changes, although must find these macros in source code and manual use these patches.
 #### And for keeping original DOOM3 source file structures, for all new source files, I put them on a new folder, and in these folder has same directory structure with DOOM3(e.g. framework, renderer, idlib...).
@@ -154,8 +152,8 @@ Define macro `MOD_BOTS` will compile SABot a7(from DOOM3) mod source code for bo
 ### Branch:
 
 > `master`:
-> * /DIII4A: frontend source
-> * /doom3: game source
+> * /idTech4Amm: frontend source
+> * /Q3E /Q3E/src/main/jni/doom3: game source
 
 > `free`:
 > * For F-Droid pure free version.
