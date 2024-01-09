@@ -996,7 +996,7 @@ idInventoy::Drop
 void idInventory::Drop( const idDict &spawnArgs, const char *weapon_classname, int weapon_index ) {
 	// remove the weapon bit
 	// also remove the ammo associated with the weapon as we pushed it in the item
-	assert( weapon_index != -1 || weapon_classname );
+	/*assert( weapon_index != -1 || weapon_classname );
 	if ( weapon_index == -1 ) {
 		for( weapon_index = 0; weapon_index < MAX_WEAPONS; weapon_index++ ) {
 			if ( !idStr::Icmp( weapon_classname, spawnArgs.GetString( va( "def_weapon%d", weapon_index ) ) ) ) {
@@ -1017,7 +1017,7 @@ void idInventory::Drop( const idDict &spawnArgs, const char *weapon_classname, i
 		ammo[ ammo_i ] = 0;
 	}
 
-	weaponMods[weapon_index] = 0;
+	weaponMods[weapon_index] = 0;*/
 }
 
 /*
@@ -4154,13 +4154,13 @@ bool idPlayer::Give( const char *statname, const char *value, bool dropped ) {
 		}
 		nextArmorPulse = gameLocal.time + ARMOR_PULSE;
 	} else if ( !idStr::Icmp( statname, "air" ) ) {
-		if ( airTics >= pm_airTics.GetInteger() ) {
+		/*if ( airTics >= pm_airTics.GetInteger() ) {
 			return false;
-		}
+		}*/
 		airTics += atoi( value ) / 100.0 * pm_airTics.GetInteger();
-		if ( airTics > pm_airTics.GetInteger() ) {
+		/*if ( airTics > pm_airTics.GetInteger() ) {
 			airTics = pm_airTics.GetInteger();
-		}
+		}*/
 	} else if ( !idStr::Icmp ( statname, "weaponmod" ) ) {
 		if( !idStr::Icmp( value, "all" ) ) {
 			for( int i = 0; i < MAX_WEAPONS; i++ ) {
@@ -4748,8 +4748,8 @@ bool idPlayer::GivePowerUp( int powerup, int time, bool team ) {
 		}
 		case POWERUP_GUARD: {
 			nextHealthPulse = gameLocal.time + HEALTH_PULSE;
-			inventory.maxHealth = 200;
-			inventory.maxarmor = 200;
+			inventory.maxHealth += 200;
+			inventory.maxarmor += 200;
 
 			break;
 		}
@@ -6529,7 +6529,7 @@ bool idPlayer::HandleSingleGuiCommand( idEntity *entityGui, idLexer *src ) {
 	}
 
 	if ( token.Icmp( "addhealth" ) == 0 ) {
-		if ( entityGui && health < 100 ) {
+		if ( entityGui && health < 10000 ) {
 			int _health = entityGui->spawnArgs.GetInt( "gui_parm1" );
 			int amt = ( _health >= HEALTH_PER_DOSE ) ? HEALTH_PER_DOSE : _health;
 			_health -= amt;
@@ -6538,8 +6538,8 @@ bool idPlayer::HandleSingleGuiCommand( idEntity *entityGui, idLexer *src ) {
 				entityGui->GetRenderEntity()->gui[ 0 ]->SetStateInt( "gui_parm1", _health );
 			}
 			health += amt;
-			if ( health > 100 ) {
-				health = 100;
+			if ( health > 10000 ) {
+				health = 10000;
 			}
 		}
 		return true;
@@ -7932,9 +7932,10 @@ void idPlayer::UpdateAir( void ) {
 				hud->HandleNamedEvent( "Air" );
 			}
 		}
-		airTics+=2;	// regain twice as fast as lose
-		if ( airTics > pm_airTics.GetInteger() ) {
-			airTics = pm_airTics.GetInteger();
+		//airTics+=2;	// regain twice as fast as lose
+		if ( airTics < pm_airTics.GetInteger() ) {
+			//airTics = pm_airTics.GetInteger();
+            airTics+=2;
 		}
 	}
 
