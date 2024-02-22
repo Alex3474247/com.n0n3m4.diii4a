@@ -5,7 +5,10 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
-project(doom3)
+project(idtech)
+
+add_definitions(-D__ANDROID__)
+option(ANDROID "Android build" ON)
 
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
@@ -49,3 +52,7 @@ target_link_libraries( # Specifies the target library.
         )
 
 add_subdirectory (doom3/neo)
+
+add_subdirectory (deplibs)
+
+add_subdirectory (quake2)

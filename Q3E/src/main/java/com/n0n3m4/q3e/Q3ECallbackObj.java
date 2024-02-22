@@ -19,6 +19,8 @@
 
 package com.n0n3m4.q3e;
 
+import com.n0n3m4.q3e.karin.KOnceRunnable;
+
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 
@@ -102,7 +104,7 @@ public class Q3ECallbackObj
     }
 
     //k NEW:
-// Now call directly by native of libdante.so, and don't need call requestAudioData in Java.
+// Now call directly by native of libidtech4*.so, and don't need call requestAudioData in Java.
 // if offset >= 0 and length > 0, only write.
 // if offset >= 0 and length < 0, length = -length, then write and flush.
 // If length == 0 and offset < 0, only flush.
@@ -188,6 +190,42 @@ public class Q3ECallbackObj
     public String GetClipboardText()
     {
         return Q3EUtils.GetClipboardText(Q3EMain.mGLSurfaceView.getContext());
+    }
+
+    public void sendAnalog(final boolean down, final float x, final float y)
+    {
+        PushEvent(new KOnceRunnable()
+        {
+            @Override
+            public void Run()
+            {
+                Q3EJNI.sendAnalog(down ? 1 : 0, x, y);
+            }
+        });
+    }
+
+    public void sendKeyEvent(final boolean down, final int keycode, final int charcode)
+    {
+        PushEvent(new KOnceRunnable()
+        {
+            @Override
+            public void Run()
+            {
+                Q3EJNI.sendKeyEvent(down ? 1 : 0, keycode, charcode);
+            }
+        });
+    }
+
+    public void sendMotionEvent(final float deltax, final float deltay)
+    {
+        PushEvent(new KOnceRunnable()
+        {
+            @Override
+            public void Run()
+            {
+                Q3EJNI.sendMotionEvent(deltax, deltay);
+            }
+        });
     }
 }
 

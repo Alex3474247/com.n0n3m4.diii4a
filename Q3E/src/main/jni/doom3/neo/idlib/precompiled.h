@@ -82,7 +82,10 @@ public:
 
 #else
 
+
+#ifdef ID_ALLOW_TOOLS
 #include "../tools/comafx/StdAfx.h"
+#endif
 
 #endif
 
@@ -143,8 +146,10 @@ public:
 #endif
 
 typedef intptr_t INT_PTR;
+#if !defined(_MSC_VER)
 typedef unsigned int DWORD;
 typedef bool BOOL;
+#endif
 #endif
 
 #define round_up(x, y)	(((x) + ((y)-1)) & ~((y)-1))
@@ -281,6 +286,8 @@ const float MAX_BOUND_SIZE = 65536.0f;
         #include "../mod/doom3/overthinked/Game.h"
     #elif defined(_HEXENEOC)
         #include "../framework/Game.h"
+    #elif defined(_LIBRECOOP)
+        #include "../game/Game.h"
     #else
         #include "../game/Game.h"
     #endif
@@ -323,6 +330,8 @@ const float MAX_BOUND_SIZE = 65536.0f;
         #include "../mod/doom3/overthinked/Game_local.h"
     #elif defined(_HEXENEOC)
         #include "../mod/doom3/hexeneoc/Game_local.h"
+    #elif defined(_LIBRECOOP)
+        #include "../mod/doom3/librecoop/Game_local.h"
     #else
         #include "../game/Game_local.h"
     #endif

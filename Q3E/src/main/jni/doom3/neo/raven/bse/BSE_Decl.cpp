@@ -4,9 +4,19 @@
 #include "BSE.h"
 
 #ifdef _K_DEV
+#if !defined(_MSC_VER)
 #define LOGW_SKIP(fmt, args...) common->Warning(fmt, ##args)
 #else
+#define LOGW_SKIP(fmt, ...) common->Warning(fmt, __VA_ARGS__)
+#endif
+
+#else
+
+#if !defined(_MSC_VER)
 #define LOGW_SKIP(fmt, args...)
+#else
+#define LOGW_SKIP(fmt, ...)
+#endif
 #endif
 
 #include "BSE_Parser.cpp"
@@ -83,7 +93,7 @@ void rvDeclEffect::List(void) const
 rvDeclEffect::Parse
 ================
 */
-bool rvDeclEffect::Parse(const char *text, const int textLength)
+bool rvDeclEffect::Parse(const char *text, const int textLength, bool noCaching)
 {
 	idLexer src;
 	idToken token;
@@ -136,7 +146,7 @@ bool rvDeclEffect::SetDefaultText()
 {
 	char generated[1024]; // [esp+4h] [ebp-404h]
 
-	idStr::snPrintf(generated, sizeof(generated), "effect %s // IMPLICITLY GENERATED\n");
+	idStr::snPrintf(generated, sizeof(generated), "effect %s // IMPLICITLY GENERATED\n" , GetName());
 	SetText(generated);
 	return false;
 }
