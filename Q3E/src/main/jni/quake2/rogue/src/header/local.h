@@ -635,6 +635,7 @@ extern	cvar_t	*bob_pitch;
 extern	cvar_t	*bob_roll;
 
 extern	cvar_t	*sv_cheats;
+extern    cvar_t    *sv_unlimited_pickup;
 extern	cvar_t	*maxclients;
 extern	cvar_t	*maxspectators;
 

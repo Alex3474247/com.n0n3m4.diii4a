@@ -53,6 +53,7 @@ cvar_t *bob_pitch;
 cvar_t *bob_roll;
 
 cvar_t *sv_cheats;
+cvar_t *sv_unlimited_pickup;
 
 cvar_t *flood_msgs;
 cvar_t *flood_persecond;

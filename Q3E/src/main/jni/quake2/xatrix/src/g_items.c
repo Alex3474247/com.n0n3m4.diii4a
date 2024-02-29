@@ -185,12 +185,14 @@ Pickup_Powerup(edict_t *ent, edict_t *other)
 	}
 
 	quantity = other->client->pers.inventory[ITEM_INDEX(ent->item)];
-
+    if(!sv_unlimited_pickup->value)
+    {
 	if (((skill->value == 1) &&
 		 (quantity >= 2)) || ((skill->value >= 2) && (quantity >= 1)))
 	{
 		return false;
 	}
+    }
 
 	if ((coop->value) && (ent->item->flags & IT_STAY_COOP) && (quantity > 0))
 	{
@@ -265,11 +267,21 @@ Pickup_Adrenaline(edict_t *ent, edict_t *other)
 		other->max_health += 1;
 	}
 
+	/*if (other->health < other->max_health)
+	{
+		other->health = other->max_health;
+	}*/
+    if(!sv_unlimited_pickup->value)
+    {
 	if (other->health < other->max_health)
 	{
 		other->health = other->max_health;
 	}
-
+    }
+    else
+    {
+        other->health += 50;
+    }
 	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->value))
 	{
 		SetRespawn(ent, ent->item->quantity);
@@ -338,13 +350,15 @@ Pickup_Bandolier(edict_t *ent, edict_t *other)
 	{
 		index = ITEM_INDEX(item);
 		other->client->pers.inventory[index] += item->quantity;
-
+        if(!sv_unlimited_pickup->value)
+        {
 		if (other->client->pers.inventory[index] >
 			other->client->pers.max_bullets)
 		{
 			other->client->pers.inventory[index] =
 				other->client->pers.max_bullets;
 		}
+        }
 	}
 
 	item = FindItem("Shells");
@@ -353,13 +367,15 @@ Pickup_Bandolier(edict_t *ent, edict_t *other)
 	{
 		index = ITEM_INDEX(item);
 		other->client->pers.inventory[index] += item->quantity;
-
+        if(!sv_unlimited_pickup->value)
+        {
 		if (other->client->pers.inventory[index] >
 			other->client->pers.max_shells)
 		{
 			other->client->pers.inventory[index] =
 				other->client->pers.max_shells;
 		}
+        }
 	}
 
 	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->value))
@@ -422,13 +438,15 @@ Pickup_Pack(edict_t *ent, edict_t *other)
 	{
 		index = ITEM_INDEX(item);
 		other->client->pers.inventory[index] += item->quantity;
-
+        if(!sv_unlimited_pickup->value)
+        {
 		if (other->client->pers.inventory[index] >
 			other->client->pers.max_bullets)
 		{
 			other->client->pers.inventory[index] =
 				other->client->pers.max_bullets;
 		}
+        }
 	}
 
 	item = FindItem("Shells");
@@ -437,13 +455,15 @@ Pickup_Pack(edict_t *ent, edict_t *other)
 	{
 		index = ITEM_INDEX(item);
 		other->client->pers.inventory[index] += item->quantity;
-
+        if(!sv_unlimited_pickup->value)
+        {
 		if (other->client->pers.inventory[index] >
 			other->client->pers.max_shells)
 		{
 			other->client->pers.inventory[index] =
 				other->client->pers.max_shells;
 		}
+        }
 	}
 
 	item = FindItem("Cells");
@@ -452,13 +472,15 @@ Pickup_Pack(edict_t *ent, edict_t *other)
 	{
 		index = ITEM_INDEX(item);
 		other->client->pers.inventory[index] += item->quantity;
-
+        if(!sv_unlimited_pickup->value)
+        {
 		if (other->client->pers.inventory[index] >
 			other->client->pers.max_cells)
 		{
 			other->client->pers.inventory[index] =
 				other->client->pers.max_cells;
 		}
+        }
 	}
 
 	item = FindItem("Grenades");
@@ -467,13 +489,15 @@ Pickup_Pack(edict_t *ent, edict_t *other)
 	{
 		index = ITEM_INDEX(item);
 		other->client->pers.inventory[index] += item->quantity;
-
+        if(!sv_unlimited_pickup->value)
+        {
 		if (other->client->pers.inventory[index] >
 			other->client->pers.max_grenades)
 		{
 			other->client->pers.inventory[index] =
 				other->client->pers.max_grenades;
 		}
+        }
 	}
 
 	item = FindItem("Rockets");
@@ -482,13 +506,15 @@ Pickup_Pack(edict_t *ent, edict_t *other)
 	{
 		index = ITEM_INDEX(item);
 		other->client->pers.inventory[index] += item->quantity;
-
+        if(!sv_unlimited_pickup->value)
+        {
 		if (other->client->pers.inventory[index] >
 			other->client->pers.max_rockets)
 		{
 			other->client->pers.inventory[index] =
 				other->client->pers.max_rockets;
 		}
+        }
 	}
 
 	item = FindItem("Slugs");
@@ -497,13 +523,15 @@ Pickup_Pack(edict_t *ent, edict_t *other)
 	{
 		index = ITEM_INDEX(item);
 		other->client->pers.inventory[index] += item->quantity;
-
+        if(!sv_unlimited_pickup->value)
+        {
 		if (other->client->pers.inventory[index] >
 			other->client->pers.max_slugs)
 		{
 			other->client->pers.inventory[index] =
 				other->client->pers.max_slugs;
 		}
+        }
 	}
 
 	item = FindItem("Mag Slug");
@@ -512,13 +540,15 @@ Pickup_Pack(edict_t *ent, edict_t *other)
 	{
 		index = ITEM_INDEX(item);
 		other->client->pers.inventory[index] += item->quantity;
-
+        if(!sv_unlimited_pickup->value)
+        {
 		if (other->client->pers.inventory[index] >
 			other->client->pers.max_magslug)
 		{
 			other->client->pers.inventory[index] =
 				other->client->pers.max_magslug;
 		}
+        }
 	}
 
 	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->value))
@@ -786,18 +816,21 @@ Add_Ammo(edict_t *ent, gitem_t *item, int count)
 	}
 
 	index = ITEM_INDEX(item);
-
+    if(!sv_unlimited_pickup->value)
+    {
 	if (ent->client->pers.inventory[index] == max)
 	{
 		return false;
 	}
-
+    }
 	ent->client->pers.inventory[index] += count;
-
+    if(!sv_unlimited_pickup->value)
+    {
 	if (ent->client->pers.inventory[index] > max)
 	{
 		ent->client->pers.inventory[index] = max;
 	}
+    }
 
 	return true;
 }
@@ -901,14 +934,15 @@ MegaHealth_think(edict_t *self)
 	{
 		return;
 	}
-
+    if(!sv_unlimited_pickup->value)
+    {
 	if (self->owner->health > self->owner->max_health)
 	{
 		self->nextthink = level.time + 1;
 		self->owner->health -= 1;
 		return;
 	}
-
+    }
 	if (!(self->spawnflags & DROPPED_ITEM) && (deathmatch->value))
 	{
 		SetRespawn(self, 20);
@@ -926,7 +960,8 @@ Pickup_Health(edict_t *ent, edict_t *other)
 	{
 		return false;
 	}
-
+    if(!sv_unlimited_pickup->value)
+    {
 	if (!(ent->style & HEALTH_IGNORE_MAX))
 	{
 		if (other->health >= other->max_health)
@@ -934,9 +969,11 @@ Pickup_Health(edict_t *ent, edict_t *other)
 			return false;
 		}
 	}
+    }
 
 	other->health += ent->count;
-
+    if(!sv_unlimited_pickup->value)
+    {
 	if (!(ent->style & HEALTH_IGNORE_MAX))
 	{
 		if (other->health > other->max_health)
@@ -944,6 +981,7 @@ Pickup_Health(edict_t *ent, edict_t *other)
 			other->health = other->max_health;
 		}
 	}
+    }
 
 	if (ent->style & HEALTH_TIMED)
 	{
@@ -1054,7 +1092,8 @@ Pickup_Armor(edict_t *ent, edict_t *other)
 		{
 			oldinfo = &bodyarmor_info;
 		}
-
+        if(!sv_unlimited_pickup->value)
+        {
 		if (newinfo->normal_protection > oldinfo->normal_protection)
 		{
 			/* calc new armor values */
@@ -1095,7 +1134,13 @@ Pickup_Armor(edict_t *ent, edict_t *other)
 			/* update current armor value */
 			other->client->pers.inventory[old_armor_index] = newcount;
 		}
-	}
+        }
+        else
+        {
+            salvagecount = newinfo->base_count;
+            newcount = other->client->pers.inventory[old_armor_index] + salvagecount;
+            other->client->pers.inventory[ITEM_INDEX(ent->item)] = newcount;}
+        }
 
 	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->value))
 	{

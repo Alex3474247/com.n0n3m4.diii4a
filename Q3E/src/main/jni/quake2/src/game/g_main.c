@@ -71,6 +71,7 @@ cvar_t *bob_pitch;
 cvar_t *bob_roll;
 
 cvar_t *sv_cheats;
+cvar_t *sv_unlimited_pickup;
 
 cvar_t *flood_msgs;
 cvar_t *flood_persecond;
@@ -399,11 +400,13 @@ ExitLevel(void)
 		{
 			continue;
 		}
-
+        if(!sv_unlimited_pickup)
+        {
 		if (ent->health > ent->client->pers.max_health)
 		{
 			ent->health = ent->client->pers.max_health;
 		}
+        }
 	}
 }
 
