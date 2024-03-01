@@ -41,6 +41,7 @@
 qboolean IsInitialized = false;
 
 extern void Android_PollInput(void);
+extern void Q3E_CheckNativeWindowChanged(void);
 int main_time, main_oldtime, main_newtime;
 void main_frame()
 {
@@ -51,6 +52,7 @@ void main_frame()
 	}
 	while (main_time < 1);
 	Android_PollInput();
+	Q3E_CheckNativeWindowChanged();
 	Qcommon_Frame(main_time);
 	main_oldtime = main_newtime;
 }
@@ -217,6 +219,21 @@ static void game_exit(void)
 	Q3E_CloseRedirectOutput();
 }
 
+void Sys_SyncState(void)
+{
+	if (setState)
+	{
+		static int prev_state = -1;
+		static int state = -1;
+		state = (cls.key_dest == key_game) << 1;
+
+		if (state != prev_state)
+		{
+			(*setState)(state);
+			prev_state = state;
+		}
+	}
+}
 
 int
 main(int argc, char **argv)
