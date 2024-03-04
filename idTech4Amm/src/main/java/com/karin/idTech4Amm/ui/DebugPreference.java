@@ -13,6 +13,7 @@ import android.util.Log;
 
 import com.karin.idTech4Amm.R;
 import com.karin.idTech4Amm.lib.ContextUtility;
+import com.karin.idTech4Amm.sys.Constants;
 import com.n0n3m4.q3e.Q3EPreference;
 import com.n0n3m4.q3e.Q3ELang;
 import com.n0n3m4.q3e.Q3EUtils;
@@ -32,7 +33,6 @@ public class DebugPreference extends PreferenceFragment implements Preference.On
     {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.debug_preference);
-        findPreference(Q3EPreference.NO_HANDLE_SIGNALS).setOnPreferenceChangeListener(this);
     }
 
     @Override
@@ -73,8 +73,7 @@ public class DebugPreference extends PreferenceFragment implements Preference.On
     private void OpenCrashInfo()
     {
         Context activity = ContextUtility.GetContext(this);
-        final SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(activity);
-        String text = mPrefs.getString(KUncaughtExceptionHandler.CONST_PREFERENCE_APP_CRASH_INFO, null);
+        String text = KUncaughtExceptionHandler.GetDumpExceptionContent();
         AlertDialog.Builder builder = ContextUtility.CreateMessageDialogBuilder(activity, Q3ELang.tr(activity, R.string.last_crash_info), text != null ? text : Q3ELang.tr(activity, R.string.none));
         if(text != null)
         {
@@ -82,10 +81,20 @@ public class DebugPreference extends PreferenceFragment implements Preference.On
                     @Override
                     public void onClick(DialogInterface dialog, int id)
                     {
-                        mPrefs.edit().remove(KUncaughtExceptionHandler.CONST_PREFERENCE_APP_CRASH_INFO).commit();
+                        KUncaughtExceptionHandler.ClearDumpExceptionContent();
                         dialog.dismiss();
                     }
                 });
+            if(Constants.IsDebug())
+            {
+                builder.setNegativeButton("Trigger", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id)
+                    {
+                        throw new RuntimeException("Manuel trigger exception for testing");
+                    }
+                });
+            }
         }
         builder.create().show();
     }
