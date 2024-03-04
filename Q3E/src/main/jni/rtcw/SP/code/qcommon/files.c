@@ -3901,7 +3901,7 @@ static void FS_CheckPak0( void )
 						"**************************************************\n\n\n",
 						curpack->checksum );
 
-					Com_Error(ERR_FATAL, NULL);
+					//Com_Error(ERR_FATAL, NULL);
 				}
 				/*
 				else

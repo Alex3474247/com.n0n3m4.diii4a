@@ -88,16 +88,16 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 	if ( ent->item->giTag == PW_NOFATIGUE ) {
 		if ( Q_stricmp( ent->item->classname, "item_stamina_brandy" ) == 0 ) {
 			other->health += 10;
-			if ( other->health > other->client->ps.stats[STAT_MAX_HEALTH] ) {
+			/*if ( other->health > other->client->ps.stats[STAT_MAX_HEALTH] ) {
 				other->health = other->client->ps.stats[STAT_MAX_HEALTH];
-			}
+			}*/
 			other->client->ps.stats[STAT_HEALTH] = other->health;
 		}
 
 		// cap stamina
-		if ( other->client->ps.powerups[PW_NOFATIGUE] > 60000 ) {
+		/*if ( other->client->ps.powerups[PW_NOFATIGUE] > 60000 ) {
 			other->client->ps.powerups[PW_NOFATIGUE] = 60000;
-		}
+		}*/
 	}
 
 
@@ -218,16 +218,17 @@ void UseHoldableItem( gentity_t *ent, int item ) {
 	switch ( item ) {
 	case HI_WINE:           // 1921 Chateu Lafite - gives 25 pts health up to max health
 		ent->health += 25;
-		if ( ent->health > ent->client->ps.stats[STAT_MAX_HEALTH] ) {
+		/*if ( ent->health > ent->client->ps.stats[STAT_MAX_HEALTH] ) {
 			ent->health = ent->client->ps.stats[STAT_MAX_HEALTH];
-		}
+		}*/
 		break;
 
 	case HI_STAMINA:        // restores fatigue bar and sets "nofatigue" for a time period (currently forced to 60 sec)
 		//----(SA)	NOTE:	currently only gives free nofatigue time, doesn't reset fatigue bar.
 		//					(this is because I'd like the restore to be visually gradual (on the HUD item representing
 		//					current status of your fatigue) rather than snapping back to 'full')
-		ent->client->ps.powerups[PW_NOFATIGUE] = 60000;
+	//	ent->client->ps.powerups[PW_NOFATIGUE] = 60000;
+    ent->client->ps.powerups[PW_NOFATIGUE] += 60000;
 		break;
 
 	case HI_BOOK1:
@@ -328,17 +329,17 @@ void Add_Ammo( gentity_t *ent, int weapon, int count, qboolean fillClip ) {
 	case WP_DYNAMITE:
 		COM_BitSet( ent->client->ps.weapons, ammoweap );
 
-	case WP_TESLA:
+	/*case WP_TESLA:
 	case WP_FLAMETHROWER:
 		noPack = qtrue;
-		break;
+		break;*/
 	default:
 		break;
 	}
 
-	if ( fillClip || noPack ) {
+	/*if ( fillClip || noPack ) {
 		Fill_Clip( &ent->client->ps, weapon );
-	}
+	}*/
 
 	if ( ent->aiCharacter ) {
 		noPack = qfalse;    // let AI's deal with their own clip/ammo handling
@@ -348,9 +349,9 @@ void Add_Ammo( gentity_t *ent, int weapon, int count, qboolean fillClip ) {
 	if ( noPack ) {
 		ent->client->ps.ammo[ammoweap] = 0;
 	} else {
-		if ( ent->client->ps.ammo[ammoweap] > ammoTable[ammoweap].maxammo ) {
+		/*if ( ent->client->ps.ammo[ammoweap] > ammoTable[ammoweap].maxammo ) {
 			ent->client->ps.ammo[ammoweap] = ammoTable[ammoweap].maxammo;
-		}
+		}*/
 
 		if ( count >= 999 ) { // 'really, give /all/'
 			ent->client->ps.ammo[ammoweap] = count;
@@ -522,9 +523,9 @@ int Pickup_Health( gentity_t *ent, gentity_t *other ) {
 
 	other->health += quantity;
 
-	if ( other->health > max ) {
+	/*if ( other->health > max ) {
 		other->health = max;
-	}
+	}*/
 	other->client->ps.stats[STAT_HEALTH] = other->health;
 
 	if ( ent->s.density == 2 ) {   // multi-stage health first stage
@@ -551,9 +552,9 @@ int Pickup_Armor( gentity_t *ent, gentity_t *other ) {
 	other->client->ps.stats[STAT_ARMOR] += ent->item->quantity;
 //	if ( other->client->ps.stats[STAT_ARMOR] > other->client->ps.stats[STAT_MAX_HEALTH] * 2 ) {
 //		other->client->ps.stats[STAT_ARMOR] = other->client->ps.stats[STAT_MAX_HEALTH] * 2;
-	if ( other->client->ps.stats[STAT_ARMOR] > 100 ) {
+	/*if ( other->client->ps.stats[STAT_ARMOR] > 100 ) {
 		other->client->ps.stats[STAT_ARMOR] = 100;
-	}
+	}*/
 
 	// single player has no respawns	(SA)
 	if ( g_gametype.integer == GT_SINGLE_PLAYER ) {
