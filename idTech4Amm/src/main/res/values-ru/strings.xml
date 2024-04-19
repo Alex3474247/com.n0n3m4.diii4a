@@ -290,5 +290,12 @@
     <string name="tdm_base">The Dark Mod</string>
     <string name="quake_3_base">Quake III:Arena</string>
     <string name="quake_3_teamarena">Quake III:Team Arena</string>
+    <string name="option">Option</string>
+    <string name="stop">Stop</string>
+    <string name="scroll_to_top">Top</string>
+    <string name="scroll_to_bottom">Bottom</string>
+    <string name="scroll">Scroll</string>
+    <string name="pause">Pause</string>
+    <string name="joystick_visible">Joystick visible:</string>
 
 </resources>

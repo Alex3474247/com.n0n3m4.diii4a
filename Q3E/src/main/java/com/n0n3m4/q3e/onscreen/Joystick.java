@@ -3,7 +3,7 @@ package com.n0n3m4.q3e.onscreen;
 import android.graphics.Rect;
 import android.view.View;
 
-import com.n0n3m4.q3e.Q3EControlView;
+import com.n0n3m4.q3e.Q3EGlobals;
 import com.n0n3m4.q3e.Q3EKeyCodes;
 import com.n0n3m4.q3e.Q3EUtils;
 import com.n0n3m4.q3e.gl.Q3EGL;
@@ -21,25 +21,26 @@ public class Joystick extends Paintable implements TouchListener
     private static final int CONST_INVALID_DIRECTION = -1;
     private static final int CONST_HELPER_BORDER_WIDTH = 8;
 
-    private FloatBuffer verts_p; // ring vertex buffer
-    private FloatBuffer vertsd_p; // dot vertex buffer
-    private FloatBuffer tex_p; // rect texture coord buffer
-    private ByteBuffer inds_p; // rect index buffer
-    public int tex_ind; // ring texture
+    public View view;
+    public int cx;
+    public int cy;
+
+    private final FloatBuffer verts_p; // ring vertex buffer
+    private final FloatBuffer vertsd_p; // dot vertex buffer
+    private final FloatBuffer tex_p; // rect texture coord buffer
+    private final ByteBuffer inds_p; // rect index buffer
+    private int tex_ind; // ring texture
     private int texd_ind; // dot texture
 
     private final float[] posx = new float[8];
     private final float[] posy = new float[8];
     public int size;
-    private int dot_size;
-    private float internalsize;
-    public int cx = -1;
-    public int cy = -1;
+    private final int dot_size;
+    private final float internalsize;
 
     private int dot_pos = CONST_INVALID_DIRECTION;
     private int dotx, doty;
-    boolean dotjoyenabled = false;
-    public View view;
+    private boolean dotjoyenabled = false;
 
     private final int[] codes = {Q3EKeyCodes.KeyCodesGeneric.J_UP, Q3EKeyCodes.KeyCodesGeneric.J_RIGHT, Q3EKeyCodes.KeyCodesGeneric.J_DOWN, Q3EKeyCodes.KeyCodesGeneric.J_LEFT};
     private final int[] Menu_Codes = {Q3EKeyCodes.KeyCodesGeneric.K_UPARROW, Q3EKeyCodes.KeyCodesGeneric.K_RIGHTARROW, Q3EKeyCodes.KeyCodesGeneric.K_DOWNARROW, Q3EKeyCodes.KeyCodesGeneric.K_LEFTARROW};
@@ -47,9 +48,9 @@ public class Joystick extends Paintable implements TouchListener
     private final boolean[] enarr = new boolean[4];
 
     private int m_joystickReleaseRange_2 = 0;
-    private int m_size_2 = 0;
-    private int m_posX = 0;
-    private int m_posY = 0;
+    private final int m_size_2;
+    private int m_posX;
+    private int m_posY;
     private int m_fullZoneRadius = 0;
     private final Rect m_range = new Rect();
     private boolean m_pressed = false;
@@ -64,8 +65,9 @@ public class Joystick extends Paintable implements TouchListener
     private int m_deadZoneRadius = 0;
     private int m_joystickDeadZone_2 = 0;
     private boolean m_updateTexture = false;
+    private int m_visibleMode = Q3EGlobals.ONSCRREN_JOYSTICK_VISIBLE_ALWAYS;
 
-    public Joystick(View vw, GL10 gl, int r, float a, int x, int y, float fullZonePercent, float deadZonePercent, boolean unfixed, boolean editMode, String texid)
+    public Joystick(View vw, GL10 gl, int r, float a, int x, int y, float fullZonePercent, float deadZonePercent, boolean unfixed, boolean editMode, int visibleMode, String texid)
     {
         int fullZoneRadius = fullZonePercent >= 1.0f ? (int)((float)r * fullZonePercent) : 0;
         int deadZoneRadius = deadZonePercent > 0.0f ? (int)((float)r * Math.max(0.0f, Math.min(deadZonePercent, 1.0f))) : 0;
@@ -79,6 +81,7 @@ public class Joystick extends Paintable implements TouchListener
         this.m_posX = x;
         this.m_posY = y;
         this.m_editMode = editMode;
+        this.m_visibleMode = visibleMode;
         if(unfixed && fullZoneRadius < r) // if unfixed, min range is circle radius
             fullZoneRadius = r;
         if(deadZoneRadius >= r)
@@ -179,43 +182,48 @@ public class Joystick extends Paintable implements TouchListener
 
         if(!m_editMode)
         {
-            if(!m_unfixed)
+            if((m_visibleMode != Q3EGlobals.ONSCRREN_JOYSTICK_VISIBLE_HIDDEN && m_visibleMode != Q3EGlobals.ONSCRREN_JOYSTICK_VISIBLE_ONLY_PRESSED) // always
+                    || (m_visibleMode == Q3EGlobals.ONSCRREN_JOYSTICK_VISIBLE_ONLY_PRESSED && m_pressed) // only pressed
+            )
             {
-                Q3EGL.DrawVerts(gl, tex_ind, 6, tex_p, verts_p, inds_p, cx, cy, red, green, blue, alpha);
-
-                // int dp = dot_pos;//Multithreading.
-                if (dotjoyenabled)
-                    Q3EGL.DrawVerts(gl, texd_ind, 6, tex_p, vertsd_p, inds_p, cx + dotx, cy + doty, red, green, blue, alpha);
-                else if (dot_pos != CONST_INVALID_DIRECTION)
-                    Q3EGL.DrawVerts(gl, texd_ind, 6, tex_p, vertsd_p, inds_p, cx + posx[dot_pos], cy + posy[dot_pos], red, green, blue, alpha);
-            }
-            else
-            {
-                if(m_pressed)
+                if(!m_unfixed)
                 {
-                    // GL.DrawVerts(gl, tex_ind, 6, tex_p, verts_p, inds_p, cx, cy, red, green, blue, alpha);
+                    Q3EGL.DrawVerts_GL1(gl, tex_ind, 6, tex_p, verts_p, inds_p, cx, cy, red, green, blue, alpha);
+
+                    // int dp = dot_pos;//Multithreading.
                     if (dotjoyenabled)
-                        Q3EGL.DrawVerts(gl, texd_ind, 6, tex_p, vertsd_p, inds_p, cx + dotx, cy + doty, red, green, blue, alpha);
+                        Q3EGL.DrawVerts_GL1(gl, texd_ind, 6, tex_p, vertsd_p, inds_p, cx + dotx, cy + doty, red, green, blue, alpha);
                     else if (dot_pos != CONST_INVALID_DIRECTION)
-                        Q3EGL.DrawVerts(gl, texd_ind, 6, tex_p, vertsd_p, inds_p, cx + posx[dot_pos], cy + posy[dot_pos], red, green, blue, alpha);
+                        Q3EGL.DrawVerts_GL1(gl, texd_ind, 6, tex_p, vertsd_p, inds_p, cx + posx[dot_pos], cy + posy[dot_pos], red, green, blue, alpha);
                 }
                 else
-                    Q3EGL.DrawVerts(gl, texd_ind, 6, tex_p, vertsd_p, inds_p, m_posX, m_posY, red, green, blue, alpha);
+                {
+                    if(m_pressed)
+                    {
+                        // GL.DrawVerts(gl, tex_ind, 6, tex_p, verts_p, inds_p, cx, cy, red, green, blue, alpha);
+                        if (dotjoyenabled)
+                            Q3EGL.DrawVerts_GL1(gl, texd_ind, 6, tex_p, vertsd_p, inds_p, cx + dotx, cy + doty, red, green, blue, alpha);
+                        else if (dot_pos != CONST_INVALID_DIRECTION)
+                            Q3EGL.DrawVerts_GL1(gl, texd_ind, 6, tex_p, vertsd_p, inds_p, cx + posx[dot_pos], cy + posy[dot_pos], red, green, blue, alpha);
+                    }
+                    else
+                        Q3EGL.DrawVerts_GL1(gl, texd_ind, 6, tex_p, vertsd_p, inds_p, m_posX, m_posY, red, green, blue, alpha);
+                }
             }
         }
         else
         {
             if(!m_unfixed)
-                Q3EGL.DrawVerts(gl, tex_ind, 6, tex_p, verts_p, inds_p, m_posX, m_posY, red, green, blue, alpha);
+                Q3EGL.DrawVerts_GL1(gl, tex_ind, 6, tex_p, verts_p, inds_p, m_posX, m_posY, red, green, blue, alpha);
             else
-                Q3EGL.DrawVerts(gl, texd_ind, 6, tex_p, vertsd_p, inds_p, m_posX, m_posY, red, green, blue, alpha);
+                Q3EGL.DrawVerts_GL1(gl, texd_ind, 6, tex_p, vertsd_p, inds_p, m_posX, m_posY, red, green, blue, alpha);
 
             if(null != m_outerVertexBuffer)
-                Q3EGL.DrawVerts(gl, m_outerTexture, 6, tex_p, m_outerVertexBuffer, inds_p, m_posX, m_posY, /*red, green, blue, */0, 1, 0, alpha);
+                Q3EGL.DrawVerts_GL1(gl, m_outerTexture, 6, tex_p, m_outerVertexBuffer, inds_p, m_posX, m_posY, /*red, green, blue, */0, 1, 0, alpha);
             else if(null != m_borderVertexBuffer)
-                Q3EGL.DrawVerts(gl, m_borderTexture, 6, tex_p, m_borderVertexBuffer, inds_p, m_posX, m_posY, /*red, green, blue, */0, 1, 0, alpha);
+                Q3EGL.DrawVerts_GL1(gl, m_borderTexture, 6, tex_p, m_borderVertexBuffer, inds_p, m_posX, m_posY, /*red, green, blue, */0, 1, 0, alpha);
             if(null != m_innerVertexBuffer)
-                Q3EGL.DrawVerts(gl, m_innerTexture, 6, tex_p, m_innerVertexBuffer, inds_p, m_posX, m_posY, /*red, green, blue, */1, 0, 0, alpha);
+                Q3EGL.DrawVerts_GL1(gl, m_innerTexture, 6, tex_p, m_innerVertexBuffer, inds_p, m_posX, m_posY, /*red, green, blue, */1, 0, 0, alpha);
         }
     }
 
@@ -291,11 +299,9 @@ public class Joystick extends Paintable implements TouchListener
     {
         final int deltax = x - cx;
         final int deltay = y - cy;
-        boolean res = true;
-        if (NotInFullZone(deltax, deltay))
-        {
-            res = false;
-        }
+        boolean res = !NotInFullZone(deltax, deltay);
+        if(act == ACT_PRESS)
+            m_pressed = true;
         if (res && act != ACT_RELEASE)
         {
             if (Q3EUtils.q3ei.callbackObj.notinmenu)
@@ -319,9 +325,15 @@ public class Joystick extends Paintable implements TouchListener
                         doty = (int) (doty * internalsize / dist);
                     }
                     if(NotInDeadZone(deltax, deltay))
+                    {
+                        //m_pressed = true;
                         Q3EUtils.q3ei.callbackObj.sendAnalog(true, analogx, analogy);
+                    }
                     else
+                    {
+                        //m_pressed = false;
                         Q3EUtils.q3ei.callbackObj.sendAnalog(false, 0, 0);
+                    }
                 }
                 else
                 {
@@ -330,18 +342,19 @@ public class Joystick extends Paintable implements TouchListener
                     );
                     dot_pos = (int) (angle / 45);
                     if(NotInDeadZone(deltax, deltay))
-                {
-                    enarr[0] = (dot_pos % 7 < 2);
-                    enarr[1] = (dot_pos > 0) && (dot_pos < 4);
-                    enarr[2] = (dot_pos > 2) && (dot_pos < 6);
-                    enarr[3] = (dot_pos > 4);
-                }
+                    {
+                        //m_pressed = true;
+                        enarr[0] = (dot_pos % 7 < 2);
+                        enarr[1] = (dot_pos > 0) && (dot_pos < 4);
+                        enarr[2] = (dot_pos > 2) && (dot_pos < 6);
+                        enarr[3] = (dot_pos > 4);
+                    }
                     else
                     {
+                        //m_pressed = false;
                         enarr[0] = enarr[1] = enarr[2] = enarr[3] = false;
                     }
                 }
-
             }
             else
             {
@@ -353,6 +366,7 @@ public class Joystick extends Paintable implements TouchListener
                 enarr[0] = enarr[1] = enarr[2] = enarr[3] = false;
                 if(NotInDeadZone(deltax, deltay))
                 {
+                    //m_pressed = true;
                     enarr[dot_pos] = true;
                 }
                 dot_pos *= 2;
@@ -360,6 +374,7 @@ public class Joystick extends Paintable implements TouchListener
         }
         else
         {
+            m_pressed = false;
             if (Q3EUtils.q3ei.joystick_smooth)
             {
                 dotjoyenabled = false;
@@ -377,9 +392,9 @@ public class Joystick extends Paintable implements TouchListener
 
     public boolean HandleEvent_unfixed(int x, int y, int act)
     {
-        int deltax = 0;
-        int deltay = 0;
-        Q3EControlView controlView = (Q3EControlView) (this.view);
+        int deltax;
+        int deltay;
+        //Q3EControlView controlView = (Q3EControlView) (this.view);
         boolean res = true;
         switch (act)
         {
@@ -508,7 +523,7 @@ public class Joystick extends Paintable implements TouchListener
 
     public static Joystick Move(Joystick tmp, GL10 gl, float fullZonePercent, float deadZonePercent)
     {
-        Joystick newj = new Joystick(tmp.view, gl, tmp.size / 2, tmp.alpha, tmp.cx, tmp.cy, fullZonePercent, deadZonePercent, tmp.m_unfixed, tmp.m_editMode, tmp.tex_androidid);
+        Joystick newj = new Joystick(tmp.view, gl, tmp.size / 2, tmp.alpha, tmp.cx, tmp.cy, fullZonePercent, deadZonePercent, tmp.m_unfixed, tmp.m_editMode, tmp.m_visibleMode, tmp.tex_androidid);
         newj.tex_ind = tmp.tex_ind;
         newj.texd_ind = tmp.texd_ind;
         newj.m_outerTexture = tmp.m_outerTexture;

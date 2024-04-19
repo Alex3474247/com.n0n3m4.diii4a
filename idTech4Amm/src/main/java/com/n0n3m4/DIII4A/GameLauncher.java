@@ -38,7 +38,6 @@ import android.provider.Settings;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -61,7 +60,6 @@ import android.widget.Toast;
 import com.karin.idTech4Amm.OnScreenButtonConfigActivity;
 import com.karin.idTech4Amm.R;
 import com.karin.idTech4Amm.lib.ContextUtility;
-import com.karin.idTech4Amm.lib.FileUtility;
 import com.karin.idTech4Amm.lib.UIUtility;
 import com.karin.idTech4Amm.lib.Utility;
 import com.karin.idTech4Amm.misc.TextHelper;
@@ -127,7 +125,6 @@ public class GameLauncher extends Activity
     private static final int CONST_RESULT_CODE_REQUEST_EDIT_EXTERNAL_GAME_LIBRARY = 9;
 	private static final int CONST_RESULT_CODE_REQUEST_EXTRACT_SOURCE = 10;
 	private static final int CONST_RESULT_CODE_REQUEST_EXTERNAL_STORAGE_FOR_CHOOSE_GAME_MOD = 11;
-
 	private static final int CONST_RESULT_CODE_ACCESS_ANDROID_DATA = 12;
 
 	private final GameManager m_gameManager = new GameManager();
@@ -449,6 +446,35 @@ public class GameLauncher extends Activity
 			}
         }
     };
+
+	private final AdapterView.OnItemSelectedListener m_itemSelectedListener = new AdapterView.OnItemSelectedListener()
+	{
+		@Override
+		public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+		{
+			int viewId = parent.getId();
+			if(viewId == R.id.launcher_tab2_joystick_visible)
+			{
+				PreferenceManager.getDefaultSharedPreferences(GameLauncher.this).edit()
+						.putInt(Q3EPreference.pref_harm_joystick_visible, getResources().getIntArray(R.array.joystick_visible_mode_values)[position])
+						.commit();
+			}
+		}
+
+		@Override
+		public void onNothingSelected(AdapterView<?> parent)
+		{
+			int viewId = parent.getId();
+			if(viewId == R.id.launcher_tab2_joystick_visible)
+			{
+				int position = Utility.ArrayIndexOf(getResources().getIntArray(R.array.joystick_visible_mode_values), Q3EGlobals.ONSCRREN_JOYSTICK_VISIBLE_ALWAYS);
+				parent.setSelection(position);
+				PreferenceManager.getDefaultSharedPreferences(GameLauncher.this).edit()
+						.putInt(Q3EPreference.pref_harm_joystick_visible, Q3EGlobals.ONSCRREN_JOYSTICK_VISIBLE_ALWAYS)
+						.commit();
+			}
+		}
+	};
     private class SavePreferenceTextWatcher implements TextWatcher
     {
         private final String name;
@@ -734,6 +760,22 @@ public class GameLauncher extends Activity
 		SelectCheckbox(V.rg_harm_r_shadow, index);
 		if (!IsProp("r_useShadowMapping")) SetProp("r_useShadowMapping", "0");
 
+		V.cb_translucentStencilShadow.setChecked(getProp("harm_r_stencilShadowTranslucent", false));
+		if (!IsProp("harm_r_stencilShadowTranslucent")) setProp("r_useDXT", false);
+
+		V.cb_s_useOpenAL.setChecked(getProp("s_useOpenAL", false));
+		if (!IsProp("s_useOpenAL"))
+		{
+			setProp("s_useOpenAL", false);
+			V.cb_s_useEAXReverb.setChecked(false);
+			setProp("s_useEAXReverb", false);
+		}
+		else
+		{
+			V.cb_s_useEAXReverb.setChecked(getProp("s_useEAXReverb", false));
+			if (!IsProp("s_useEAXReverb")) setProp("s_useEAXReverb", false);
+		}
+
         str = GetProp(Q3EUtils.q3ei.GetGameCommandParm());
         if (str != null)
         {
@@ -821,6 +863,7 @@ public class GameLauncher extends Activity
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+		Q3EUtils.DumpPID(this);
         Q3ELang.Locale(this);
 
         //k
@@ -868,6 +911,7 @@ public class GameLauncher extends Activity
         V.secfinglmb.setChecked(mPrefs.getBoolean(Q3EPreference.pref_2fingerlmb, false));
         V.smoothjoy.setChecked(mPrefs.getBoolean(Q3EPreference.pref_analog, true));
         V.launcher_tab2_joystick_unfixed.setChecked(mPrefs.getBoolean(Q3EPreference.pref_harm_joystick_unfixed, false));
+		V.launcher_tab2_joystick_visible.setSelection(Utility.ArrayIndexOf(getResources().getIntArray(R.array.joystick_visible_mode_values), mPrefs.getInt(Q3EPreference.pref_harm_joystick_visible, Q3EGlobals.ONSCRREN_JOYSTICK_VISIBLE_ALWAYS)));
         V.detectmouse.setOnCheckedChangeListener(m_checkboxChangeListener);
         V.detectmouse.setChecked(mPrefs.getBoolean(Q3EPreference.pref_detectmouse, true));
 
@@ -1015,6 +1059,7 @@ public class GameLauncher extends Activity
         V.nolight.setOnCheckedChangeListener(m_checkboxChangeListener);
         V.smoothjoy.setOnCheckedChangeListener(m_checkboxChangeListener);
         V.launcher_tab2_joystick_unfixed.setOnCheckedChangeListener(m_checkboxChangeListener);
+		V.launcher_tab2_joystick_visible.setOnItemSelectedListener(m_itemSelectedListener);
         V.edt_path.addTextChangedListener(new SavePreferenceTextWatcher(Q3EPreference.pref_datapath, default_gamedata));
         V.edt_mouse.addTextChangedListener(new SavePreferenceTextWatcher(Q3EPreference.pref_eventdev, "/dev/input/event???"));
         V.rg_curpos.setOnCheckedChangeListener(m_groupCheckChangeListener);
@@ -1511,6 +1556,7 @@ public class GameLauncher extends Activity
 		mEdtr.putBoolean(Q3EPreference.pref_harm_skip_intro, V.skip_intro.isChecked());
         mEdtr.putBoolean(Q3EPreference.pref_harm_multithreading, V.multithreading.isChecked());
         mEdtr.putBoolean(Q3EPreference.pref_harm_joystick_unfixed, V.launcher_tab2_joystick_unfixed.isChecked());
+		mEdtr.putInt(Q3EPreference.pref_harm_joystick_visible, getResources().getIntArray(R.array.joystick_visible_mode_values)[V.launcher_tab2_joystick_visible.getSelectedItemPosition()]);
         mEdtr.putBoolean(Q3EPreference.pref_harm_find_dll, V.find_dll.isChecked());
 		mEdtr.putBoolean(Q3EPreference.pref_harm_scale_by_screen_area, V.scale_by_screen_area.isChecked());
 		mEdtr.putBoolean(Q3EPreference.pref_harm_s_useOpenAL, V.cb_s_useOpenAL.isChecked());
@@ -2256,7 +2302,7 @@ public class GameLauncher extends Activity
 
     private String GetExternalGameLibraryPath()
     {
-        return getFilesDir() + File.separator + Q3EUtils.q3ei.game + File.separator + Q3EJNI.ARCH;
+        return getFilesDir() + File.separator + Q3EUtils.q3ei.game + File.separator + Q3EGlobals.ARCH;
     }
 
     private void OpenTranslatorsDialog()
@@ -2502,6 +2548,7 @@ public class GameLauncher extends Activity
 		public RadioGroup rg_fs_q3game;
 		public RadioGroup rg_fs_rtcwgame;
 		public RadioGroup rg_fs_tdmgame;
+		public Spinner launcher_tab2_joystick_visible;
 
         public void Setup()
         {
@@ -2581,6 +2628,7 @@ public class GameLauncher extends Activity
 			rg_fs_q3game = findViewById(R.id.rg_fs_q3game);
 			rg_fs_rtcwgame = findViewById(R.id.rg_fs_rtcwgame);
 			rg_fs_tdmgame = findViewById(R.id.rg_fs_tdmgame);
+			launcher_tab2_joystick_visible = findViewById(R.id.launcher_tab2_joystick_visible);
         }
     }
 }

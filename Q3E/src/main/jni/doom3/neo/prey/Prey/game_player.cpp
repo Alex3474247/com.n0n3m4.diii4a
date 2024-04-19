@@ -933,8 +933,8 @@ void hhPlayer::UpdateHudAmmo(idUserInterface *_hud) {
 
 		_hud->SetStateFloat( "player_ammopercent", ammoPct );
 		_hud->SetStateFloat( "player_altammopercent", altPct );
-		_hud->SetStateString( "player_ammoamounttext", ammo<0 ? "" : va("%d", ammo) );
-		_hud->SetStateString( "player_altammoamounttext", altAmmo<0 ? "" : va("%d", altAmmo) );
+		_hud->SetStateString( "player_ammoamounttext", ammo<0 ? "" : va("%d", /*//k */(int)ammo) );
+		_hud->SetStateString( "player_altammoamounttext", altAmmo<0 ? "" : va("%d", /*//k */(int)altAmmo) );
 		_hud->SetStateBool( "player_ammolow", ammoLow );
 		_hud->SetStateBool( "player_altammolow", altAmmoLow );
 	}
@@ -2409,7 +2409,7 @@ void hhPlayer::BobCycle( const idVec3 &pushVelocity ) {
 	viewBob.Zero();
 
 #ifdef _MOD_FULL_BODY_AWARENESS
-	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || InVehicle() || IsZoomed())
+	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || InVehicle() || IsZoomed() || focusUI)
 #endif
 	if ( physicsObj.HasSteppedUp() ) {
 
@@ -2430,7 +2430,7 @@ void hhPlayer::BobCycle( const idVec3 &pushVelocity ) {
 
 	// if the player stepped up recently
 #ifdef _MOD_FULL_BODY_AWARENESS
-	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || InVehicle() || IsZoomed()) {
+	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || InVehicle() || IsZoomed() || focusUI) {
 #endif
 	deltaTime = gameLocal.time - stepUpTime;
 	if ( deltaTime < STEPUP_TIME ) {
@@ -3714,7 +3714,7 @@ void hhPlayer::GetViewPos( idVec3 &origin, idMat3 &axis ) {
 	// if dead, fix the angle and don't add any kick
 	// HUMANHEAD cjr:  Replaced health <= 0 with IsDead() call for deathwalk override
 #ifdef _MOD_FULL_BODY_AWARENESS
-	if( (!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || InVehicle() || IsZoomed()) && (IsDead() && !gameLocal.isMultiplayer) )
+	if( (!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || InVehicle() || IsZoomed() || focusUI) && (IsDead() && !gameLocal.isMultiplayer) )
 #else
 	if ( IsDead() && !gameLocal.isMultiplayer ) 
 #endif
@@ -4861,7 +4861,7 @@ hhPlayer::Think
 */
 void hhPlayer::Think( void ) {
 #ifdef _MOD_FULL_BODY_AWARENESS
-	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || InVehicle() || IsZoomed())
+	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || InVehicle() || IsZoomed() || focusUI)
 	{
 		renderEntity.suppressSurfaceInViewID = entityNumber + 1;
 		showWeaponViewModel		= GetUserInfo()->GetBool("ui_showGun");
@@ -6498,7 +6498,7 @@ void hhPlayer::ReadFromSnapshot( const idBitMsgDelta &msg ) {
 				AI_PAIN = Pain( NULL, NULL, oldHealth - health, lastDamageDir, lastDamageLocation );
 				lastDmgTime = gameLocal.time;
 			} else {
-				common->Warning( "NET: no damage def for damage feedback '%s'\n", lastDamageDef );
+				common->Warning( "NET: no damage def for damage feedback '%d'\n", lastDamageDef );
 			}
 		}
 	}

@@ -7719,7 +7719,7 @@ void idPlayer::BobCycle( const idVec3 &pushVelocity ) {
 	viewBob.Zero();
 
 #ifdef _MOD_FULL_BODY_AWARENESS
-	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || IsInVehicle() || IsZoomed())
+	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || IsInVehicle() || IsZoomed() || focusUI)
 #endif
 	if ( physicsObj.HasSteppedUp() ) {
 
@@ -7740,7 +7740,7 @@ void idPlayer::BobCycle( const idVec3 &pushVelocity ) {
 
 	// if the player stepped up recently
 #ifdef _MOD_FULL_BODY_AWARENESS
-	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || IsInVehicle() || IsZoomed()) {
+	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || IsInVehicle() || IsZoomed() || focusUI) {
 #endif
 	deltaTime = gameLocal.time - stepUpTime;
 	if ( deltaTime < STEPUP_TIME ) {
@@ -9331,7 +9331,7 @@ Called every tic for each player
 */
 void idPlayer::Think( void ) {
 #ifdef _MOD_FULL_BODY_AWARENESS
-	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || IsInVehicle() || IsZoomed())
+	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || IsInVehicle() || IsZoomed() || focusUI)
 	{
 		renderEntity.suppressSurfaceInViewID = entityNumber + 1;
 		showWeaponViewModel		= GetUserInfo()->GetBool("ui_showGun");
@@ -10670,7 +10670,7 @@ void idPlayer::CalculateViewWeaponPos( idVec3 &origin, idMat3 &axis ) {
 
 	// CalculateRenderView must have been called first
 #ifdef _MOD_FULL_BODY_AWARENESS
-	idVec3 viewOrigin = !harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || IsInVehicle() || IsZoomed() ? firstPersonViewOrigin : firstPersonViewOrigin_viewWeaponOrigin;
+	idVec3 viewOrigin = !harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || IsInVehicle() || IsZoomed() || focusUI ? firstPersonViewOrigin : firstPersonViewOrigin_viewWeaponOrigin;
 #else
 	const idVec3 &viewOrigin = firstPersonViewOrigin;
 #endif
@@ -10945,7 +10945,7 @@ void idPlayer::GetViewPos( idVec3 &origin, idMat3 &axis ) const {
 
 	// if dead, fix the angle and don't add any kick
 #ifdef _MOD_FULL_BODY_AWARENESS
-	if( (!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || IsInVehicle() || zoomed) && health <= 0 )
+	if( (!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || IsInVehicle() || zoomed || focusUI) && health <= 0 )
 #else
 	if ( health <= 0 )
 #endif
@@ -10989,7 +10989,7 @@ idPlayer::CalculateFirstPersonView
 */
 void idPlayer::CalculateFirstPersonView( void ) {
 #ifdef _MOD_FULL_BODY_AWARENESS
-	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || IsInVehicle() || IsZoomed()) {
+	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || IsInVehicle() || IsZoomed() || focusUI) {
 #endif
 	if ( ( pm_modelView.GetInteger() == 1 ) || ( ( pm_modelView.GetInteger() == 2 ) && ( health <= 0 ) ) ) {
 		//	Displays the view from the point of view of the "camera" joint in the player model
@@ -11014,60 +11014,69 @@ void idPlayer::CalculateFirstPersonView( void ) {
 		idVec3 firstPersonViewOrigin_orig;
 		GetViewPos( firstPersonViewOrigin_orig, firstPersonViewAxis );
 
-		if( af.IsActive() )
+		if(harm_pm_fullBodyAwarenessFixed.GetBool())
 		{
-			idAFBody* head = af.GetPhysics()->GetBody( "head" );
-			if( head )
-			{
-				firstPersonViewOrigin = head->GetWorldOrigin();
-				firstPersonViewAxis = head->GetWorldAxis();
-			}
-		}
-		else if(head.GetEntity())
-		{
-#define _HARM_Q4_PLAYERMODEL_HEAD_JOINT "head_channel"
-			idMat3 axis;
-			idVec3 origin;
-			const char *headJointName = harm_pm_fullBodyAwarenessHeadJoint.GetString();
-			jointHandle_t head_joint = INVALID_JOINT;
-			if(headJointName && headJointName[0])
-			{
-				head_joint = head->GetAnimator()->GetJointHandle( headJointName );
-			}
-			if(head_joint >= 0 && head->GetJointWorldTransform( head_joint, gameLocal.time, origin, axis ) )
-				firstPersonViewOrigin = origin;
-			else
-			{
-				firstPersonViewOrigin = head->GetPhysics()->GetOrigin();
-			}
+			firstPersonViewOrigin = GetEyePosition() + viewBob;
 		}
 		else
 		{
-			// position camera at head
-			idMat3 axis;
-			idVec3 origin;
-			const char *headJointName = harm_pm_fullBodyAwarenessHeadJoint.GetString();
-			jointHandle_t head_joint = INVALID_JOINT;
-			if(headJointName && headJointName[0])
+			if( af.IsActive() )
 			{
-				head_joint = animator.GetJointHandle( headJointName );
+				idAFBody* head = af.GetPhysics()->GetBody( "head" );
+				if( head )
+				{
+					firstPersonViewOrigin = head->GetWorldOrigin();
+					firstPersonViewAxis = head->GetWorldAxis();
+				}
+				else
+					firstPersonViewOrigin = GetEyePosition();
+			}
+			else if(head.GetEntity())
+			{
+#define _HARM_Q4_PLAYERMODEL_HEAD_JOINT "head_channel"
+				idMat3 axis;
+				idVec3 origin;
+				const char *headJointName = harm_pm_fullBodyAwarenessHeadJoint.GetString();
+				jointHandle_t head_joint = INVALID_JOINT;
+				if(headJointName && headJointName[0])
+				{
+					head_joint = head->GetAnimator()->GetJointHandle( headJointName );
+				}
+				if(head_joint >= 0 && head->GetJointWorldTransform( head_joint, gameLocal.time, origin, axis ) )
+					firstPersonViewOrigin = origin;
+				else
+				{
+					firstPersonViewOrigin = head->GetPhysics()->GetOrigin();
+				}
+			}
+			else
+			{
+				// position camera at head
+				idMat3 axis;
+				idVec3 origin;
+				const char *headJointName = harm_pm_fullBodyAwarenessHeadJoint.GetString();
+				jointHandle_t head_joint = INVALID_JOINT;
+				if(headJointName && headJointName[0])
+				{
+					head_joint = animator.GetJointHandle( headJointName );
 #if 0
-				if(head_joint < 0 && idStr::Icmp(_HARM_Q4_PLAYERMODEL_HEAD_JOINT, headJointName))
-					head_joint = animator.GetJointHandle( _HARM_Q4_PLAYERMODEL_HEAD_JOINT );
+					if(head_joint < 0 && idStr::Icmp(_HARM_Q4_PLAYERMODEL_HEAD_JOINT, headJointName))
+						head_joint = animator.GetJointHandle( _HARM_Q4_PLAYERMODEL_HEAD_JOINT );
 #endif
-			}
-			else
-			{
-				head_joint = animator.GetJointHandle( _HARM_Q4_PLAYERMODEL_HEAD_JOINT ); // quake4 playermodel head joint name, quake4 playermodel head is can attached
-			}
-			if(head_joint >= 0 && animator.GetJointTransform( head_joint, gameLocal.time, origin, axis ) )
-				firstPersonViewOrigin = ( origin + modelOffset) * ( viewAxis * physicsObj.GetGravityAxis() ) + physicsObj.GetOrigin()
-									+ viewBob
-					;
-			else
-				firstPersonViewOrigin = GetEyePosition() + viewBob
-									;
+				}
+				else
+				{
+					head_joint = animator.GetJointHandle( _HARM_Q4_PLAYERMODEL_HEAD_JOINT ); // quake4 playermodel head joint name, quake4 playermodel head is can attached
+				}
+				if(head_joint >= 0 && animator.GetJointTransform( head_joint, gameLocal.time, origin, axis ) )
+					firstPersonViewOrigin = ( origin + modelOffset) * ( viewAxis * physicsObj.GetGravityAxis() ) + physicsObj.GetOrigin()
+										+ viewBob
+						;
+				else
+					firstPersonViewOrigin = GetEyePosition() + viewBob
+										;
 #undef _HARM_Q4_PLAYERMODEL_HEAD_JOINT
+			}
 		}
 
 		firstPersonViewOrigin_playerViewOrigin = firstPersonViewOrigin;
@@ -13025,7 +13034,7 @@ idPlayer::CanShowWeaponViewmodel
 */
 bool idPlayer::CanShowWeaponViewmodel( void ) const {
 #ifdef _MOD_FULL_BODY_AWARENESS
-	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || IsInVehicle() || zoomed)
+	if(!harm_pm_fullBodyAwareness.GetBool() || pm_thirdPerson.GetBool() || IsInVehicle() || zoomed || focusUI)
 #endif
  	return showWeaponViewModel;
 #ifdef _MOD_FULL_BODY_AWARENESS

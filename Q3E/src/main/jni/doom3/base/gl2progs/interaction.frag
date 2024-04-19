@@ -22,7 +22,7 @@
 #version 100
 //#pragma optimize(off)
 
-precision mediump float;
+precision highp float;
 
 /*
  * Pixel values between vertices are interpolated by Gouraud shading by default,
@@ -61,7 +61,7 @@ uniform sampler2D u_fragmentMap3;	/* u_diffuseTexture */
 uniform sampler2D u_fragmentMap4;	/* u_specularTexture */
 uniform sampler2D u_fragmentMap5;	/* u_specularFalloffTexture */
 #ifdef _TRANSLUCENT_STENCIL_SHADOW
-uniform lowp float u_uniformParm0; // shadow alpha
+uniform mediump float u_uniformParm0; // shadow alpha
 #endif
 
 void main(void)

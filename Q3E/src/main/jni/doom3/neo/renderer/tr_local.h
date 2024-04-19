@@ -160,7 +160,7 @@ typedef struct drawSurf_s {
 	struct vertCache_s		*dynamicTexCoords;	// float * in vertex cache memory
 	// specular directions for non vertex program cards, skybox texcoords, etc
 #ifdef _MULTITHREAD //k: only for frontend in multithread, like memory address ==
-	const srfTriangles_t *origGeo;
+	const srfTriangles_t 	*geoOrig;
 #endif
 } drawSurf_t;
 
@@ -392,6 +392,7 @@ typedef struct viewLight_s {
     float			baseLightProject[16];			// global xyz1 to projected light strq
 	float			inverseBaseLightProject[16];// transforms the zero-to-one cube to exactly cover the light in world space
     idVec3					lightRadius;		// xyz radius for point lights
+	const struct drawSurf_s	*perforatedShadows;	//karin: perforated surface for shadow mapping
 #endif
 } viewLight_t;
 
@@ -733,10 +734,6 @@ typedef struct {
 	glstate_t			glState;
 
 	int					c_copyFrameBuffer;
-#ifdef _HUMANHEAD //k: scope view support: in multithread
-	bool scopeView;
-	bool shuttleView;
-#endif
 #ifdef _SHADOW_MAPPING
     float		shadowV[6][16];				// shadow depth view matrix
     float		shadowP[6][16];				// shadow depth projection matrix
@@ -1138,6 +1135,8 @@ void	GL_UseProgram(shaderProgram_s *program);
 void	GL_Uniform1fv(GLint location, const GLfloat *value);
 void	GL_Uniform3fv(GLint location, const GLfloat *value);
 void	GL_Uniform4fv(GLint location, const GLfloat *value);
+void 	GL_Uniform1i(GLint location, GLint w);
+void	GL_Uniform4f(GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
 void	GL_UniformMatrix4fv(GLint location, const GLfloat *value);
 void 	GL_UniformMatrix4fv(GLint location, const GLsizei n, const GLfloat *value);
 void	GL_Uniform1f(GLint location, GLfloat value);
@@ -1149,7 +1148,8 @@ void	GL_ClearStateDelta(void);
 void	GL_State(int stateVector);
 void	GL_TexEnv(int env);
 void	GL_Cull(int cullType);
-void GL_CheckErrors(const char *name);
+void    GL_CheckErrors(const char *name);
+void	GL_SelectTextureForce(int unit);
 
 const int GLS_SRCBLEND_ZERO						= 0x00000001;
 const int GLS_SRCBLEND_ONE						= 0x0;
@@ -1476,6 +1476,63 @@ typedef enum {
 	PROG_USER
 } program_t;
 
+typedef enum {
+	// base
+	SHADER_INTERACTION = 0,
+	SHADER_SHADOW,
+	SHADER_DEFAULT,
+	SHADER_ZFILL,
+	SHADER_ZFILLCLIP,
+	SHADER_CUBEMAP,
+	SHADER_REFLECTIONCUBEMAP,
+	SHADER_FOG,
+	SHADER_BLENDLIGHT,
+	SHADER_INTERACTIONBLINNPHONG,
+	SHADER_DIFFUSECUBEMAP,
+	SHADER_TEXGEN,
+	// new stage
+	SHADER_HEATHAZE,
+	SHADER_HEATHAZEWITHMASK,
+	SHADER_HEATHAZEWITHMASKANDVERTEX,
+	SHADER_COLORPROCESS,
+	// shadow mapping
+#ifdef _SHADOW_MAPPING
+	SHADER_DEPTHPOINTLIGHT,
+	SHADER_INTERACTIONPOINTLIGHT,
+	SHADER_INTERACTIONBLINNPHONGPOINTLIGHT,
+	SHADER_DEPTHPARALLELLIGHT,
+	SHADER_INTERACTIONPARALLELLIGHT,
+	SHADER_INTERACTIONBLINNPHONGPARALLELLIGHT,
+	SHADER_DEPTHSPOTLIGHT,
+	SHADER_INTERACTIONSPOTLIGHT,
+	SHADER_INTERACTIONBLINNPHONGSPOTLIGHT,
+	SHADER_DEPTHPERFORATED,
+#endif
+	// translucent stencil shadow
+#ifdef _TRANSLUCENT_STENCIL_SHADOW
+	SHADER_INTERACTIONTRANSLUCENT,
+	SHADER_INTERACTIONBLINNPHONGTRANSLUCENT,
+#endif
+    // costum
+	SHADER_CUSTOM,
+} glsl_program_t;
+
+#define SHADER_BASE_BEGIN SHADER_INTERACTION
+#define SHADER_BASE_END SHADER_TEXGEN
+
+#define SHADER_NEW_STAGE_BEGIN SHADER_HEATHAZE
+#define SHADER_NEW_STAGE_END SHADER_COLORPROCESS
+
+#ifdef _SHADOW_MAPPING
+#define SHADER_SHADOW_MAPPING_BEGIN SHADER_DEPTHPOINTLIGHT
+#define SHADER_SHADOW_MAPPING_END SHADER_DEPTHPERFORATED
+#endif
+
+#ifdef _TRANSLUCENT_STENCIL_SHADOW
+#define SHADER_STENCIL_SHADOW_BEGIN SHADER_INTERACTIONTRANSLUCENT
+#define SHADER_STENCIL_SHADOW_END SHADER_INTERACTIONBLINNPHONGTRANSLUCENT
+#endif
+
 /*
 
   All vertex programs use the same constant register layout:
@@ -1535,6 +1592,7 @@ DRAW_GLSL
 */
 
 #define MAX_UNIFORM_PARMS 8
+#define HARM_SHADER_NAME_LENGTH 64
 //#define _HARM_SHADER_NAME
 typedef struct shaderProgram_s {
 	GLuint		program;
@@ -1550,6 +1608,7 @@ typedef struct shaderProgram_s {
 	GLint		modelMatrix;
 	GLint		textureMatrix;
 	GLint		modelViewMatrix;
+	GLint		projectionMatrix;
 	GLint		clipPlane;
 	GLint		fogMatrix;
 	GLint		fogColor;
@@ -1602,10 +1661,76 @@ typedef struct shaderProgram_s {
 	GLint		globalLightOrigin;
     GLint		bias;
 #endif
-#ifdef _HARM_SHADER_NAME //k: restore shader name
-	char name[32];
-#endif
+	char 		name[HARM_SHADER_NAME_LENGTH];
+    int         type; // glsl_program_t
 } shaderProgram_t;
+#define SHADER_PARM_ADDR(prop) offsetof(shaderProgram_t, prop)
+#define SHADER_PARM_LOCATION(location) (*(GLint *)((char *)backEnd.glState.currentProgram + location))
+#define SHADER_PARMS_ADDR(prop, i) ((GLint)(offsetof(shaderProgram_t, prop)) + i * (GLint)sizeof(GLuint))
+
+struct GLSLShaderProp
+{
+	idStr name;
+	shaderProgram_t *program;
+	idStr default_vertex_shader_source;
+	idStr default_fragment_shader_source;
+	idStr macros;
+	idStr vertex_shader_source_file;
+	idStr fragment_shader_source_file;
+    int type; // glsl_program_t
+
+	GLSLShaderProp()
+			: program(NULL),
+            type(SHADER_CUSTOM)
+	{}
+
+	GLSLShaderProp(const char *name)
+			: name(name),
+			  program(NULL),
+              type(SHADER_CUSTOM)
+	{
+		vertex_shader_source_file = name;
+		vertex_shader_source_file += ".vert";
+		fragment_shader_source_file = name;
+		fragment_shader_source_file += ".frag";
+	}
+
+	GLSLShaderProp(const char *name, int type, shaderProgram_t *program, const idStr &vs, const idStr &fs, const idStr &macros)
+			: name(name),
+              type(type),
+			  program(program),
+			  default_vertex_shader_source(vs),
+			  default_fragment_shader_source(fs),
+			  macros(macros)
+	{
+		vertex_shader_source_file = name;
+		vertex_shader_source_file += ".vert";
+		fragment_shader_source_file = name;
+		fragment_shader_source_file += ".frag";
+	}
+};
+
+class idGLSLShaderManager
+{
+public:
+	~idGLSLShaderManager();
+	int Add(shaderProgram_t *shader); // return num of shaders
+	void Clear(void);
+	const shaderProgram_t * Find(const char *name) const;
+	const shaderProgram_t * Find(GLuint handle) const; // handle is OpenGL shader program's handle
+	const shaderProgram_t * Load(const GLSLShaderProp &prop); // frontend: if in multi-threading, only add on queue, because current thread has not OpenGL context; else if not in multi-threading, actual load directly. however always return a shader program handle, if not load, shaderProgram_t::program = -1.
+	void ActuallyLoad(void); // backend: if in multi-threading, load actually from queue with OpenGL context
+
+	static idGLSLShaderManager _shaderManager;
+
+private:
+	idList<shaderProgram_t *> shaders;
+	idList<GLSLShaderProp> queue;
+
+private:
+	idGLSLShaderManager() {}
+};
+extern idGLSLShaderManager *shaderManager;
 
 
 /* This file was automatically generated.  Do not edit! */
@@ -1617,38 +1742,9 @@ void RB_GLSL_DrawInteraction(const drawInteraction_t *din);
 
 void R_CheckBackEndCvars(void);
 
-extern shaderProgram_t shadowShader;
-extern shaderProgram_t interactionShader;
-extern shaderProgram_t defaultShader;
-extern shaderProgram_t depthFillShader;
-extern shaderProgram_t cubemapShader; //k: skybox shader
-extern shaderProgram_t reflectionCubemapShader; //k: reflection shader
-extern shaderProgram_t depthFillClipShader; //k: z-fill clipped shader
-extern shaderProgram_t fogShader; //k: fog shader
-extern shaderProgram_t blendLightShader; //k: blend light shader
-extern shaderProgram_t interactionBlinnPhongShader; //k: BLINN-PHONG lighting model interaction shader
-extern shaderProgram_t diffuseCubemapShader; //k: diffuse cubemap shader
-extern shaderProgram_t texgenShader; //k: texgen shader
-#ifdef _SHADOW_MAPPING
-extern shaderProgram_t depthShader_pointLight; //k: depth shader(point light)
-extern shaderProgram_t	interactionShadowMappingShader_pointLight; //k: interaction with shadow mapping(point light)
-extern shaderProgram_t	interactionShadowMappingBlinnPhongShader_pointLight; //k: interaction with shadow mapping(point light)
-
-extern shaderProgram_t depthShader_parallelLight; //k: depth shader(parallel)
-extern shaderProgram_t interactionShadowMappingShader_parallelLight; //k: interaction with shadow(parallel)
-extern shaderProgram_t interactionShadowMappingBlinnPhongShader_parallelLight; //k: interaction with shadow mapping(parallel)
-
-extern shaderProgram_t depthShader_spotLight; //k: depth shader
-extern shaderProgram_t interactionShadowMappingShader_spotLight; //k: interaction with shadow mapping
-extern shaderProgram_t interactionShadowMappingBlinnPhongShader_spotLight; //k: interaction with shadow mapping
-
-extern shaderProgram_t depthPerforatedShader; //k: depth perforated shader
-#endif
-#ifdef _TRANSLUCENT_STENCIL_SHADOW
-extern shaderProgram_t interactionTranslucentShader; //k: PHONG lighting model interaction shader(translucent stencil shadow)
-extern shaderProgram_t interactionTranslucentBlinnPhongShader; //k: BLINN-PHONG lighting model interaction shader(translucent stencil shadow)
-#endif
-
+#define GLSL_PROGRAM_PROC extern
+#include "glsl/glsl_program.h"
+#undef GLSL_PROGRAM_PROC
 
 /*
 ============================================================
@@ -1977,7 +2073,7 @@ struct idAllocAutoHeap {
 		void * Alloc(size_t size) {
 			Free();
 			data = calloc(size, 1);
-			common->Printf("[Harmattan]: %p alloca on heap memory %p(%d bytes)\n", this, data, size);
+			common->Printf("[Harmattan]: %p alloca on heap memory %p(%zu bytes)\n", this, data, size);
 			return data;
 		}
 
@@ -1985,7 +2081,7 @@ struct idAllocAutoHeap {
 			Free();
 			data = calloc(size + 15, 1);
 			void *ptr = ((void *)(((intptr_t)data + 15) & ~15));
-			common->Printf("[Harmattan]: %p alloca16 on heap memory %p(%d bytes) <- %p(%d bytes)\n", this, ptr, size, data, size + 15);
+			common->Printf("[Harmattan]: %p alloca16 on heap memory %p(%zu bytes) <- %p(%zu bytes)\n", this, ptr, size, data, size + 15);
 			return ptr;
 		}
 
@@ -2019,13 +2115,13 @@ struct idAllocAutoHeap {
 	idAllocAutoHeap _allocAutoHeap##x; \
 	T *varname = (T *) (HARM_MAX_STACK_ALLOC_SIZE == 0 || (HARM_MAX_STACK_ALLOC_SIZE > 0 && (alloc_size) >= HARM_MAX_STACK_ALLOC_SIZE) ? _allocAutoHeap##x.Alloc16(alloc_size) : _alloca16(alloc_size)); \
 	if(_allocAutoHeap##x.IsAlloc()) \
-		common->Printf("[Harmattan]: Alloca on heap memory %s %p(%d bytes)\n", #varname, varname, alloc_size);
+		common->Printf("[Harmattan]: Alloca on heap memory %s %p(%zu bytes)\n", #varname, varname, (size_t)alloc_size);
 
 #define _DROID_ALLOC16(T, alloc_size, varname, x) \
 	idAllocAutoHeap _allocAutoHeap##x; \
 	varname = (T *) (HARM_MAX_STACK_ALLOC_SIZE == 0 || (HARM_MAX_STACK_ALLOC_SIZE > 0 && (alloc_size) >= HARM_MAX_STACK_ALLOC_SIZE) ? _allocAutoHeap##x.Alloc16(alloc_size) : _alloca16(alloc_size)); \
 	if(_allocAutoHeap##x.IsAlloc()) \
-		common->Printf("[Harmattan]: Alloca on heap memory %s %p(%d bytes)\n", #varname, varname, alloc_size);
+		common->Printf("[Harmattan]: Alloca on heap memory %s %p(%zu bytes)\n", #varname, varname, (size_t)alloc_size);
 
 	// free memory when not call alloca()
 #define _DROID_FREE(varname, x)/* \
@@ -2038,6 +2134,7 @@ struct idAllocAutoHeap {
 #ifdef _RAVEN //k: macros for renderEffect_s::suppressSurfaceMask
 #define SUPPRESS_SURFACE_MASK(x) (1 << (x))
 #define SUPPRESS_SURFACE_MASK_CHECK(t, x) ((t) & SUPPRESS_SURFACE_MASK(x))
+#include "../raven/renderer/NewShaderStage.h"
 #endif
 
 extern void GLimp_CheckGLInitialized(void); // Check GL context initialized, only for Android
@@ -2080,8 +2177,7 @@ extern idCVar harm_r_shadowMapFrustumNear;
 extern idCVar harm_r_shadowMapFrustumFar;
 extern idCVar harm_r_useLightScissors;
 extern idCVar harm_r_shadowMapDepthBuffer;
-extern idCVar harm_r_shadowMapPolygonFactor;
-extern idCVar harm_r_shadowMapPolygonOffset;
+extern idCVar harm_r_shadowMapNonParallelLightUltra;
 
 extern idBounds bounds_zeroOneCube;
 extern idBounds bounds_unitCube;
@@ -2134,7 +2230,7 @@ extern float RB_overbright;
 #else
 #define HARM_CHECK_SHADER(x)
 #define HARM_CHECK_SHADER_ATTR(x, index)
-#define HARM_CHECK_SHADER_ERROR(x)
+#define HARM_CHECK_SHADER_ERROR()
 #endif
 
 #ifdef _EXTRAS_TOOLS

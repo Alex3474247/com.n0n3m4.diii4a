@@ -1,6 +1,4 @@
-#version 320 es
-
-precision mediump float;
+#version 140
 #extension GL_ARB_gpu_shader5 : enable
 
 /**

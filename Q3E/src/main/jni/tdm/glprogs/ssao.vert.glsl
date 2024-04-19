@@ -1,6 +1,4 @@
-#version 320 es
-
-precision mediump float;
+#version 330
 
 out vec2 var_TexCoord;
 out vec2 var_ViewRayXY;

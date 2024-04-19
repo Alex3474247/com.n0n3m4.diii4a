@@ -222,19 +222,19 @@ ID_INLINE static void RB_ShadowMapping_setupSample(void)
     else
 #endif
     {
-    if( backEnd.vLight->parallel )
-    {
-        sampleScale = 1.0;
-    }
-    else if( backEnd.vLight->pointLight )
-    {
-        // if(sampleFactor != 0) lod = 0.2;
-		sampleScale = 100.0;
-    }
-    else
-    {
-        sampleScale = 4.0;
-    }
+		if( backEnd.vLight->parallel )
+		{
+			sampleScale = 1.0;
+		}
+		else if( backEnd.vLight->pointLight )
+		{
+			// if(sampleFactor != 0) lod = 0.2;
+			sampleScale = 100.0;
+		}
+		else
+		{
+			sampleScale = 4.0;
+		}
     }
 
     if(sampleFactor > 0.0)
@@ -242,6 +242,7 @@ ID_INLINE static void RB_ShadowMapping_setupSample(void)
 
     GL_Uniform1f(offsetof(shaderProgram_t, u_uniformParm[2]), lod * sampleScale);
     GL_Uniform1f(offsetof(shaderProgram_t, u_uniformParm[5]), SampleFactors[backEnd.vLight->shadowLOD]); // 1.0 / size
+    GL_Uniform1f(offsetof(shaderProgram_t, u_uniformParm[6]), shadowMapResolutions[backEnd.vLight->shadowLOD]); // textureSize()
 }
 
 // Setup polygon offset in shadow map pass
@@ -251,17 +252,17 @@ ID_INLINE static void RB_ShadowMapping_polygonOffset(void)
     {
         case 0:
             GL_Cull( CT_FRONT_SIDED );
-            GL_PolygonOffset( true, harm_r_shadowMapPolygonFactor.GetFloat(), harm_r_shadowMapPolygonOffset.GetFloat() );
+            GL_PolygonOffset( true, r_shadowMapPolygonFactor.GetFloat(), r_shadowMapPolygonOffset.GetFloat() );
             break;
 
         case 1:
             GL_Cull( CT_BACK_SIDED );
-            GL_PolygonOffset( true, -harm_r_shadowMapPolygonFactor.GetFloat(), -harm_r_shadowMapPolygonOffset.GetFloat() );
+            GL_PolygonOffset( true, -r_shadowMapPolygonFactor.GetFloat(), -r_shadowMapPolygonOffset.GetFloat() );
             break;
 
         default:
             GL_Cull( CT_TWO_SIDED );
-            GL_PolygonOffset( true, harm_r_shadowMapPolygonFactor.GetFloat(), harm_r_shadowMapPolygonOffset.GetFloat() );
+            GL_PolygonOffset( true, r_shadowMapPolygonFactor.GetFloat(), r_shadowMapPolygonOffset.GetFloat() );
             break;
     }
 }
@@ -1187,7 +1188,7 @@ void RB_ShadowMapPass( const drawSurf_t* drawSurfs, int side, int type, bool cle
     RB_ResetViewportAndScissorToDefaultCamera(backEnd.viewDef);
 }
 
-void RB_ShadowMapPasses( const drawSurf_t* shadowDrawSurfs[2], const drawSurf_t* ambientDrawSurfs[2], int side )
+void RB_ShadowMapPasses( const drawSurf_t *globalShadowDrawSurf, const drawSurf_t *localShadowDrawSurf, const drawSurf_t *ambientDrawSurf, int side )
 {
     const viewLight_t* vLight = backEnd.vLight;
 
@@ -1204,16 +1205,7 @@ void RB_ShadowMapPasses( const drawSurf_t* shadowDrawSurfs[2], const drawSurf_t*
 
     RB_ShadowMapping_clearBuffer();
 
-    bool allNull = true;
-    for(int i = 0; i < 2; i++)
-    {
-        if(shadowDrawSurfs[i] || ambientDrawSurfs[i])
-        {
-            allNull = false;
-            break;
-        }
-    }
-    if( allNull
+    if( (!globalShadowDrawSurf && !localShadowDrawSurf && !ambientDrawSurf) 
         || RB_ShadowMapping_filterLightType()
             )
     {
@@ -1278,14 +1270,13 @@ void RB_ShadowMapPasses( const drawSurf_t* shadowDrawSurfs[2], const drawSurf_t*
             1.0f,
     };
 
-    const drawSurf_t *list[4] = {
-            shadowDrawSurfs[0],
-            shadowDrawSurfs[1],
-            ambientDrawSurfs[0],
-            ambientDrawSurfs[1],
+    const drawSurf_t *list[3] = {
+		globalShadowDrawSurf,
+		localShadowDrawSurf,
+		ambientDrawSurf,
     };
 
-    for(int i = 0; i < 4; i++)
+    for(int i = 0; i < 3; i++)
     {
         const drawSurf_t* drawSurfs = list[i];
         if(!drawSurfs)
