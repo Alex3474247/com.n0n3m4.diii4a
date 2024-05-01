@@ -29,7 +29,8 @@ public final class Q3EGlobals
     public static final int UI_ZOOM = 14;
     public static final int UI_INTERACT = 15;
     public static final int UI_WEAPON_PANEL = 16;
-    public static final int UI_SIZE=UI_WEAPON_PANEL+1;
+    public static final int UI_SCORE = 17;
+    public static final int UI_SIZE=UI_SCORE+1;
 
     // on-screen item type
     public static final int TYPE_BUTTON = 0;
@@ -90,6 +91,7 @@ public final class Q3EGlobals
     public static final String LIB_ENGINE3_ID = "libidtech3.so"; // Quake 3
     public static final String LIB_ENGINE3_RTCW = "libidtech3_rtcw.so"; // RTCW
     public static final String LIB_ENGINE4_TDM = "libthedarkmod.so"; // TDM
+    public static final String LIB_ENGINE1_QUAKE = "libidtech_quake.so"; // Quake 1
 
     public static final String CONFIG_FILE_DOOM3 = "DoomConfig.cfg"; // DOOM3
     public static final String CONFIG_FILE_QUAKE4 = "Quake4Config.cfg"; // Quake 4
@@ -98,6 +100,7 @@ public final class Q3EGlobals
     public static final String CONFIG_FILE_QUAKE3 = "q3config.cfg"; // Quake 3
     public static final String CONFIG_FILE_RTCW = "wolfconfig.cfg"; // RTCW
     public static final String CONFIG_FILE_TDM = "Darkmod.cfg"; // TDM
+    public static final String CONFIG_FILE_QUAKE1 = "config.cfg"; // Quake 1
 
     public static final String GAME_DOOM3 = "doom3";
     public static final String GAME_QUAKE4 = "quake4";
@@ -106,6 +109,7 @@ public final class Q3EGlobals
     public static final String GAME_QUAKE3 = "quake3";
     public static final String GAME_RTCW = "rtcw";
     public static final String GAME_TDM = "tdm";
+    public static final String GAME_QUAKE1 = "quake1";
 
     public static final String GAME_NAME_DOOM3 = "DOOM 3";
     public static final String GAME_NAME_QUAKE4 = "Quake 4";
@@ -114,6 +118,7 @@ public final class Q3EGlobals
     public static final String GAME_NAME_QUAKE3 = "Quake 3";
     public static final String GAME_NAME_RTCW = "RTCW"; // "Return to Castle Wolfenstein";
     public static final String GAME_NAME_TDM = "Dark mod"; // The Dark Mod
+    public static final String GAME_NAME_QUAKE1 = "Quake 1"; // The Dark Mod
 
     public static final String GAME_BASE_DOOM3 = "base";
     public static final String GAME_BASE_D3XP = "d3xp";
@@ -122,7 +127,17 @@ public final class Q3EGlobals
     public static final String GAME_BASE_QUAKE2 = "baseq2";
     public static final String GAME_BASE_QUAKE3 = "baseq3";
     public static final String GAME_BASE_RTCW = "main";
-    public static final String GAME_BASE_TDM = "darkmod";
+    public static final String GAME_BASE_TDM = ""; // the dark mod is standalone
+    public static final String GAME_BASE_QUAKE1 = "darkplaces/id1"; // "darkplaces";
+
+    public static final String GAME_SUBDIR_DOOM3 = "doom3";
+    public static final String GAME_SUBDIR_QUAKE4 = "quake4";
+    public static final String GAME_SUBDIR_PREY = "prey";
+    public static final String GAME_SUBDIR_QUAKE2 = "quake2";
+    public static final String GAME_SUBDIR_QUAKE3 = "quake3";
+    public static final String GAME_SUBDIR_RTCW = "rtcw";
+    public static final String GAME_SUBDIR_TDM = "darkmod";
+    public static final String GAME_SUBDIR_QUAKE1 = "quake1";
 
     public static final String[] LIBS = {
             "game",
@@ -160,7 +175,10 @@ public final class Q3EGlobals
     public static final String[] TDM_LIBS = {
             "thedarkmod",
     };
-
+    public static final String[] Q1_LIBS = {
+            "idtech_quake",
+    };
+/*
     public static final String[] QUAKE4_MAPS = {
             "airdefense1",
             "airdefense2",
@@ -227,7 +245,7 @@ public final class Q3EGlobals
             "DATA NETWORKING SECURITY",
             "NEXUS CORE", // Act V
             "THE NEXUS",
-    };
+    };*/
 
     public static final String[] CONTROLS_NAMES = {
             "Joystick",
@@ -246,7 +264,8 @@ public final class Q3EGlobals
             "Run",
             "Zoom",
             "Interact",
-            "Weapon"
+            "Weapon",
+            "Score",
     };
 
     public static final int GLFORMAT_RGB565 = 0x0565;
@@ -257,7 +276,7 @@ public final class Q3EGlobals
 
     public static final String GAME_EXECUABLE = "game.arm";
 
-    public static final String TDM_GLSL_SHADER_VERSION = "2.11.2";
+    public static final String TDM_GLSL_SHADER_VERSION = "2.12.0";
 
     public static final String IDTECH4AMM_PAK_SUFFIX = ".zipak";
 

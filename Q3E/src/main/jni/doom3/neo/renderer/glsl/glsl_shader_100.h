@@ -1165,7 +1165,8 @@ GLSL_SHADER const char TEXGEN_FRAG[] =
 "highp float unpack (vec4 colour)\n" \
 "{\n" \
 "	const highp vec4 bitShifts = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);\n" \
-"	return /*all(lessThan(colour, vec4(1.0, 1.0, 1.0, 1.0)))*/ colour.r < 1.0 ? dot(colour , bitShifts) : 1.0;\n" \
+"	highp float dotc = dot(colour , bitShifts);\n" \
+"	return /*all(lessThan(colour, vec4(1.0, 1.0, 1.0, 1.0)))*/ colour.r < 1.0 ? dotc : 1.0;\n" \
 "}\n"
 
 #define VECTOR_TO_DEPTH_FUNC(far, near) \
@@ -1219,14 +1220,12 @@ PACK_FLOAT_FUNC()
 "#ifdef _USING_DEPTH_TEXTURE\n"
 "   #ifdef _DEBUG\n"
 "       gl_FragColor = vec4((gl_FragCoord.z + 1.0) * 0.5, 0.0, 0.0, 1.0); // DEBUG\n"
-"   #else\n"
-"       gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
 "   #endif\n"
 "#else\n"
 "	highp float depth;\n"
 "	depth = gl_FragCoord.z;\n"
 "   #ifdef _PACK_FLOAT\n"
-"		gl_FragColor = gl_FragColor = pack(depth);\n"
+"		gl_FragColor = pack(depth);\n"
 "   #else\n"
 "		gl_FragColor = vec4(depth, 0.0, 0.0, 1.0);\n"
 "   #endif\n"
@@ -1389,7 +1388,7 @@ GLSL_SHADER const char INTERACTION_SHADOW_MAPPING_FRAG[] =
         "	varying highp vec4 var_ShadowCoord;\n"
 		"#endif\n"
         "\n"
-		"#ifdef _PACK_FLOAT\n"
+		"#if !defined(_USING_DEPTH_TEXTURE) && defined(_PACK_FLOAT)\n"
 		UNPACK_FLOAT_FUNC()
 		"#define DC(x) (unpack(x))\n"
 		"#else\n"
@@ -1504,7 +1503,7 @@ GLSL_SHADER const char DEPTH_PERFORATED_VERT[] =
 "#version 100\n"
 "//#pragma optimize(off)\n"
 "\n"
-"precision highp float;\n"
+"precision mediump float;\n"
 "\n"
 "attribute vec4 attr_TexCoord;\n"
 "attribute highp vec4 attr_Vertex;\n"
@@ -1525,7 +1524,7 @@ GLSL_SHADER const char DEPTH_PERFORATED_FRAG[] =
 "#version 100\n"
 "//#pragma optimize(off)\n"
 "\n"
-"precision highp float;\n"
+"precision mediump float;\n"
 "\n"
 "uniform sampler2D u_fragmentMap0;\n"
 "uniform lowp float u_alphaTest;\n"
@@ -1546,14 +1545,12 @@ PACK_FLOAT_FUNC()
 "#ifdef _USING_DEPTH_TEXTURE\n"
 "   #ifdef _DEBUG\n"
 "       gl_FragColor = vec4((gl_FragCoord.z + 1.0) * 0.5, 0.0, 0.0, 1.0); // DEBUG\n"
-"   #else\n"
-"       gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
 "   #endif\n"
 "#else\n"
 "	highp float depth;\n"
 "	depth = gl_FragCoord.z;\n"
 "   #ifdef _PACK_FLOAT\n"
-"		gl_FragColor = gl_FragColor = pack(depth);\n"
+"		gl_FragColor = pack(depth);\n"
 "   #else\n"
 "		gl_FragColor = vec4(depth, 0.0, 0.0, 1.0);\n"
 "   #endif\n"

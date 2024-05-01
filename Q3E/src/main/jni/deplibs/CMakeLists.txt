@@ -13,10 +13,16 @@ add_subdirectory (libjpeg) # 9f
 
 add_subdirectory (curl) # -8.5.0
 
-add_subdirectory (libpng)
+add_subdirectory (libpng) #
 
-add_subdirectory (pugixml)
+add_subdirectory (pugixml) #
 
 add_subdirectory (mbedtls) # -3.5.2
 
 add_subdirectory (minizip) # -ng-1.2
+
+add_subdirectory (freetype) #
+
+add_subdirectory (oboe) # 1.8.1
+
+#add_subdirectory (sdl2) # 2.30.2

@@ -48,6 +48,12 @@ static bool shaderRequired = true;
 #define REQUIRE_SHADER shaderRequired = true;
 #define UNNECESSARY_SHADER shaderRequired = false;
 
+#ifdef _SHADOW_MAPPING
+extern bool r_useDepthTexture;
+extern bool r_useCubeDepthTexture;
+extern bool r_usePackColorAsDepth;
+#endif
+
 static int RB_GLSL_LoadShaderProgram(
 		const char *name,
         int type,
@@ -58,11 +64,41 @@ static int RB_GLSL_LoadShaderProgram(
 		const char *fragment_shader_source_file,
 		const char *macros
 );
-static bool RB_GLSL_LoadShaderProgram(const GLSLShaderProp *prop);
+
+static bool RB_GLSL_LoadShaderProgramFromProp(const GLSLShaderProp *prop)
+{
+	const char *vs;
+	const char *fs;
+	const char *macros;
+
+	vs = prop->default_vertex_shader_source.c_str();
+	fs = prop->default_fragment_shader_source.c_str();
+	macros = prop->macros.c_str();
+
+	if(RB_GLSL_LoadShaderProgram(
+			prop->name.c_str(),
+            prop->type,
+			prop->program,
+			vs,
+			fs,
+			prop->vertex_shader_source_file.c_str(),
+			prop->fragment_shader_source_file.c_str(),
+			macros
+	) < 0)
+		return false;
+	return true;
+}
 
 #define GLSL_PROGRAM_PROC
 #include "glsl_program.h"
 #undef GLSL_PROGRAM_PROC
+
+#define GLSL_INTERNAL_SHADER_INDEX_TO_HANDLE(x) ( (x) + 1 )
+#define GLSL_CUSTOM_SHADER_INDEX_TO_HANDLE(x) ( -( (x) + 1) )
+#define GLSL_INTERNAL_SHADER_HANDLE_TO_INDEX(x) ( (x) - 1 )
+#define GLSL_CUSTOM_SHADER_HANDLE_TO_INDEX(x) ( -(x) - 1 )
+
+const shaderHandle_t idGLSLShaderManager::INVALID_SHADER_HANDLE = 0;
 
 int idGLSLShaderManager::Add(shaderProgram_t *shader)
 {
@@ -73,11 +109,11 @@ int idGLSLShaderManager::Add(shaderProgram_t *shader)
 		common->Warning("idGLSLShaderManager::Add shader's program handle is 0!");
 		return -1;
 	}
-	const shaderProgram_t *c = Find(shader->name);
-	if(c && c != shader)
+	int index = FindIndex(shader->name);
+	if(index >= 0)
 	{
 		common->Warning("idGLSLShaderManager::Add shader's name is dup '%s'!", shader->name);
-		return -1;
+		return index; // -1
 	}
 	common->Printf("idGLSLShaderManager::Add shader program '%s'.\n", shader->name);
 	return shaders.Append(shader);
@@ -85,16 +121,6 @@ int idGLSLShaderManager::Add(shaderProgram_t *shader)
 
 void idGLSLShaderManager::Clear(void)
 {
-	for(int i = 0; i < shaders.Num(); i++)
-	{
-		shaderProgram_t *shader = shaders[i];
-		// free all custom shaders
-		if(shader->type == SHADER_CUSTOM) // TOOD: tell rvNewShaderStage
-		{
-			printf("[Harmattan]: GLSL shader manager::free loaded custom shader '%s'.\n", shader->name);
-			free(shader);
-		}
-	}
 	shaders.Clear();
 }
 
@@ -125,88 +151,220 @@ const shaderProgram_t * idGLSLShaderManager::Find(GLuint handle) const
 	return NULL;
 }
 
-const shaderProgram_t * idGLSLShaderManager::Load(const GLSLShaderProp &inProp)
+int idGLSLShaderManager::FindIndex(const char *name) const
 {
-	const shaderProgram_t *c;
+	for (int i = 0; i < shaders.Num(); i++)
+	{
+		const shaderProgram_t *shader = shaders[i];
+		if(!idStr::Icmp(name, shader->name))
+		{
+			common->Printf("[Harmattan]: GLSL shader manager::FindIndex '%s' -> %d %s.\n", shader->name, shader->type, shader->type == SHADER_CUSTOM ? "custom" : "internal");
+			return i;
+		}
+	}
+	return -1;
+}
 
-	c = Find(inProp.name.c_str());
-	if(c)
+int idGLSLShaderManager::FindIndex(GLuint handle) const
+{
+	if(handle == 0)
+		return NULL;
+	for (int i = 0; i < shaders.Num(); i++)
+	{
+		const shaderProgram_t *shader = shaders[i];
+		if(handle == shader->program)
+			return i;
+	}
+	return -1;
+}
+
+const shaderProgram_t * idGLSLShaderManager::Get(shaderHandle_t handle) const
+{
+	int index;
+
+	if(handle > 0)
+	{
+		index = GLSL_INTERNAL_SHADER_HANDLE_TO_INDEX(handle);
+		if(index < shaders.Num())
+			return shaders[index];
+	}
+	else if(handle < 0)
+	{
+		index = GLSL_CUSTOM_SHADER_HANDLE_TO_INDEX(handle);
+		if(index < customShaders.Num())
+		{
+			const shaderProgram_t *program = customShaders[index].program;
+			if(program && program->program > 0)
+				return program;
+		}
+	}
+	return NULL;
+}
+
+shaderHandle_t idGLSLShaderManager::GetHandle(const char *name) const
+{
+    int index;
+
+    index = FindIndex(name);
+    if(index >= 0)
+        return GLSL_INTERNAL_SHADER_INDEX_TO_HANDLE(index);
+
+	index = FindCustomIndex(name);
+	if(index >= 0)
+		return GLSL_CUSTOM_SHADER_INDEX_TO_HANDLE(index);
+
+    return INVALID_SHADER_HANDLE;
+}
+
+int idGLSLShaderManager::FindCustomIndex(const char *name) const
+{
+	for(int i = 0; i < customShaders.Num(); i++)
+	{
+		const GLSLShaderProp &p = customShaders[i];
+		if(!idStr::Icmp(name, p.name.c_str()))
+			return i;
+	}
+	return -1;
+}
+
+GLSLShaderProp * idGLSLShaderManager::FindCustom(const char *name)
+{
+	for(int i = 0; i < customShaders.Num(); i++)
+	{
+		GLSLShaderProp &p = customShaders[i];
+		if(!idStr::Icmp(name, p.name.c_str()))
+			return &p;
+	}
+	return NULL;
+}
+
+shaderHandle_t idGLSLShaderManager::Load(const GLSLShaderProp &inProp)
+{
+	int index;
+	GLSLShaderProp *prop;
+
+	// check has loaded
+	index = FindIndex(inProp.name.c_str());
+	if(index >= 0)
 	{
 		common->Printf("[Harmattan]: GLSL shader manager::Load shader '%s' has loaded.\n", inProp.name.c_str());
-		return c;
+		return GLSL_INTERNAL_SHADER_INDEX_TO_HANDLE(index);
 	}
 
-	for(int i = 0; i < queue.Num(); i++)
+	// check has custom loaded
+	prop = FindCustom(inProp.name.c_str());
+	if(prop)
 	{
-		GLSLShaderProp &prop = queue[i];
-		if(!idStr::Icmp(inProp.name.c_str(), prop.name.c_str()))
+		if(prop->program && prop->program->program > 0)
 		{
-			common->Printf("[Harmattan]: GLSL shader manager::Load shader '%s' has already.\n", inProp.name.c_str());
-			return prop.program;
+			common->Printf("[Harmattan]: GLSL shader manager::Load custom shader '%s' has already loaded.\n", inProp.name.c_str());
+			return GLSL_CUSTOM_SHADER_INDEX_TO_HANDLE(index);
+		}
+		else
+		{
+			common->Printf("[Harmattan]: GLSL shader manager::Load custom shader '%s' has already load failed.\n", inProp.name.c_str());
+			return INVALID_SHADER_HANDLE;
 		}
 	}
 
-	shaderProgram_t *shader = (shaderProgram_t *)malloc(sizeof(*shader));
-	memset(shader, 0, sizeof(*shader));
-	shader->program = -1;
-	strncpy(shader->name, inProp.name.c_str(), sizeof(shader->name));
-	GLSLShaderProp prop;
-	prop = inProp;
-	prop.program = shader;
-	queue.Append(prop);
-	c = shader;
-	common->Printf("[Harmattan]: GLSL shader manager::Load shader push '%s' into queue.\n", prop.name.c_str());
+	// add to queue
+	GLSLShaderProp p = inProp;
+	p.type = SHADER_CUSTOM;
+	p.program = NULL;
+	index = customShaders.Append(p);
+	// queue.Append(index);
+	common->Printf("[Harmattan]: GLSL shader manager::Load shader push '%s' into queue.\n", p.name.c_str());
 
 #ifdef _MULTITHREAD // in multi-threading, push on queue and load on backend
-	if(!multithreadActive)
+	if(!multithreadActive) {
+#endif
 		ActuallyLoad();
-#else
-	ActuallyLoad();
+#ifdef _MULTITHREAD
+	}
 #endif
 
-	return c;
+	return GLSL_CUSTOM_SHADER_INDEX_TO_HANDLE(index);
 }
 
 void idGLSLShaderManager::ActuallyLoad(void)
 {
-	const shaderProgram_t *c;
+	unsigned int index = queueCurrentIndex;
+	const int num = customShaders.Num();
 
-	if(!queue.Num())
+	if(
+			// !queue.Num()
+			index >= num
+			)
 		return;
 
 	const bool B = shaderRequired;
 	UNNECESSARY_SHADER;
 
-	while(queue.Num())
+	while(
+			index < num
+			// queue.Num()
+			)
 	{
-		GLSLShaderProp &prop = queue[0];
-		c = Find(prop.name);
-		if(c && c->program > 0)
+		/*
+		index = queue[0];
+		queue.RemoveIndex(0); // always remove it
+
+		// it's not happened, using assert
+		if(index >= customShaders.Num())
 		{
-			queue.RemoveIndex(0);
+			common->Warning("[Harmattan]: GLSL shader manager::ActuallyLoad custom shader index '%d' over( >= %d ).", index, customShaders.Num());
+			continue;
+		}*/
+
+		GLSLShaderProp &prop = customShaders[index];
+		index++;
+
+		if(FindIndex(prop.name.c_str()) >= 0)
+		{
+			common->Warning("[Harmattan]: GLSL shader manager::ActuallyLoad custom shader '%s' has loaded.", prop.name.c_str());
+			continue;
+		}
+		if(prop.program)
+		{
+			common->Warning("[Harmattan]: GLSL shader manager::ActuallyLoad custom shader '%s' has handle.", prop.name.c_str());
 			continue;
 		}
 
-		common->Printf("[Harmattan]: GLSL shader manager::ActuallyLoad shader '%s'.\n", prop.name.c_str());
-		if(RB_GLSL_LoadShaderProgram(&prop))
-			Add(prop.program);
-		else
-			common->Warning("[Harmattan]: GLSL shader manager::ActuallyLoad shader '%s' error!", prop.name.c_str());
+		// create shader on heap
+		shaderProgram_t *shader = (shaderProgram_t *)malloc(sizeof(*shader));
+		memset(shader, 0, sizeof(*shader));
+		strncpy(shader->name, prop.name.c_str(), sizeof(shader->name));
+		shader->type = SHADER_CUSTOM;
+		prop.program = shader;
 
-		queue.RemoveIndex(0);
+		common->Printf("[Harmattan]: GLSL shader manager::ActuallyLoad shader '%s'.\n", prop.name.c_str());
+		if(RB_GLSL_LoadShaderProgramFromProp(&prop))
+		{
+			Add(shader);
+		}
+		else
+		{
+			memset(prop.program, 0, sizeof(*prop.program));
+			common->Warning("[Harmattan]: GLSL shader manager::ActuallyLoad shader '%s' error!", prop.name.c_str());
+		}
 	}
 	shaderRequired = B;
+	queueCurrentIndex = index;
 }
 
 idGLSLShaderManager::~idGLSLShaderManager()
 {
 	printf("[Harmattan]: GLSL shader manager destroying......\n");
-	while(queue.Num())
+	//queue.Clear();
+	queueCurrentIndex = customShaders.Num();
+	for(int i = 0; i < customShaders.Num(); i++)
 	{
-		GLSLShaderProp &prop = queue[0];
-		printf("[Harmattan]: GLSL shader manager::free unloaded custom shader '%s'.\n", prop.name.c_str());
-		delete prop.program;
-		queue.RemoveIndex(0);
+		GLSLShaderProp &prop = customShaders[i];
+		if(prop.program)
+		{
+			free(prop.program);
+			prop.program = NULL;
+		}
 	}
 	Clear();
 }
@@ -223,20 +381,13 @@ static idCVar	harm_r_shaderProgramDir("harm_r_shaderProgramDir", "", CVAR_SYSTEM
 static idCVar	harm_r_shaderProgramES3Dir("harm_r_shaderProgramES3Dir", "", CVAR_SYSTEM | CVAR_INIT | CVAR_SERVERINFO, "[Harmattan]: Special external OpenGLES3 GLSL shader program directory path(default is empty, means using `" _GL3PROGS "`).");
 #endif
 
-static void R_GetShaderSources(idList<GLSLShaderProp> &ret)
+static void RB_GLSL_GetShaderSources(idList<GLSLShaderProp> &ret)
 {
 #include "glsl_shader.h"
 #ifdef GL_ES_VERSION_3_0
 #define GLSL_SHADER_SOURCE(name, type, program, vs, fs, macros, macros3) GLSLShaderProp(name, type, program, USING_GLES3 ? ES3_##vs : vs, USING_GLES3 ? ES3_##fs : fs, USING_GLES3 ? macros3 : macros)
 #else
 #define GLSL_SHADER_SOURCE(name, type, program, vs, fs, macros, unused) GLSLShaderProp(name, type, program, vs, fs, macros)
-#endif
-#define GLSL2_SHADOW_MAPPING_2D_MACROS(type) r_useDepthTexture ? type ",_USING_DEPTH_TEXTURE" : (packFloat ? type ",_PACK_FLOAT" : type)
-#define GLSL2_SHADOW_MAPPING_CUBE_MACROS(type) r_useCubeDepthTexture ? type ",_USING_DEPTH_TEXTURE" : (packFloat ? type ",_PACK_FLOAT" : type)
-#ifdef _SHADOW_MAPPING
-	extern bool r_useDepthTexture;
-	extern bool r_useCubeDepthTexture;
-	const bool packFloat = harm_r_shadowMapDepthBuffer.GetInteger() == 3;
 #endif
 
 	ret.Clear();
@@ -263,20 +414,32 @@ static void R_GetShaderSources(idList<GLSLShaderProp> &ret)
 
 	// shadow mapping
 #ifdef _SHADOW_MAPPING
+#define GLSL2_SHADOW_MAPPING_2D_MACROS(type) r_useDepthTexture ? type ",_USING_DEPTH_TEXTURE" : (r_usePackColorAsDepth ? type ",_PACK_FLOAT" : type)
+#define GLSL2_SHADOW_MAPPING_CUBE_MACROS(type) r_useCubeDepthTexture ? type ",_USING_DEPTH_TEXTURE" : (r_usePackColorAsDepth ? type ",_PACK_FLOAT" : type)
+#define GLSL2_SHADOW_MAPPING_COLOR_MACROS(type) r_usePackColorAsDepth ? type ",_PACK_FLOAT" : type
+
+	// shadow volume
+	ret.Append(GLSL_SHADER_SOURCE("depth", SHADER_DEPTH, &depthShader, DEPTH_VERT, DEPTH_FRAG, "_USING_DEPTH_TEXTURE", ""));
+	// perforated surface
+	ret.Append(GLSL_SHADER_SOURCE("depthPerforated", SHADER_DEPTHPERFORATED, &depthPerforatedShader, DEPTH_PERFORATED_VERT, DEPTH_PERFORATED_FRAG, "_USING_DEPTH_TEXTURE", ""));
+#ifdef GL_ES_VERSION_3_0
+	if(!USING_GLES3 && (!r_useDepthTexture || !r_useCubeDepthTexture))
+#else
+	if(!r_useDepthTexture || !r_useCubeDepthTexture)
+#endif
+	{
+		ret.Append(GLSL_SHADER_SOURCE("depthColor", SHADER_DEPTHCOLOR, &depthShader_color, DEPTH_VERT, DEPTH_FRAG, GLSL2_SHADOW_MAPPING_COLOR_MACROS(""), ""));
+		ret.Append(GLSL_SHADER_SOURCE("depthPerforatedColor", SHADER_DEPTHPERFORATEDCOLOR, &depthPerforatedShader_color, DEPTH_PERFORATED_VERT, DEPTH_PERFORATED_FRAG, GLSL2_SHADOW_MAPPING_COLOR_MACROS(""), ""));
+	}
 	// point light
-	ret.Append(GLSL_SHADER_SOURCE("depthPointLight", SHADER_DEPTHPOINTLIGHT, &depthShader_pointLight, DEPTH_VERT, DEPTH_FRAG, GLSL2_SHADOW_MAPPING_CUBE_MACROS("_POINT_LIGHT"), "_POINT_LIGHT"));
 	ret.Append(GLSL_SHADER_SOURCE("interactionPointLightShadowMapping", SHADER_INTERACTIONPOINTLIGHT, &interactionShadowMappingShader_pointLight, INTERACTION_SHADOW_MAPPING_VERT, INTERACTION_SHADOW_MAPPING_FRAG, GLSL2_SHADOW_MAPPING_CUBE_MACROS("_POINT_LIGHT"), "_POINT_LIGHT"));
 	ret.Append(GLSL_SHADER_SOURCE("interactionBlinnphongPointLightShadowMapping", SHADER_INTERACTIONBLINNPHONGPOINTLIGHT, &interactionShadowMappingBlinnPhongShader_pointLight, INTERACTION_SHADOW_MAPPING_VERT, INTERACTION_SHADOW_MAPPING_FRAG, GLSL2_SHADOW_MAPPING_CUBE_MACROS("_POINT_LIGHT,BLINN_PHONG"), "_POINT_LIGHT,BLINN_PHONG"));
 	// parallel light
-	ret.Append(GLSL_SHADER_SOURCE("depthParallelLight", SHADER_DEPTHPARALLELLIGHT, &depthShader_parallelLight, DEPTH_VERT, DEPTH_FRAG, GLSL2_SHADOW_MAPPING_2D_MACROS("_PARALLEL_LIGHT"), "_PARALLEL_LIGHT"));
 	ret.Append(GLSL_SHADER_SOURCE("interactionParallelLightShadowMapping", SHADER_INTERACTIONPARALLELLIGHT, &interactionShadowMappingShader_parallelLight, INTERACTION_SHADOW_MAPPING_VERT, INTERACTION_SHADOW_MAPPING_FRAG, GLSL2_SHADOW_MAPPING_2D_MACROS("_PARALLEL_LIGHT"), "_PARALLEL_LIGHT"));
 	ret.Append(GLSL_SHADER_SOURCE("interactionBlinnphongParallelLightShadowMapping", SHADER_INTERACTIONBLINNPHONGPARALLELLIGHT, &interactionShadowMappingBlinnPhongShader_parallelLight, INTERACTION_SHADOW_MAPPING_VERT, INTERACTION_SHADOW_MAPPING_FRAG, GLSL2_SHADOW_MAPPING_2D_MACROS("_PARALLEL_LIGHT,BLINN_PHONG"), "_PARALLEL_LIGHT,BLINN_PHONG"));
 	// spot light
-	ret.Append(GLSL_SHADER_SOURCE("depthSpotLight", SHADER_DEPTHSPOTLIGHT, &depthShader_spotLight, DEPTH_VERT, DEPTH_FRAG, GLSL2_SHADOW_MAPPING_2D_MACROS("_SPOT_LIGHT"), "_SPOT_LIGHT"));
 	ret.Append(GLSL_SHADER_SOURCE("interactionSpotLightShadowMapping", SHADER_INTERACTIONSPOTLIGHT, &interactionShadowMappingShader_spotLight, INTERACTION_SHADOW_MAPPING_VERT, INTERACTION_SHADOW_MAPPING_FRAG, GLSL2_SHADOW_MAPPING_2D_MACROS("_SPOT_LIGHT"), "_SPOT_LIGHT"));
 	ret.Append(GLSL_SHADER_SOURCE("interactionBlinnphongSpotLightShadowMapping", SHADER_INTERACTIONBLINNPHONGSPOTLIGHT, &interactionShadowMappingBlinnPhongShader_spotLight, INTERACTION_SHADOW_MAPPING_VERT, INTERACTION_SHADOW_MAPPING_FRAG, GLSL2_SHADOW_MAPPING_2D_MACROS("_SPOT_LIGHT,BLINN_PHONG"), "_SPOT_LIGHT,BLINN_PHONG"));
-	// perforated surface
-	ret.Append(GLSL_SHADER_SOURCE("depthPerforated", SHADER_DEPTHPERFORATED, &depthPerforatedShader, DEPTH_PERFORATED_VERT, DEPTH_PERFORATED_FRAG, "", ""));
 #endif
 
 	// translucent stencil shadow
@@ -284,30 +447,6 @@ static void R_GetShaderSources(idList<GLSLShaderProp> &ret)
 	ret.Append(GLSL_SHADER_SOURCE("interactionTranslucent", SHADER_INTERACTIONTRANSLUCENT, &interactionTranslucentShader, INTERACTION_TRANSLUCENT_VERT, INTERACTION_TRANSLUCENT_FRAG, "", ""));
 	ret.Append(GLSL_SHADER_SOURCE("interactionBlinnphongTranslucent", SHADER_INTERACTIONBLINNPHONGTRANSLUCENT, &interactionBlinnPhongTranslucentShader, INTERACTION_TRANSLUCENT_VERT, INTERACTION_TRANSLUCENT_FRAG, "BLINN_PHONG", "BLINN_PHONG"));
 #endif
-}
-
-bool RB_GLSL_LoadShaderProgram(const GLSLShaderProp *prop)
-{
-	const char *vs;
-	const char *fs;
-	const char *macros;
-
-	vs = prop->default_vertex_shader_source.c_str();
-	fs = prop->default_fragment_shader_source.c_str();
-	macros = prop->macros.c_str();
-
-	if(RB_GLSL_LoadShaderProgram(
-			prop->name.c_str(),
-            prop->type,
-			prop->program,
-			vs,
-			fs,
-			prop->vertex_shader_source_file.c_str(),
-			prop->fragment_shader_source_file.c_str(),
-			macros
-	) < 0)
-		return false;
-	return true;
 }
 
 static bool RB_GLSL_CreateShaderProgram(shaderProgram_t *shaderProgram, const char *vert, const char *frag , const char *name);
@@ -661,29 +800,60 @@ static void RB_GLSL_GetUniformLocations(shaderProgram_t *shader)
 	GL_UseProgram(NULL);
 }
 
+static const GLSLShaderProp * RB_GLSL_FindShaderProp(const idList<GLSLShaderProp> &Props, int type)
+{
+	for(int i = 0; i <= SHADER_CUSTOM; i++)
+	{
+		const GLSLShaderProp &prop = Props[i];
+		if(prop.type == type)
+			return &prop;
+	}
+#ifdef _SHADOW_MAPPING
+    if(type == SHADER_DEPTHCOLOR || type == SHADER_DEPTHPERFORATEDCOLOR)
+    {
+#ifdef GL_ES_VERSION_3_0
+        if(!USING_GLES3 && (!r_useDepthTexture || !r_useCubeDepthTexture))
+#else
+        if(!r_useDepthTexture || !r_useCubeDepthTexture)
+#endif
+            common->Error("Shader prop '%d' not found!\n", type);
+    }
+    else
+#endif
+    common->Error("Shader prop '%d' not found!\n", type);
+	return NULL;
+}
+
 static bool RB_GLSL_InitShaders(void)
 {
 	idList<GLSLShaderProp> Props;
-	R_GetShaderSources(Props);
+	RB_GLSL_GetShaderSources(Props);
 
 	// base shader
 	REQUIRE_SHADER;
 	for(int i = SHADER_BASE_BEGIN; i <= SHADER_BASE_END; i++)
 	{
-		const GLSLShaderProp &prop = Props[i];
-		if(!RB_GLSL_LoadShaderProgram(&prop))
+		const GLSLShaderProp *prop = RB_GLSL_FindShaderProp(Props, i);
+        if(!prop)
+            continue;
+		if(!RB_GLSL_LoadShaderProgramFromProp(prop))
 			return false;
+		shaderManager->Add(prop->program);
 	}
 
 	// newStage shader
 	UNNECESSARY_SHADER;
 	for(int i = SHADER_NEW_STAGE_BEGIN; i <= SHADER_NEW_STAGE_END; i++)
 	{
-		const GLSLShaderProp &prop = Props[i];
-		if(!RB_GLSL_LoadShaderProgram(&prop))
+		const GLSLShaderProp *prop = RB_GLSL_FindShaderProp(Props, i);
+        if(!prop)
+            continue;
+		if(!RB_GLSL_LoadShaderProgramFromProp(prop))
 		{
 			common->Printf("[Harmattan]: newStage %d not support!\n", i);
+            continue;
 		}
+		shaderManager->Add(prop->program);
 	}
 	REQUIRE_SHADER;
 
@@ -691,8 +861,10 @@ static bool RB_GLSL_InitShaders(void)
 	UNNECESSARY_SHADER;
 	for(int i = SHADER_SHADOW_MAPPING_BEGIN; i <= SHADER_SHADOW_MAPPING_END; i++)
 	{
-		const GLSLShaderProp &prop = Props[i];
-		if(!RB_GLSL_LoadShaderProgram(&prop))
+		const GLSLShaderProp *prop = RB_GLSL_FindShaderProp(Props, i);
+        if(!prop)
+            continue;
+		if(!RB_GLSL_LoadShaderProgramFromProp(prop))
 		{
 			common->Printf("[Harmattan]: not support shadow mapping!\n");
 			if(r_useShadowMapping.GetBool())
@@ -702,6 +874,7 @@ static bool RB_GLSL_InitShaders(void)
 			r_useShadowMapping.SetReadonly();
 			break;
 		}
+		shaderManager->Add(prop->program);
 	}
 	REQUIRE_SHADER;
 #endif
@@ -710,8 +883,10 @@ static bool RB_GLSL_InitShaders(void)
 	UNNECESSARY_SHADER;
 	for(int i = SHADER_STENCIL_SHADOW_BEGIN; i <= SHADER_STENCIL_SHADOW_END; i++)
 	{
-		const GLSLShaderProp &prop = Props[i];
-		if(!RB_GLSL_LoadShaderProgram(&prop))
+		const GLSLShaderProp *prop = RB_GLSL_FindShaderProp(Props, i);
+        if(!prop)
+            continue;
+		if(!RB_GLSL_LoadShaderProgramFromProp(prop))
 		{
 			common->Printf("[Harmattan]: translucent stencil shadow shader error!\n");
 			if(harm_r_stencilShadowTranslucent.GetBool())
@@ -721,6 +896,7 @@ static bool RB_GLSL_InitShaders(void)
 			harm_r_stencilShadowTranslucent.SetReadonly();
 			break;
 		}
+		shaderManager->Add(prop->program);
 	}
 	REQUIRE_SHADER;
 #endif
@@ -877,8 +1053,6 @@ bool RB_GLSL_CreateShaderProgram(shaderProgram_t *shaderProgram, const char *ver
 	strncpy(shaderProgram->name, name, sizeof(shaderProgram->name));
     shaderProgram->type = type;
 
-	shaderManager->Add(shaderProgram);
-
 	return true;
 }
 
@@ -921,7 +1095,6 @@ int RB_GLSL_LoadShaderProgram(
 		common->Printf("[Harmattan]: Load external shader program success!\n\n");
 		strncpy(program->name, name, sizeof(program->name));
         program->type = type;
-		shaderManager->Add(program);
 		return 1;
 	}
 }
@@ -935,7 +1108,7 @@ void R_ExportGLSLShaderSource_f(const idCmdArgs &args)
 	idStr path = NULL;
 	idStrList target;
 
-	R_GetShaderSources(Props);
+	RB_GLSL_GetShaderSources(Props);
 	if(args.Argc() > 1)
 		path = args.Argv(args.Argc() - 1);
 
@@ -952,7 +1125,7 @@ void R_ExportGLSLShaderSource_f(const idCmdArgs &args)
 
 	common->Printf("[Harmattan]: Save GLSL shader source to '%s'\n", path.c_str());
 
-	for(int i = 0; i < SHADER_CUSTOM; i++)
+	for(int i = 0; i < Props.Num(); i++)
 	{
 		const GLSLShaderProp &prop = Props[i];
 		if(target.Num() > 0 && target.FindIndex(prop.name) < 0)
@@ -973,6 +1146,55 @@ void R_ExportGLSLShaderSource_f(const idCmdArgs &args)
 		p.Append(prop.fragment_shader_source_file);
 		fileSystem->WriteFile(p.c_str(), fsSrc.c_str(), fsSrc.Length(), "fs_basepath");
 		common->Printf("GLSL fragment shader: '%s'\n", p.c_str());
+	}
+}
+
+static void R_PrintGLSLShaderSource(const idStr &source)
+{
+    int i = 0;
+    while(i < source.Length())
+    {
+        idStr str = source.Mid(i, 1024);
+	    common->Printf(str.c_str());
+	    i += str.Length();
+	}
+}
+
+void R_PrintGLSLShaderSource_f(const idCmdArgs &args)
+{
+	const char *vs;
+	const char *fs;
+	const char *macros;
+	idList<GLSLShaderProp> Props;
+	idStrList target;
+
+	RB_GLSL_GetShaderSources(Props);
+
+	for(int i = 1; i < args.Argc(); i++)
+	{
+		target.Append(args.Argv(i));
+	}
+
+	for(int i = 0; i < Props.Num(); i++)
+	{
+		const GLSLShaderProp &prop = Props[i];
+		if(target.Num() > 0 && target.FindIndex(prop.name) < 0)
+			continue;
+
+		vs = prop.default_vertex_shader_source.c_str();
+		fs = prop.default_fragment_shader_source.c_str();
+		macros = prop.macros.c_str();
+		common->Printf("GLSL shader: %s\n\n", prop.name.c_str());
+
+		idStr vsSrc = RB_GLSL_ExpandMacros(vs, macros);
+		common->Printf("  Vertex shader: \n");
+		R_PrintGLSLShaderSource(vsSrc);
+		common->Printf("\n");
+
+		idStr fsSrc = RB_GLSL_ExpandMacros(fs, macros);
+		common->Printf("  Fragment shader: \n");
+		R_PrintGLSLShaderSource(fsSrc);
+		common->Printf("\n");
 	}
 }
 

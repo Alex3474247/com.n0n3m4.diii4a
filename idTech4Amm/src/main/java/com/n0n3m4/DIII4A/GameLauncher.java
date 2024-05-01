@@ -100,6 +100,7 @@ import com.n0n3m4.q3e.Q3EPreference;
 import com.n0n3m4.q3e.Q3EUiConfig;
 import com.n0n3m4.q3e.Q3EUtils;
 import com.n0n3m4.q3e.gl.Q3EGLConstants;
+import com.n0n3m4.q3e.karin.KStr;
 import com.n0n3m4.q3e.karin.KUncaughtExceptionHandler;
 import com.n0n3m4.q3e.karin.KidTech4Command;
 import com.n0n3m4.q3e.onscreen.Q3EControls;
@@ -110,6 +111,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @SuppressLint({"ApplySharedPref", "CommitPrefEdits"})
 public class GameLauncher extends Activity
@@ -146,6 +148,7 @@ public class GameLauncher extends Activity
     public static final String default_gamedata = Environment.getExternalStorageDirectory() + "/diii4a";
     private final ViewHolder V = new ViewHolder();
     private boolean m_cmdUpdateLock = false;
+	private String m_edtPathFocused = "";
     private final CompoundButton.OnCheckedChangeListener m_checkboxChangeListener = new CompoundButton.OnCheckedChangeListener()
     {
         @Override
@@ -353,7 +356,7 @@ public class GameLauncher extends Activity
 						.putString(Q3EPreference.pref_harm_r_lightModel, value)
 						.commit();
 			}
-			else if (rgId == R.id.rg_fs_game || rgId == R.id.rg_fs_q4game || rgId == R.id.rg_fs_preygame || rgId == R.id.rg_fs_q2game || rgId == R.id.rg_fs_q3game || rgId == R.id.rg_fs_rtcwgame || rgId == R.id.rg_fs_tdmgame)
+			else if (rgId == R.id.rg_fs_game || rgId == R.id.rg_fs_q4game || rgId == R.id.rg_fs_preygame || rgId == R.id.rg_fs_q2game || rgId == R.id.rg_fs_q3game || rgId == R.id.rg_fs_rtcwgame || rgId == R.id.rg_fs_tdmgame || rgId == R.id.rg_fs_q1game)
 			{
 				RadioButton checked = radioGroup.findViewById(id);
 				SetGameDLL((String)checked.getTag());
@@ -578,10 +581,11 @@ public class GameLauncher extends Activity
 		q3ei.defaults_table = Q3EControls.GetDefaultLayout(this, Q3EControls.CONST_DEFAULT_ON_SCREEN_BUTTON_FRIENDLY_EDGE, Q3EControls.CONST_DEFAULT_ON_SCREEN_BUTTON_SIZE_SCALE, Q3EControls.CONST_DEFAULT_ON_SCREEN_BUTTON_OPACITY, false);
     }
 
-    public void InitQ3E()
+    public void InitQ3E(String game)
     {
         // Q3EKeyCodes.InitD3Keycodes();
         Q3EInterface q3ei = new Q3EInterface();
+		q3ei.standalone = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Q3EPreference.GAME_STANDALONE_DIRECTORY, false);
 
         q3ei.InitD3();
 
@@ -594,6 +598,9 @@ public class GameLauncher extends Activity
         // Q3EInterface.DumpDefaultOnScreenConfig(q3ei.arg_table, q3ei.type_table);
 
 		q3ei.LoadTypeAndArgTablePreference(this);
+
+		if(null != game && !game.isEmpty())
+			q3ei.SetupGame(game);
 
         Q3EUtils.q3ei = q3ei;
     }
@@ -850,6 +857,7 @@ public class GameLauncher extends Activity
         V.rg_fs_game.setEnabled(!on);
         V.rg_fs_q4game.setEnabled(!on);
         V.rg_fs_preygame.setEnabled(!on);
+		V.rg_fs_q1game.setEnabled(!on);
 		V.rg_fs_q2game.setEnabled(!on);
 		V.rg_fs_q3game.setEnabled(!on);
 		V.rg_fs_rtcwgame.setEnabled(!on);
@@ -878,7 +886,8 @@ public class GameLauncher extends Activity
         if (null != actionBar)
             actionBar.setDisplayHomeAsUpEnabled(true);
 
-        InitQ3E();
+		String gameType = mPrefs.getString(Q3EPreference.pref_harm_game, Q3EGlobals.GAME_DOOM3);
+        InitQ3E(null); // gameType
         Q3EUtils.q3ei.joystick_release_range = mPrefs.getFloat(Q3EPreference.pref_harm_joystick_release_range, 0.0f);
         Q3EUtils.q3ei.joystick_unfixed = mPrefs.getBoolean(Q3EPreference.pref_harm_joystick_unfixed, false);
         Q3EUtils.q3ei.joystick_inner_dead_zone = mPrefs.getFloat(Q3EPreference.pref_harm_joystick_inner_dead_zone, 0.0f);
@@ -895,11 +904,27 @@ public class GameLauncher extends Activity
 
 		V.main_ad_layout.setVisibility(mPrefs.getBoolean(PreferenceKey.HIDE_AD_BAR, true) ? View.GONE : View.VISIBLE);
 
-        SetGame(mPrefs.getString(Q3EPreference.pref_harm_game, Q3EGlobals.GAME_DOOM3));
+        SetGame(gameType);
 
         V.edt_cmdline.setText(mPrefs.getString(Q3EUtils.q3ei.GetGameCommandPreferenceKey(), Q3EGlobals.GAME_EXECUABLE));
         V.edt_mouse.setText(mPrefs.getString(Q3EPreference.pref_eventdev, "/dev/input/event???"));
-        V.edt_path.setText(mPrefs.getString(Q3EPreference.pref_datapath, default_gamedata));
+		V.edt_path.setText(mPrefs.getString(Q3EPreference.pref_datapath, default_gamedata));
+		m_edtPathFocused = V.edt_path.getText().toString();
+		if(ContextUtility.InScopedStorage())
+		{
+			V.edt_path.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+				@Override
+				public void onFocusChange(View v, boolean hasFocus) {
+					String curPath = V.edt_path.getText().toString();
+					if(curPath.equals(m_edtPathFocused))
+						return;
+					if(!hasFocus)
+					{
+						OpenSuggestGameWorkingDirectory(curPath);
+					}
+				}
+			});
+		}
         V.hideonscr.setOnCheckedChangeListener(m_checkboxChangeListener);
         V.hideonscr.setChecked(mPrefs.getBoolean(Q3EPreference.pref_hideonscr, false));
         V.using_mouse.setChecked(mPrefs.getBoolean(Q3EPreference.pref_harm_using_mouse, false));
@@ -983,6 +1008,7 @@ public class GameLauncher extends Activity
         V.rg_fs_game.setOnCheckedChangeListener(m_groupCheckChangeListener);
 		V.rg_fs_q4game.setOnCheckedChangeListener(m_groupCheckChangeListener);
 		V.rg_fs_preygame.setOnCheckedChangeListener(m_groupCheckChangeListener);
+		V.rg_fs_q1game.setOnCheckedChangeListener(m_groupCheckChangeListener);
 		V.rg_fs_q2game.setOnCheckedChangeListener(m_groupCheckChangeListener);
 		V.rg_fs_q3game.setOnCheckedChangeListener(m_groupCheckChangeListener);
 		V.rg_fs_rtcwgame.setOnCheckedChangeListener(m_groupCheckChangeListener);
@@ -1195,13 +1221,6 @@ public class GameLauncher extends Activity
     {
         //k
         WritePreferences();
-		/*
-		if(Q3EUtils.q3ei.isQ4 && PreferenceManager.getDefaultSharedPreferences(this).getBoolean(PreferenceKey.OPEN_QUAKE4_HELPER, true))
-		{
-			OpenQuake4LevelDialog();
-			return;
-		}
-		*/
 
         if (null == m_startGameFunc)
             m_startGameFunc = new StartGameFunc(this, CONST_RESULT_CODE_REQUEST_EXTERNAL_STORAGE_FOR_START);
@@ -1263,7 +1282,7 @@ public class GameLauncher extends Activity
         if (game == null || game.isEmpty())
             game = Q3EUtils.q3ei.game_base;
         bundle.putString("game", game);
-        bundle.putString("path", V.edt_path.getText().toString());
+		bundle.putString("path", KStr.AppendPath(V.edt_path.getText().toString(), Q3EUtils.q3ei.subdatadir));
         bundle.putString("file", file);
         m_editConfigFileFunc.Start(bundle);
     }
@@ -1394,6 +1413,11 @@ public class GameLauncher extends Activity
 			ChangeGame(Q3EGlobals.GAME_PREY);
 			return true;
 		}
+		else if (itemId == R.id.main_menu_game_quake1)
+		{
+			ChangeGame(Q3EGlobals.GAME_QUAKE1);
+			return true;
+		}
 		else if (itemId == R.id.main_menu_game_quake2)
 		{
 			ChangeGame(Q3EGlobals.GAME_QUAKE2);
@@ -1507,6 +1531,7 @@ public class GameLauncher extends Activity
                 public void run()
                 {
                     V.edt_path.setText(m_chooseGameFolderFunc.GetResult());
+					OpenSuggestGameWorkingDirectory(V.edt_path.getText().toString());
                 }
             });
         Bundle bundle = new Bundle();
@@ -1952,7 +1977,7 @@ public class GameLauncher extends Activity
 
     private void SetGame(String game)
     {
-        Q3EUtils.q3ei.SetupGame(game); //k armv7-a only support neon now
+        Q3EUtils.q3ei.SetupGame(game);
         V.launcher_tab1_edit_doomconfig.setText(getString(R.string.edit_) + Q3EUtils.q3ei.config_name);
         if (null != V.main_menu_game)
             V.main_menu_game.setTitle(Q3EUtils.q3ei.game_name);
@@ -1963,6 +1988,7 @@ public class GameLauncher extends Activity
         boolean d3Visible = false;
         boolean q4Visible = false;
         boolean preyVisible = false;
+		boolean q1Visible = false;
 		boolean q2Visible = false;
 		boolean q3Visible = false;
 		boolean rtcwVisible = false;
@@ -1981,6 +2007,16 @@ public class GameLauncher extends Activity
         {
             q4Visible = true;
         }
+		else if (Q3EUtils.q3ei.isQ1)
+		{
+			q1Visible = true;
+			rendererVisible = false;
+			soundVisible = false;
+			otherVisible = false;
+			openglVisible = false;
+			modVisible = false;
+			dllVisible = false;
+		}
 		else if (Q3EUtils.q3ei.isQ2)
 		{
 			q2Visible = true;
@@ -2033,6 +2069,7 @@ public class GameLauncher extends Activity
         V.rg_fs_game.setVisibility(d3Visible ? View.VISIBLE : View.GONE);
         V.rg_fs_q4game.setVisibility(q4Visible ? View.VISIBLE : View.GONE);
         V.rg_fs_preygame.setVisibility(preyVisible ? View.VISIBLE : View.GONE);
+		V.rg_fs_q1game.setVisibility(q1Visible ? View.VISIBLE : View.GONE);
 		V.rg_fs_q2game.setVisibility(q2Visible ? View.VISIBLE : View.GONE);
 		V.rg_fs_q3game.setVisibility(q3Visible ? View.VISIBLE : View.GONE);
 		V.rg_fs_rtcwgame.setVisibility(rtcwVisible ? View.VISIBLE : View.GONE);
@@ -2045,6 +2082,14 @@ public class GameLauncher extends Activity
 		V.mod_section.setVisibility(modVisible ? View.VISIBLE : View.GONE);
 		V.dll_section.setVisibility(dllVisible ? View.VISIBLE : View.GONE);
 		V.auto_quick_load.setVisibility(q2Visible ? View.GONE : View.VISIBLE);
+
+		String subdir = Q3EUtils.q3ei.subdatadir;
+		if(null == subdir)
+			subdir = "";
+		else
+			subdir += "/";
+		V.launcher_fs_game_subdir.setText(Q3ELang.tr(this, R.string.sub_directory) + subdir);
+		V.launcher_fs_game_subdir.setVisibility(subdir.isEmpty() ? View.GONE : View.VISIBLE);
     }
 
     private void ChangeGame(String... games)
@@ -2100,68 +2145,6 @@ public class GameLauncher extends Activity
 			V.edt_cmdline.removeTextChangedListener(m_commandTextWatcher);
 		}
 	}
-
-    private void OpenQuake4LevelDialog()
-    {
-        final int[] Acts = {
-                5, 7, 6, 11, 2,
-        };
-        final String[] Act_Names = {
-                "I", "II", "III", "IV", "V",
-        };
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        String[] levels = new String[Q3EGlobals.QUAKE4_LEVELS.length];
-        int m = 0;
-        int n = 0;
-        for (int i = 0; i < Q3EGlobals.QUAKE4_LEVELS.length; i++)
-        {
-            if (n >= Acts[m])
-            {
-                n = 0;
-                m++;
-            }
-            n++;
-            levels[i] = String.format("%s%d.Act %s - %s(%s)", (i < 9 ? " " : ""), (i + 1), Act_Names[m], Q3EGlobals.QUAKE4_LEVELS[i], Q3EGlobals.QUAKE4_MAPS[i]);
-        }
-        final AlertDialog dialog = builder.setTitle(R.string.quake_4_level)
-                .setItems(levels, new DialogInterface.OnClickListener()
-                {
-                    public void onClick(DialogInterface dialog, int p)
-                    {
-                        GameLauncher.this.RemoveParam_temp("loadGame");
-                        GameLauncher.this.SetParam_temp("map", "game/" + Q3EGlobals.QUAKE4_MAPS[p]);
-                        finish();
-                        startActivity(new Intent(GameLauncher.this, Q3EMain.class));
-                    }
-                })
-                .setPositiveButton(R.string.start, new DialogInterface.OnClickListener()
-                {
-                    public void onClick(DialogInterface dialog, int p)
-                    {
-                        finish();
-                        startActivity(new Intent(GameLauncher.this, Q3EMain.class));
-                    }
-                })
-                .setNegativeButton(R.string.cancel, null)
-                .setNeutralButton(R.string.extract_resource, null)
-                .create();
-        dialog.setOnShowListener(new DialogInterface.OnShowListener()
-        {
-            @Override
-            public void onShow(DialogInterface d)
-            {
-                dialog.getButton(DialogInterface.BUTTON_NEUTRAL).setOnClickListener(new View.OnClickListener()
-                {
-                    @Override
-                    public void onClick(View v)
-                    {
-                        OpenResourceFileDialog();
-                    }
-                });
-            }
-        });
-        dialog.show();
-    }
 
     private void OpenResourceFileDialog()
     {
@@ -2269,6 +2252,8 @@ public class GameLauncher extends Activity
 			return V.rg_fs_q4game;
 		else if(Q3EUtils.q3ei.isPrey)
 			return V.rg_fs_preygame;
+		else if(Q3EUtils.q3ei.isQ1)
+			return V.rg_fs_q1game;
 		else if(Q3EUtils.q3ei.isQ2)
 			return V.rg_fs_q2game;
 		else if(Q3EUtils.q3ei.isQ3)
@@ -2370,7 +2355,7 @@ public class GameLauncher extends Activity
 		});
 		Bundle bundle = new Bundle();
 		bundle.putString("mod", preference.getString(preferenceKey, ""));
-		bundle.putString("path", preference.getString(Q3EPreference.pref_datapath, default_gamedata));
+		bundle.putString("path", KStr.AppendPath(preference.getString(Q3EPreference.pref_datapath, default_gamedata), Q3EUtils.q3ei.subdatadir));
 		m_chooseGameModFunc.Start(bundle);
 	}
 
@@ -2432,6 +2417,7 @@ public class GameLauncher extends Activity
 		groups.put(Q3EGlobals.GAME_DOOM3, V.rg_fs_game);
 		groups.put(Q3EGlobals.GAME_QUAKE4, V.rg_fs_q4game);
 		groups.put(Q3EGlobals.GAME_PREY, V.rg_fs_preygame);
+		groups.put(Q3EGlobals.GAME_QUAKE1, V.rg_fs_q1game);
 		groups.put(Q3EGlobals.GAME_QUAKE2, V.rg_fs_q2game);
 		groups.put(Q3EGlobals.GAME_QUAKE3, V.rg_fs_q3game);
 		groups.put(Q3EGlobals.GAME_RTCW, V.rg_fs_rtcwgame);
@@ -2440,6 +2426,15 @@ public class GameLauncher extends Activity
 
 		for (Game value : values)
 		{
+			String subdir = "";
+
+			if(Q3EUtils.q3ei.standalone)
+			{
+				subdir = Q3EInterface.GetGameStandaloneDirectory(value.type);
+				if(!subdir.isEmpty())
+					subdir += "/";
+			}
+
 			group = groups.get(value.type);
 			layoutParams = new RadioGroup.LayoutParams(RadioGroup.LayoutParams.WRAP_CONTENT, RadioGroup.LayoutParams.WRAP_CONTENT);
 			radio = new RadioButton(group.getContext());
@@ -2450,7 +2445,7 @@ public class GameLauncher extends Activity
 				name = (String)value.name;
 			else
 				name = "";
-			name += "(" + value.game + ")";
+			name += "(" + subdir + value.game + ")";
 			radio.setText(name);
 			radio.setTag(value.game);
 			group.addView(radio, layoutParams);
@@ -2465,6 +2460,16 @@ public class GameLauncher extends Activity
 	private void SetupTempCommandLine(boolean editable)
 	{
 		UIUtility.EditText__SetReadOnly(V.edt_cmdline_temp, !editable, InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+	}
+
+	public void OpenSuggestGameWorkingDirectory(String curPath)
+	{
+		if(ContextUtility.InScopedStorage() && !ContextUtility.IsInAppPrivateDirectory(GameLauncher.this, curPath))
+		{
+			String path = Q3EUtils.GetAppStoragePath(GameLauncher.this);
+			Toast.makeText(GameLauncher.this, Q3ELang.tr(this, R.string.suggest_game_woring_directory_tips, path), Toast.LENGTH_LONG).show();
+		}
+		m_edtPathFocused = curPath;
 	}
 
 
@@ -2544,11 +2549,13 @@ public class GameLauncher extends Activity
 		public LinearLayout opengl_section;
 		public LinearLayout mod_section;
 		public LinearLayout dll_section;
+		public RadioGroup rg_fs_q1game;
 		public RadioGroup rg_fs_q2game;
 		public RadioGroup rg_fs_q3game;
 		public RadioGroup rg_fs_rtcwgame;
 		public RadioGroup rg_fs_tdmgame;
 		public Spinner launcher_tab2_joystick_visible;
+		public TextView launcher_fs_game_subdir;
 
         public void Setup()
         {
@@ -2624,11 +2631,13 @@ public class GameLauncher extends Activity
 			opengl_section = findViewById(R.id.opengl_section);
 			dll_section = findViewById(R.id.dll_section);
 			mod_section = findViewById(R.id.mod_section);
+			rg_fs_q1game = findViewById(R.id.rg_fs_q1game);
 			rg_fs_q2game = findViewById(R.id.rg_fs_q2game);
 			rg_fs_q3game = findViewById(R.id.rg_fs_q3game);
 			rg_fs_rtcwgame = findViewById(R.id.rg_fs_rtcwgame);
 			rg_fs_tdmgame = findViewById(R.id.rg_fs_tdmgame);
 			launcher_tab2_joystick_visible = findViewById(R.id.launcher_tab2_joystick_visible);
+			launcher_fs_game_subdir = findViewById(R.id.launcher_fs_game_subdir);
         }
     }
 }

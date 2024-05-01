@@ -51,6 +51,10 @@ public final class Q3EPreference
     public static final String pref_harm_rtqw_game_lib = "q3e_harm_rtqw_game_lib"; //k
     public static final String pref_harm_rtqw_user_mod = "q3e_harm_rtqw_user_mod"; //k
     public static final String pref_params_rtqw = "q3e_params_rtqw"; //k
+    public static final String pref_harm_q1_fs_game = "q3e_harm_q1_fs_game"; //k
+    public static final String pref_harm_q1_game_lib = "q3e_harm_q1_game_lib"; //k
+    public static final String pref_harm_q1_user_mod = "q3e_harm_q1_user_mod"; //k
+    public static final String pref_params_q1 = "q3e_params_q1"; //k
     public static final String pref_harm_tdm_fs_game = "q3e_harm_tdm_fs_game"; //k
     public static final String pref_harm_tdm_game_lib = "q3e_harm_tdm_game_lib"; //k
     public static final String pref_harm_tdm_user_mod = "q3e_harm_tdm_user_mod"; //k
@@ -94,7 +98,7 @@ public final class Q3EPreference
     public static final String LANG = "harm_lang";
     public static final String MAP_BACK = "harm_map_back";
     public static final String ONSCREEN_BUTTON = "harm_onscreen_key"; // old = "harm_onscreen_button"
-    public static final String REOPEN_LAUNCHER = "harm_reopen_launcher";
+    public static final String GAME_STANDALONE_DIRECTORY = "harm_game_standalone_directory";
     public static final String LOAD_LOCAL_ENGINE_LIB = "harm_load_local_engine_lib";
 
     public static float GetFloatFromString(Context context, String name, float defVal)
