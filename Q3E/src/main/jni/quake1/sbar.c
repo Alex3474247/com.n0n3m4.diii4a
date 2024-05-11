@@ -106,6 +106,7 @@ cvar_t sbar_miniscoreboard_size = {CF_CLIENT | CF_ARCHIVE, "sbar_miniscoreboard_
 cvar_t sbar_flagstatus_right = {CF_CLIENT | CF_ARCHIVE, "sbar_flagstatus_right", "0", "moves Nexuiz flag status icons to the right"};
 cvar_t sbar_flagstatus_pos = {CF_CLIENT | CF_ARCHIVE, "sbar_flagstatus_pos", "115", "pixel position of the Nexuiz flag status icons, from the bottom"};
 cvar_t sbar_info_pos = {CF_CLIENT | CF_ARCHIVE, "sbar_info_pos", "0", "pixel position of the info strings (such as showfps), from the bottom"};
+cvar_t sbar_digits = {CF_CLIENT, "sbar_digits", "3", "sets the statusbar capacity for ammo, health and armor" };//alex3474247
 
 cvar_t cl_deathscoreboard = {CF_CLIENT, "cl_deathscoreboard", "1", "shows scoreboard (+showscores) while dead"};
 
@@ -390,6 +391,7 @@ void Sbar_Init (void)
 	Cvar_RegisterVariable(&sbar_gametime);
 	Cvar_RegisterVariable(&sbar_miniscoreboard_size);
 	Cvar_RegisterVariable(&sbar_info_pos);
+    Cvar_RegisterVariable(&sbar_digits);//alex3474247
 	Cvar_RegisterVariable(&cl_deathscoreboard);
 	// This name is used by QuakeSpasm-based engines and is read by the Alkaline 1.2 CSQC
 	Cvar_RegisterVirtual(&sbar_alpha_bg, "scr_sbaralpha");
@@ -461,7 +463,7 @@ static void Sbar_DrawString (int x, int y, char *str)
 Sbar_DrawNum
 =============
 */
-static void Sbar_DrawNum (int x, int y, int num, int digits, int color)
+/*static void Sbar_DrawNum (int x, int y, int num, int digits, int color)
 {
 	char str[32], *ptr;
 	int l, frame;
@@ -485,8 +487,47 @@ static void Sbar_DrawNum (int x, int y, int num, int digits, int color)
 
 		ptr++;
 	}
-}
+}*/
+static void Sbar_DrawNum (int x, int y, int num, int digits, int color)
+{
+	char str[32], *ptr;
+	int l, frame;
 
+	l = dpsnprintf(str, sizeof(str), "%i", num);
+	ptr = str;
+	if (l > digits)
+		ptr += (l-digits);
+	if (l < digits)
+		if (sbar_digits.integer <= 3)
+		{
+			x += (digits - l) * 24;
+		}
+		else
+		{
+			x += (digits - l) * (24 - (digits - 3) * 4);
+		}
+
+	while (*ptr)
+	{
+		if (*ptr == '-')
+			frame = STAT_MINUS;
+		else
+			frame = *ptr -'0';
+
+		Sbar_DrawPic (x, y, sb_nums[color][frame]);
+		
+		if (sbar_digits.integer <= 3)
+		{
+			x += 24;
+		}
+		else
+		{
+			x += (24 - (digits - 3) * 4);
+		}
+
+		ptr++;
+	}
+}
 /*
 =============
 Sbar_DrawXNum
@@ -1703,7 +1744,15 @@ void Sbar_Draw (void)
 					{
 						if (gamemode == GAME_ROGUE)
 						{
-							Sbar_DrawNum (24, 0, cl.stats[STAT_ARMOR], 3, cl.stats[STAT_ARMOR] <= 25);
+							//Sbar_DrawNum (24, 0, cl.stats[STAT_ARMOR], 3, cl.stats[STAT_ARMOR] <= 25);
+                            if (sbar_digits.integer != 3)
+							{
+								Sbar_DrawNum(24, 0, cl.stats[STAT_ARMOR], sbar_digits.integer, cl.stats[STAT_ARMOR] <= 25);
+							}
+							else
+							{
+								Sbar_DrawNum(24, 0, cl.stats[STAT_ARMOR], 3, cl.stats[STAT_ARMOR] <= 25);
+							}
 							if (cl.stats[STAT_ITEMS] & RIT_ARMOR3)
 								Sbar_DrawPic (0, 0, sb_armor[2]);
 							else if (cl.stats[STAT_ITEMS] & RIT_ARMOR2)
@@ -1713,7 +1762,15 @@ void Sbar_Draw (void)
 						}
 						else
 						{
-							Sbar_DrawNum (24, 0, cl.stats[STAT_ARMOR], 3, cl.stats[STAT_ARMOR] <= 25);
+							//Sbar_DrawNum (24, 0, cl.stats[STAT_ARMOR], 3, cl.stats[STAT_ARMOR] <= 25);
+                            if (sbar_digits.integer != 3)
+							{
+								Sbar_DrawNum(24, 0, cl.stats[STAT_ARMOR], sbar_digits.integer, cl.stats[STAT_ARMOR] <= 25);
+							}
+							else
+							{
+								Sbar_DrawNum(24, 0, cl.stats[STAT_ARMOR], 3, cl.stats[STAT_ARMOR] <= 25);
+							}
 							if (cl.stats[STAT_ITEMS] & IT_ARMOR3)
 								Sbar_DrawPic (0, 0, sb_armor[2]);
 							else if (cl.stats[STAT_ITEMS] & IT_ARMOR2)
@@ -1728,7 +1785,15 @@ void Sbar_Draw (void)
 				Sbar_DrawFace ();
 
 				// health
-				Sbar_DrawNum (136, 0, cl.stats[STAT_HEALTH], 3, cl.stats[STAT_HEALTH] <= 25);
+				//Sbar_DrawNum (136, 0, cl.stats[STAT_HEALTH], 3, cl.stats[STAT_HEALTH] <= 25);
+				if (sbar_digits.integer != 3)
+				{
+					Sbar_DrawNum(136, 0, cl.stats[STAT_HEALTH], sbar_digits.integer, cl.stats[STAT_HEALTH] <= 25);
+				}
+				else
+				{
+					Sbar_DrawNum(136, 0, cl.stats[STAT_HEALTH], 3, cl.stats[STAT_HEALTH] <= 25);
+				}
 
 				// ammo icon
 				if (gamemode == GAME_ROGUE)
@@ -1760,7 +1825,15 @@ void Sbar_Draw (void)
 						Sbar_DrawPic (224, 0, sb_ammo[3]);
 				}
 
-				Sbar_DrawNum (248, 0, cl.stats[STAT_AMMO], 3, cl.stats[STAT_AMMO] <= 10);
+				//Sbar_DrawNum (248, 0, cl.stats[STAT_AMMO], 3, cl.stats[STAT_AMMO] <= 10);
+            	if (sbar_digits.integer != 3)
+				{
+					Sbar_DrawNum(239, 0, cl.stats[STAT_AMMO], sbar_digits.integer, cl.stats[STAT_AMMO] <= 10);
+				}
+				else
+				{
+					Sbar_DrawNum(248, 0, cl.stats[STAT_AMMO], 3, cl.stats[STAT_AMMO] <= 10);
+				}
 
 				// LadyHavoc: changed to draw the deathmatch overlays in any multiplayer mode
 				if ((!cl.islocalgame || cl.gametype != GAME_COOP))
