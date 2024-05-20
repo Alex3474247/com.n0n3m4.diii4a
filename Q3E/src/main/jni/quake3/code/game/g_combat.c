@@ -914,7 +914,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	}
 
 	// check for completely getting out of the damage
-	if ( !(dflags & DAMAGE_NO_PROTECTION) ) {
+	//if ( !(dflags & DAMAGE_NO_PROTECTION) ) {
 
 		// if TF_NO_FRIENDLY_FIRE is set, don't do damage to the target
 		// if the attacker was on the same team
@@ -942,7 +942,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		if ( targ->flags & FL_GODMODE ) {
 			return;
 		}
-	}
+	//}
 
 	// battlesuit protects from all radius damage (but takes knockback)
 	// and protects 50% against all damage

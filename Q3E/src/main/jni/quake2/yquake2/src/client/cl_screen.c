@@ -1278,6 +1278,10 @@ SCR_ExecuteLayoutString(char *s)
 
 			width = 3;
 			value = cl.frame.playerstate.stats[STAT_HEALTH];
+            if (value != 0)
+            {
+                width = floor(log10(abs(value)))+1;
+            }
 
 			if (value > 25)
 			{
@@ -1297,7 +1301,7 @@ SCR_ExecuteLayoutString(char *s)
 				Draw_PicScaled(x, y, "field_3", scale);
 			}
 
-			SCR_DrawFieldScaled(x, y, color, width, value, scale);
+			SCR_DrawFieldScaled(x-16*(width-3), y, color, width, value, scale);
 			continue;
 		}
 
@@ -1308,6 +1312,10 @@ SCR_ExecuteLayoutString(char *s)
 
 			width = 3;
 			value = cl.frame.playerstate.stats[STAT_AMMO];
+            if (value != 0)
+            {
+                width = floor(log10(abs(value)))+1;
+            }
 
 			if (value > 5)
 			{
@@ -1327,7 +1335,8 @@ SCR_ExecuteLayoutString(char *s)
 				Draw_PicScaled(x, y, "field_3", scale);
 			}
 
-			SCR_DrawFieldScaled(x, y, color, width, value, scale);
+			SCR_DrawFieldScaled(x-16*(width-3), y, color, width, value, scale);
+            
 			continue;
 		}
 
@@ -1338,6 +1347,10 @@ SCR_ExecuteLayoutString(char *s)
 
 			width = 3;
 			value = cl.frame.playerstate.stats[STAT_ARMOR];
+            if (value != 0)
+            {
+                width = floor(log10(abs(value)))+1;
+            }
 
 			if (value < 1)
 			{
@@ -1351,7 +1364,7 @@ SCR_ExecuteLayoutString(char *s)
 				Draw_PicScaled(x, y, "field_3", scale);
 			}
 
-			SCR_DrawFieldScaled(x, y, color, width, value, scale);
+			SCR_DrawFieldScaled(x-16*(width-3), y, color, width, value, scale);
 			continue;
 		}
 

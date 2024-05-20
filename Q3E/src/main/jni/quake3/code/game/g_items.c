@@ -209,9 +209,9 @@ int Pickup_Holdable( gentity_t *ent, gentity_t *other ) {
 void Add_Ammo (gentity_t *ent, int weapon, int count)
 {
 	ent->client->ps.ammo[weapon] += count;
-	if ( ent->client->ps.ammo[weapon] > 200 ) {
+	/*if ( ent->client->ps.ammo[weapon] > 200 ) {
 		ent->client->ps.ammo[weapon] = 200;
-	}
+	}*/
 }
 
 int Pickup_Ammo (gentity_t *ent, gentity_t *other)
@@ -300,9 +300,9 @@ int Pickup_Health (gentity_t *ent, gentity_t *other) {
 
 	other->health += quantity;
 
-	if (other->health > max ) {
+	/*if (other->health > max ) {
 		other->health = max;
-	}
+	}*/
 	other->client->ps.stats[STAT_HEALTH] = other->health;
 
 	if ( ent->item->quantity == 100 ) {		// mega health respawns slow
@@ -327,14 +327,14 @@ int Pickup_Armor( gentity_t *ent, gentity_t *other ) {
 		upperBound = other->client->ps.stats[STAT_MAX_HEALTH] * 2;
 	}
 
-	if ( other->client->ps.stats[STAT_ARMOR] > upperBound ) {
+	/*if ( other->client->ps.stats[STAT_ARMOR] > upperBound ) {
 		other->client->ps.stats[STAT_ARMOR] = upperBound;
-	}
+	}*/
 #else
 	other->client->ps.stats[STAT_ARMOR] += ent->item->quantity;
-	if ( other->client->ps.stats[STAT_ARMOR] > other->client->ps.stats[STAT_MAX_HEALTH] * 2 ) {
+	/*if ( other->client->ps.stats[STAT_ARMOR] > other->client->ps.stats[STAT_MAX_HEALTH] * 2 ) {
 		other->client->ps.stats[STAT_ARMOR] = other->client->ps.stats[STAT_MAX_HEALTH] * 2;
-	}
+	}*/
 #endif
 
 	return RESPAWN_ARMOR;

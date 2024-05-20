@@ -592,7 +592,7 @@ T_Damage(edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	save = 0;
 
 	/* check for godmode */
-	if ((targ->flags & FL_GODMODE) && !(dflags & DAMAGE_NO_PROTECTION))
+	if ((targ->flags & FL_GODMODE))//&& !(dflags & DAMAGE_NO_PROTECTION))
 	{
 		take = 0;
 		save = damage;

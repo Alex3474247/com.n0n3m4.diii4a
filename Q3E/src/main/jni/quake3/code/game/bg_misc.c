@@ -1053,9 +1053,9 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		return qtrue;	// weapons are always picked up
 
 	case IT_AMMO:
-		if ( ps->ammo[ item->giTag ] >= 200 ) {
+		/*if ( ps->ammo[ item->giTag ] >= 200 ) {
 			return qfalse;		// can't hold any more
-		}
+		}*/
 		return qtrue;
 
 	case IT_ARMOR:
@@ -1072,13 +1072,13 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 			upperBound = ps->stats[STAT_MAX_HEALTH] * 2;
 		}
 
-		if ( ps->stats[STAT_ARMOR] >= upperBound ) {
+		/*if ( ps->stats[STAT_ARMOR] >= upperBound ) {
 			return qfalse;
-		}
+		}*/
 #else
-		if ( ps->stats[STAT_ARMOR] >= ps->stats[STAT_MAX_HEALTH] * 2 ) {
+		/*if ( ps->stats[STAT_ARMOR] >= ps->stats[STAT_MAX_HEALTH] * 2 ) {
 			return qfalse;
-		}
+		}*/
 #endif
 		return qtrue;
 
@@ -1091,15 +1091,15 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		else
 #endif
 		if ( item->quantity == 5 || item->quantity == 100 ) {
-			if ( ps->stats[STAT_HEALTH] >= ps->stats[STAT_MAX_HEALTH] * 2 ) {
+			/*if ( ps->stats[STAT_HEALTH] >= ps->stats[STAT_MAX_HEALTH] * 2 ) {
 				return qfalse;
-			}
+			}*/
 			return qtrue;
 		}
 
-		if ( ps->stats[STAT_HEALTH] >= ps->stats[STAT_MAX_HEALTH] ) {
+		/*if ( ps->stats[STAT_HEALTH] >= ps->stats[STAT_MAX_HEALTH] ) {
 			return qfalse;
-		}
+		}*/
 		return qtrue;
 
 	case IT_POWERUP:
