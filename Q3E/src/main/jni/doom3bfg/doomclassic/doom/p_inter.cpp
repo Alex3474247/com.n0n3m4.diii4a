@@ -88,8 +88,8 @@ P_GiveAmmo
 	if (ammo < 0 || ammo > NUMAMMO)
 		I_Error ("P_GiveAmmo: bad type %i", ammo);
 
-	if ( player->ammo[ammo] == player->maxammo[ammo]  )
-		return false;
+	/*if ( player->ammo[ammo] == player->maxammo[ammo]  )
+		return false;*/
 
 	if (num)
 		num *= clipammo[ammo];
@@ -108,8 +108,8 @@ P_GiveAmmo
 	oldammo = player->ammo[ammo];
 	player->ammo[ammo] += num;
 
-	if (player->ammo[ammo] > player->maxammo[ammo])
-		player->ammo[ammo] = player->maxammo[ammo];
+	/*if (player->ammo[ammo] > player->maxammo[ammo])
+		player->ammo[ammo] = player->maxammo[ammo];*/
 
 	// If non zero ammo, 
 	// don't change up weapons,
@@ -234,12 +234,12 @@ P_GiveBody
 ( player_t*	player,
  int		num )
 {
-	if (player->health >= MAXHEALTH)
-		return false;
+	/*if (player->health >= MAXHEALTH)
+		return false;*/
 
 	player->health += num;
-	if (player->health > MAXHEALTH)
-		player->health = MAXHEALTH;
+	/*if (player->health > MAXHEALTH)
+		player->health = MAXHEALTH;*/
 	player->mo->health = player->health;
 
 	return true;
@@ -260,11 +260,11 @@ P_GiveArmor
 	int		hits;
 
 	hits = armortype*100;
-	if (player->armorpoints >= hits)
+	/*if (player->armorpoints >= hits)
 		return false;	// don't pick up
-
+*/
 	player->armortype = armortype;
-	player->armorpoints = hits;
+	player->armorpoints += hits;
 
 	return true;
 }
@@ -399,16 +399,16 @@ P_TouchSpecialThing
 		// bonus items
 	case SPR_BON1:
 		player->health++;		// can go over 100%
-		if (player->health > 200)
-			player->health = 200;
+		/*if (player->health > 200)
+			player->health = 200;*/
 		player->mo->health = player->health;
 		player->message = GOTHTHBONUS;
 		break;
 
 	case SPR_BON2:
 		player->armorpoints++;		// can go over 100%
-		if (player->armorpoints > 200)
-			player->armorpoints = 200;
+		/*if (player->armorpoints > 200)
+			player->armorpoints = 200;*/
 		if (!player->armortype)
 			player->armortype = 1;
 		player->message = GOTARMBONUS;
@@ -416,8 +416,8 @@ P_TouchSpecialThing
 
 	case SPR_SOUL:
 		player->health += 100;
-		if (player->health > 200)
-			player->health = 200;
+		/*if (player->health > 200)
+			player->health = 200;*/
 		player->mo->health = player->health;
 		player->message = GOTSUPER;
 		sound = sfx_getpow;
@@ -426,7 +426,7 @@ P_TouchSpecialThing
 	case SPR_MEGA:
 		if (::g->gamemode != commercial)
 			return;
-		player->health = 200;
+		player->health += 200;
 		player->mo->health = player->health;
 		P_GiveArmor (player,2);
 		player->message = GOTMSPHERE;
