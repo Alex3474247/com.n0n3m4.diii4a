@@ -1301,7 +1301,7 @@ SCR_ExecuteLayoutString(char *s)
 				Draw_PicScaled(x, y, "field_3", scale);
 			}
 
-			SCR_DrawFieldScaled(x-16*(width-3), y, color, width, value, scale);
+			SCR_DrawFieldScaled(x-16*scale*(width-3), y, color, width, value, scale);
 			continue;
 		}
 
@@ -1335,7 +1335,7 @@ SCR_ExecuteLayoutString(char *s)
 				Draw_PicScaled(x, y, "field_3", scale);
 			}
 
-			SCR_DrawFieldScaled(x-16*(width-3), y, color, width, value, scale);
+			SCR_DrawFieldScaled(x-16*scale*(width-3), y, color, width, value, scale);
             
 			continue;
 		}
@@ -1364,7 +1364,7 @@ SCR_ExecuteLayoutString(char *s)
 				Draw_PicScaled(x, y, "field_3", scale);
 			}
 
-			SCR_DrawFieldScaled(x-16*(width-3), y, color, width, value, scale);
+			SCR_DrawFieldScaled(x-16*scale*(width-3), y, color, width, value, scale);
 			continue;
 		}
 

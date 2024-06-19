@@ -433,10 +433,10 @@ ExitLevel(void)
 			continue;
 		}
 
-		if (ent->health > ent->max_health)
+		/*if (ent->health > ent->max_health)
 		{
 			ent->health = ent->max_health;
-		}
+		}*/
 	}
 
 	debristhisframe = 0;
