@@ -92,19 +92,15 @@ import com.n0n3m4.q3e.Q3EAd;
 import com.n0n3m4.q3e.Q3EControlView;
 import com.n0n3m4.q3e.Q3EGlobals;
 import com.n0n3m4.q3e.Q3EInterface;
-import com.n0n3m4.q3e.Q3EJNI;
 import com.n0n3m4.q3e.Q3EKeyCodes;
 import com.n0n3m4.q3e.Q3ELang;
-import com.n0n3m4.q3e.Q3EMain;
 import com.n0n3m4.q3e.Q3EPreference;
 import com.n0n3m4.q3e.Q3EUiConfig;
 import com.n0n3m4.q3e.Q3EUtils;
 import com.n0n3m4.q3e.gl.Q3EGLConstants;
 import com.n0n3m4.q3e.karin.KStr;
 import com.n0n3m4.q3e.karin.KUncaughtExceptionHandler;
-import com.n0n3m4.q3e.karin.KidTech4Command;
 import com.n0n3m4.q3e.karin.KidTechCommand;
-import com.n0n3m4.q3e.karin.KidTechQuakeCommand;
 import com.n0n3m4.q3e.onscreen.Q3EControls;
 
 import java.io.File;
@@ -113,7 +109,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @SuppressLint({"ApplySharedPref", "CommitPrefEdits"})
 public class GameLauncher extends Activity
@@ -236,7 +231,7 @@ public class GameLauncher extends Activity
 				PreferenceManager.getDefaultSharedPreferences(GameLauncher.this).edit()
 						.putBoolean(Q3EPreference.pref_harm_auto_quick_load, isChecked)
 						.commit();
-				if (isChecked && (Q3EUtils.q3ei.IsIdTech4() || Q3EUtils.q3ei.IsIdTech3() || Q3EUtils.q3ei.IsTDMTech()))
+				if (isChecked && (Q3EUtils.q3ei.IsIdTech4() || Q3EUtils.q3ei.isRTCW))
 					SetParam_temp("loadGame", "QuickSave");
 				else
 					RemoveParam_temp("loadGame");
@@ -317,11 +312,25 @@ public class GameLauncher extends Activity
 			{
 				SetupTempCommandLine(isChecked);
 			}
-			else if (id == R.id.cb_translucentStencilShadow)
+			else if (id == R.id.cb_stencilShadowTranslucent)
 			{
 				setProp("harm_r_stencilShadowTranslucent", isChecked);
 				PreferenceManager.getDefaultSharedPreferences(GameLauncher.this).edit()
-						.putBoolean(Q3EPreference.pref_harm_s_useOpenAL, isChecked)
+						.putBoolean(Q3EPreference.pref_harm_r_stencilShadowTranslucent, isChecked)
+						.commit();
+			}
+			else if (id == R.id.cb_stencilShadowSoft)
+			{
+				setProp("harm_r_stencilShadowSoft", isChecked);
+				PreferenceManager.getDefaultSharedPreferences(GameLauncher.this).edit()
+						.putBoolean(Q3EPreference.pref_harm_r_stencilShadowSoft, isChecked)
+						.commit();
+			}
+			else if (id == R.id.cb_stencilShadowCombine)
+			{
+				setProp("harm_r_stencilShadowCombine", isChecked);
+				PreferenceManager.getDefaultSharedPreferences(GameLauncher.this).edit()
+						.putBoolean(Q3EPreference.pref_harm_r_stencilShadowCombine, isChecked)
 						.commit();
 			}
         }
@@ -335,7 +344,7 @@ public class GameLauncher extends Activity
 			int rgId = radioGroup.getId();
 			if (rgId == R.id.rg_scrres)
 			{
-				GameLauncher.this.UpdateCustomerResulotion(id == R.id.res_custom);
+				GameLauncher.this.UpdateCustomerResolution(id == R.id.res_custom);
 				GameLauncher.this.UpdateResolutionScaleScheme(id);
 				index = GetCheckboxIndex(radioGroup, id);
 				PreferenceManager.getDefaultSharedPreferences(GameLauncher.this).edit()
@@ -358,7 +367,7 @@ public class GameLauncher extends Activity
 						.putString(Q3EPreference.pref_harm_r_lightModel, value)
 						.commit();
 			}
-			else if (rgId == R.id.rg_fs_game || rgId == R.id.rg_fs_q4game || rgId == R.id.rg_fs_preygame || rgId == R.id.rg_fs_q2game || rgId == R.id.rg_fs_q3game || rgId == R.id.rg_fs_rtcwgame || rgId == R.id.rg_fs_tdmgame || rgId == R.id.rg_fs_q1game || rgId == R.id.rg_fs_d3bfggame)
+			else if (rgId == R.id.rg_fs_game || rgId == R.id.rg_fs_q4game || rgId == R.id.rg_fs_preygame || rgId == R.id.rg_fs_q2game || rgId == R.id.rg_fs_q3game || rgId == R.id.rg_fs_rtcwgame || rgId == R.id.rg_fs_tdmgame || rgId == R.id.rg_fs_q1game || rgId == R.id.rg_fs_d3bfggame || rgId == R.id.rg_fs_doomgame)
 			{
 				RadioButton checked = radioGroup.findViewById(id);
 				SetGameDLL((String)checked.getTag());
@@ -407,6 +416,14 @@ public class GameLauncher extends Activity
 				int glVersion = GetCheckboxIndex(radioGroup, id) == 1 ? Q3EGLConstants.OPENGLES30 : Q3EGLConstants.OPENGLES20;
 				PreferenceManager.getDefaultSharedPreferences(GameLauncher.this).edit()
 						.putInt(Q3EPreference.pref_harm_opengl, glVersion)
+						.commit();
+			}
+			else if (rgId == R.id.rg_r_autoAspectRatio)
+			{
+				index = GetCheckboxIndex(radioGroup, id);
+				SetProp("harm_r_autoAspectRatio", index);
+				PreferenceManager.getDefaultSharedPreferences(GameLauncher.this).edit()
+						.putInt(Q3EPreference.pref_harm_r_autoAspectRatio, index)
 						.commit();
 			}
         }
@@ -512,6 +529,34 @@ public class GameLauncher extends Activity
                     .commit();
         }
     }
+	private class SaveFloatPreferenceTextWatcher implements TextWatcher
+	{
+		private final String name;
+		private final String preference;
+		private final float defValue;
+
+        public SaveFloatPreferenceTextWatcher(String name, String preference, float defValue)
+		{
+			this.name = name;
+			this.preference = preference;
+			this.defValue = defValue;
+		}
+
+		public void onTextChanged(CharSequence s, int start, int before, int count)
+		{
+			SetProp(name, s);
+		}
+
+		public void beforeTextChanged(CharSequence s, int start, int count, int after)
+		{
+		}
+
+		public void afterTextChanged(Editable s)
+		{
+			String value = s.length() == 0 ? "" + defValue : s.toString();
+			Q3EPreference.SetFloatFromString(GameLauncher.this, preference, value, defValue);
+		}
+	}
 
 	private class CommandTextWatcher implements TextWatcher
 	{
@@ -536,7 +581,7 @@ public class GameLauncher extends Activity
 		{
 			boolean cond = enabled && V.edt_cmdline.isInputMethodTarget() && !IsCmdUpdateLocked();
 			if (cond)
-				updatehacktings();
+				updatehacktings(Q3EUtils.q3ei.IsIdTech4());
 		}
 
 		public void afterTextChanged(Editable s)
@@ -712,80 +757,104 @@ public class GameLauncher extends Activity
         SetProp(name, KidTechCommand.btostr(val));
     }
 
-    public void updatehacktings()
+    public void updatehacktings(boolean all)
     {
     	LockCmdUpdate();
-        //k
-        V.usedxt.setChecked(getProp("r_useDXT", false));
-        V.useetc1.setChecked(getProp("r_useETC1", false));
-        V.useetc1cache.setChecked(getProp("r_useETC1cache", false));
-        V.nolight.setChecked(getProp("r_noLight", false));
+		String str;
 
-        //k fill commandline
-        if (!IsProp("r_useDXT")) setProp("r_useDXT", false);
-        if (!IsProp("r_useETC1")) setProp("r_useETC1", false);
-        if (!IsProp("r_useETC1cache")) setProp("r_useETC1cache", false);
-        if (!IsProp("r_noLight")) setProp("r_noLight", false);
-
-        String str = GetProp("harm_r_clearVertexBuffer");
-        int index = Q3EUtils.parseInt_s(str, 2);
-        SelectCheckbox(V.r_harmclearvertexbuffer, index);
-        if (!IsProp("harm_r_clearVertexBuffer")) SetProp("harm_r_clearVertexBuffer", 2);
-
-        str = GetProp("harm_r_lightModel");
-        index = 0;
-        if (str != null)
-        {
-            if ("blinn_phong".equalsIgnoreCase(str))
-                index = 1;
-        }
-        SelectCheckbox(V.rg_harm_r_lightModel, index);
-        if (!IsProp("harm_r_lightModel")) SetProp("harm_r_lightModel", "phong");
-        str = GetProp("harm_r_specularExponent");
-        if (null != str)
-            V.edt_harm_r_specularExponent.setText(str);
-        if (!IsProp("harm_r_specularExponent")) SetProp("harm_r_specularExponent", "4.0");
-
-        str = GetProp("s_driver");
-        index = 0;
-        if (str != null)
-        {
-            if ("OpenSLES".equalsIgnoreCase(str))
-                index = 1;
-        }
-        SelectCheckbox(V.rg_s_driver, index);
-
-		str = GetProp("harm_r_maxFps");
-		if (null != str)
-			V.edt_harm_r_maxFps.setText(str);
-		if (!IsProp("harm_r_maxFps")) SetProp("harm_r_maxFps", "0");
-
-		str = GetProp("r_useShadowMapping");
-		index = 0;
-		if (str != null)
+		if(all) // only for idTech4 games
 		{
-			if ("1".equalsIgnoreCase(str))
-				index = 1;
-		}
-		SelectCheckbox(V.rg_harm_r_shadow, index);
-		if (!IsProp("r_useShadowMapping")) SetProp("r_useShadowMapping", "0");
+			//k
+			V.usedxt.setChecked(getProp("r_useDXT", false));
+			V.useetc1.setChecked(getProp("r_useETC1", false));
+			V.useetc1cache.setChecked(getProp("r_useETC1cache", false));
+			V.nolight.setChecked(getProp("r_noLight", false));
 
-		V.cb_translucentStencilShadow.setChecked(getProp("harm_r_stencilShadowTranslucent", false));
-		if (!IsProp("harm_r_stencilShadowTranslucent")) setProp("r_useDXT", false);
+			//k fill commandline
+			if (!IsProp("r_useDXT")) setProp("r_useDXT", false);
+			if (!IsProp("r_useETC1")) setProp("r_useETC1", false);
+			if (!IsProp("r_useETC1cache")) setProp("r_useETC1cache", false);
+			if (!IsProp("r_noLight")) setProp("r_noLight", false);
 
-		V.cb_s_useOpenAL.setChecked(getProp("s_useOpenAL", false));
-		if (!IsProp("s_useOpenAL"))
-		{
-			setProp("s_useOpenAL", false);
-			V.cb_s_useEAXReverb.setChecked(false);
-			setProp("s_useEAXReverb", false);
-		}
-		else
-		{
-			V.cb_s_useEAXReverb.setChecked(getProp("s_useEAXReverb", false));
-			if (!IsProp("s_useEAXReverb")) setProp("s_useEAXReverb", false);
+			str = GetProp("harm_r_clearVertexBuffer");
+			int index = Q3EUtils.parseInt_s(str, 2);
+			SelectCheckbox(V.r_harmclearvertexbuffer, index);
+			if (!IsProp("harm_r_clearVertexBuffer")) SetProp("harm_r_clearVertexBuffer", 2);
+
+			str = GetProp("harm_r_lightModel");
+			index = 0;
+			if (str != null)
+			{
+				if ("blinn_phong".equalsIgnoreCase(str))
+					index = 1;
+			}
+			SelectCheckbox(V.rg_harm_r_lightModel, index);
+			if (!IsProp("harm_r_lightModel")) SetProp("harm_r_lightModel", "phong");
+			str = GetProp("harm_r_specularExponent");
+			if (null != str)
+				V.edt_harm_r_specularExponent.setText(str);
+			if (!IsProp("harm_r_specularExponent")) SetProp("harm_r_specularExponent", "4.0");
+
+			str = GetProp("s_driver");
+			index = 0;
+			if (str != null)
+			{
+				if ("OpenSLES".equalsIgnoreCase(str))
+					index = 1;
+			}
+			SelectCheckbox(V.rg_s_driver, index);
+
+			str = GetProp("harm_r_maxFps");
+			if (null != str)
+				V.edt_harm_r_maxFps.setText(str);
+			if (!IsProp("harm_r_maxFps")) SetProp("harm_r_maxFps", "0");
+
+			str = GetProp("r_useShadowMapping");
+			index = 0;
+			if (str != null)
+			{
+				if ("1".equalsIgnoreCase(str))
+					index = 1;
+			}
+			SelectCheckbox(V.rg_harm_r_shadow, index);
+			if (!IsProp("r_useShadowMapping")) SetProp("r_useShadowMapping", "0");
+			str = GetProp("harm_r_shadowMapAlpha");
+			if (null != str)
+				V.edt_harm_r_shadowMapAlpha.setText(str);
+			if (!IsProp("harm_r_shadowMapAlpha")) SetProp("harm_r_shadowMapAlpha", "0.5");
+
+			V.cb_stencilShadowTranslucent.setChecked(getProp("harm_r_stencilShadowTranslucent", false));
+			if (!IsProp("harm_r_stencilShadowTranslucent")) setProp("harm_r_stencilShadowTranslucent", false);
+			str = GetProp("harm_r_stencilShadowAlpha");
+			if (null != str)
+				V.edt_harm_r_stencilShadowAlpha.setText(str);
+			if (!IsProp("harm_r_stencilShadowAlpha")) SetProp("harm_r_stencilShadowAlpha", "0.5");
+
+			V.cb_stencilShadowSoft.setChecked(getProp("harm_r_stencilShadowSoft", false));
+			if (!IsProp("harm_r_stencilShadowSoft")) setProp("harm_r_stencilShadowTranslucent", false);
+			V.cb_stencilShadowCombine.setChecked(getProp("harm_r_stencilShadowCombine", false));
+			if (!IsProp("harm_r_stencilShadowCombine")) setProp("harm_r_stencilShadowCombine", false);
+
+			V.cb_s_useOpenAL.setChecked(getProp("s_useOpenAL", false));
+			if (!IsProp("s_useOpenAL"))
+			{
+				setProp("s_useOpenAL", false);
+				V.cb_s_useEAXReverb.setChecked(false);
+				setProp("s_useEAXReverb", false);
+			}
+			else
+			{
+				V.cb_s_useEAXReverb.setChecked(getProp("s_useEAXReverb", false));
+				if (!IsProp("s_useEAXReverb")) setProp("s_useEAXReverb", false);
+			}
+
+			str = GetProp("harm_r_autoAspectRatio");
+			index = Q3EUtils.parseInt_s(str, 1);
+			SelectCheckbox(V.rg_r_autoAspectRatio, index);
+			if (!IsProp("harm_r_autoAspectRatio")) SetProp("harm_r_autoAspectRatio", 1);
 		}
 
+		// game mods for every games
 		str = GetGameModFromCommand();
         if (str != null)
         {
@@ -813,8 +882,10 @@ public class GameLauncher extends Activity
         {
             SelectCheckbox(GetGameModRadioGroup(), -1);
         }
+
+		// graphics
 		int checkedRadioButtonId = V.rg_scrres.getCheckedRadioButtonId();
-		GameLauncher.this.UpdateCustomerResulotion(checkedRadioButtonId == R.id.res_custom);
+		GameLauncher.this.UpdateCustomerResolution(checkedRadioButtonId == R.id.res_custom);
 		GameLauncher.this.UpdateResolutionScaleScheme(checkedRadioButtonId);
 
 		UnlockCmdUpdate();
@@ -866,6 +937,7 @@ public class GameLauncher extends Activity
 		V.rg_fs_rtcwgame.setEnabled(!on);
 		V.rg_fs_tdmgame.setEnabled(!on);
 		V.rg_fs_d3bfggame.setEnabled(!on);
+		V.rg_fs_doomgame.setEnabled(!on);
         V.fs_game_user.setText(on ? R.string.mod_ : R.string.user_mod);
         //V.launcher_tab1_game_lib_button.setEnabled(on);
         V.edt_fs_game.setEnabled(on);
@@ -979,6 +1051,8 @@ public class GameLauncher extends Activity
             SetParam_temp("loadGame", "QuickSave");
         boolean multithreading = mPrefs.getBoolean(Q3EPreference.pref_harm_multithreading, false);
         V.multithreading.setChecked(multithreading);
+		SelectCheckbox(V.rg_r_autoAspectRatio, mPrefs.getInt(Q3EPreference.pref_harm_r_autoAspectRatio, 1));
+		V.rg_r_autoAspectRatio.setOnCheckedChangeListener(m_groupCheckChangeListener);
         V.edt_cmdline.setOnEditorActionListener(new TextView.OnEditorActionListener()
         {
             public boolean onEditorAction(TextView view, int id, KeyEvent ev)
@@ -1018,6 +1092,7 @@ public class GameLauncher extends Activity
 		V.rg_fs_rtcwgame.setOnCheckedChangeListener(m_groupCheckChangeListener);
 		V.rg_fs_tdmgame.setOnCheckedChangeListener(m_groupCheckChangeListener);
 		V.rg_fs_d3bfggame.setOnCheckedChangeListener(m_groupCheckChangeListener);
+		V.rg_fs_doomgame.setOnCheckedChangeListener(m_groupCheckChangeListener);
         V.edt_fs_game.addTextChangedListener(new TextWatcher()
         {
             public void onTextChanged(CharSequence s, int start, int before, int count)
@@ -1052,23 +1127,7 @@ public class GameLauncher extends Activity
 
         //DIII4A-specific
 		SetupCommandTextWatcher(true);
-        V.edt_harm_r_specularExponent.addTextChangedListener(new TextWatcher()
-        {
-            public void onTextChanged(CharSequence s, int start, int before, int count)
-            {
-                SetProp("harm_r_specularExponent", s);
-            }
-
-            public void beforeTextChanged(CharSequence s, int start, int count, int after)
-            {
-            }
-
-            public void afterTextChanged(Editable s)
-            {
-                String value = s.length() == 0 ? "4.0" : s.toString();
-				Q3EPreference.SetFloatFromString(GameLauncher.this, Q3EPreference.pref_harm_r_specularExponent, value, 4.0f);
-            }
-        });
+        V.edt_harm_r_specularExponent.addTextChangedListener(new SaveFloatPreferenceTextWatcher("harm_r_specularExponent", Q3EPreference.pref_harm_r_specularExponent, 4.0f));
 		V.edt_harm_r_maxFps.addTextChangedListener(new TextWatcher()
 		{
 			public void onTextChanged(CharSequence s, int start, int before, int count)
@@ -1159,8 +1218,18 @@ public class GameLauncher extends Activity
 		V.readonly_command.setChecked(readonlyCommand);
 		SetupCommandLine(readonlyCommand);
 		V.readonly_command.setOnCheckedChangeListener(m_checkboxChangeListener);
-		V.cb_translucentStencilShadow.setChecked(mPrefs.getBoolean(Q3EPreference.pref_harm_r_translucentStencilShadow, false));
-		V.cb_translucentStencilShadow.setOnCheckedChangeListener(m_checkboxChangeListener);
+		V.cb_stencilShadowTranslucent.setChecked(mPrefs.getBoolean(Q3EPreference.pref_harm_r_stencilShadowTranslucent, false));
+		V.cb_stencilShadowTranslucent.setOnCheckedChangeListener(m_checkboxChangeListener);
+		V.edt_harm_r_stencilShadowAlpha.setText(Q3EPreference.GetStringFromFloat(mPrefs, Q3EPreference.pref_harm_r_stencilShadowAlpha, 0.5f));
+		V.edt_harm_r_stencilShadowAlpha.addTextChangedListener(new SaveFloatPreferenceTextWatcher("harm_r_stencilShadowAlpha", Q3EPreference.pref_harm_r_stencilShadowAlpha, 0.5f));
+		V.edt_harm_r_shadowMapAlpha.setText(Q3EPreference.GetStringFromFloat(mPrefs, Q3EPreference.pref_harm_r_shadowMapAlpha, 0.5f));
+		V.edt_harm_r_shadowMapAlpha.addTextChangedListener(new SaveFloatPreferenceTextWatcher("harm_r_shadowMapAlpha", Q3EPreference.pref_harm_r_shadowMapAlpha, 0.5f));
+
+		V.cb_stencilShadowSoft.setChecked(mPrefs.getBoolean(Q3EPreference.pref_harm_r_stencilShadowSoft, false));
+		V.cb_stencilShadowSoft.setOnCheckedChangeListener(m_checkboxChangeListener);
+		V.cb_stencilShadowCombine.setChecked(mPrefs.getBoolean(Q3EPreference.pref_harm_r_stencilShadowCombine, false));
+		V.cb_stencilShadowCombine.setOnCheckedChangeListener(m_checkboxChangeListener);
+
 		SetupTempCommandLine(false);
 		V.editable_temp_command.setOnCheckedChangeListener(m_checkboxChangeListener);
 		V.edt_cmdline_temp.addTextChangedListener(new TextWatcher()
@@ -1179,7 +1248,7 @@ public class GameLauncher extends Activity
 			public void afterTextChanged(Editable s) { }
 		});
 
-        updatehacktings();
+        updatehacktings(Q3EUtils.q3ei.IsIdTech4());
 
 		AfterCreated();
     }
@@ -1453,6 +1522,11 @@ public class GameLauncher extends Activity
 			ChangeGame(Q3EGlobals.GAME_DOOM3BFG);
 			return true;
 		}
+		else if (itemId == R.id.main_menu_game_doom)
+		{
+			ChangeGame(Q3EGlobals.GAME_GZDOOM);
+			return true;
+		}
 		else if (itemId == android.R.id.home)
 		{
 			ChangeGame();
@@ -1602,7 +1676,12 @@ public class GameLauncher extends Activity
 		mEdtr.putBoolean(Q3EPreference.pref_harm_s_useOpenAL, V.cb_s_useOpenAL.isChecked());
 		mEdtr.putBoolean(Q3EPreference.pref_harm_s_useEAXReverb, V.cb_s_useEAXReverb.isChecked());
 		mEdtr.putBoolean(PreferenceKey.READONLY_COMMAND, V.readonly_command.isChecked());
-		mEdtr.putBoolean(Q3EPreference.pref_harm_r_translucentStencilShadow, V.cb_translucentStencilShadow.isChecked());
+		mEdtr.putBoolean(Q3EPreference.pref_harm_r_stencilShadowTranslucent, V.cb_stencilShadowTranslucent.isChecked());
+		mEdtr.putFloat(Q3EPreference.pref_harm_r_stencilShadowAlpha, Q3EUtils.parseFloat_s(V.edt_harm_r_stencilShadowAlpha.getText().toString(), 0.5f));
+		mEdtr.putFloat(Q3EPreference.pref_harm_r_shadowMapAlpha, Q3EUtils.parseFloat_s(V.edt_harm_r_shadowMapAlpha.getText().toString(), 0.5f));
+		mEdtr.putBoolean(Q3EPreference.pref_harm_r_stencilShadowSoft, V.cb_stencilShadowSoft.isChecked());
+		mEdtr.putBoolean(Q3EPreference.pref_harm_r_stencilShadowCombine, V.cb_stencilShadowCombine.isChecked());
+		mEdtr.putInt(Q3EPreference.pref_harm_r_autoAspectRatio, GetCheckboxIndex(V.rg_r_autoAspectRatio));
 
 		// mEdtr.putString(Q3EUtils.q3ei.GetGameModPreferenceKey(), V.edt_fs_game.getText().toString());
         mEdtr.commit();
@@ -1749,16 +1828,16 @@ public class GameLauncher extends Activity
         dialog.show(getFragmentManager(), "DebugDialog");
     }
 
-    private void UpdateCustomerResulotion(boolean enabled)
+    private void UpdateCustomerResolution(boolean on)
     {
         LinearLayout layout = V.res_customlayout;
         final int count = layout.getChildCount();
         for (int i = 0; i < count; i++)
         {
-            layout.getChildAt(i).setEnabled(enabled);
+            layout.getChildAt(i).setEnabled(on);
         }
 
-        layout.setEnabled(enabled);
+        layout.setEnabled(on);
     }
 
     private void SetGameDLL(String val)
@@ -2010,6 +2089,7 @@ public class GameLauncher extends Activity
 		boolean rtcwVisible = false;
 		boolean tdmVisible = false;
 		boolean d3bfgVisible = false;
+		boolean doomVisible = false;
 
 		boolean rendererVisible = true;
 		boolean soundVisible = true;
@@ -2093,6 +2173,18 @@ public class GameLauncher extends Activity
 			quickloadVisible = false;
 			skipintroVisible = false;
 		}
+		else if (Q3EUtils.q3ei.isDOOM)
+		{
+			doomVisible = true;
+			rendererVisible = false;
+			soundVisible = false;
+			otherVisible = false;
+			openglVisible = false;
+			// modVisible = false;
+			dllVisible = false;
+			quickloadVisible = false;
+			skipintroVisible = false;
+		}
         else
         {
             d3Visible = true;
@@ -2114,6 +2206,7 @@ public class GameLauncher extends Activity
 		V.rg_fs_rtcwgame.setVisibility(rtcwVisible ? View.VISIBLE : View.GONE);
 		V.rg_fs_tdmgame.setVisibility(tdmVisible ? View.VISIBLE : View.GONE);
 		V.rg_fs_d3bfggame.setVisibility(d3bfgVisible ? View.VISIBLE : View.GONE);
+		V.rg_fs_doomgame.setVisibility(doomVisible ? View.VISIBLE : View.GONE);
 
 		V.renderer_section.setVisibility(rendererVisible ? View.VISIBLE : View.GONE);
 		V.sound_section.setVisibility(soundVisible ? View.VISIBLE : View.GONE);
@@ -2181,7 +2274,7 @@ public class GameLauncher extends Activity
 		if(b)
 		{
 			V.edt_cmdline.addTextChangedListener(m_commandTextWatcher);
-			m_commandTextWatcher.Install(Q3EUtils.q3ei.IsIdTech4() || Q3EUtils.q3ei.IsIdTech2() || Q3EUtils.q3ei.IsIdTech3() || Q3EUtils.q3ei.IsTDMTech());
+			m_commandTextWatcher.Install(true);
 		}
 		else
 		{
@@ -2317,6 +2410,8 @@ public class GameLauncher extends Activity
 			return V.rg_fs_tdmgame;
 		else if(Q3EUtils.q3ei.isD3BFG)
 			return V.rg_fs_d3bfggame;
+		else if(Q3EUtils.q3ei.isDOOM)
+			return V.rg_fs_doomgame;
 		else
         	return V.rg_fs_game;
     }
@@ -2479,6 +2574,7 @@ public class GameLauncher extends Activity
 		groups.put(Q3EGlobals.GAME_RTCW, V.rg_fs_rtcwgame);
 		groups.put(Q3EGlobals.GAME_TDM, V.rg_fs_tdmgame);
 		groups.put(Q3EGlobals.GAME_DOOM3BFG, V.rg_fs_d3bfggame);
+		groups.put(Q3EGlobals.GAME_GZDOOM, V.rg_fs_doomgame);
 		Game[] values = Game.values();
 
 		for (Game value : values)
@@ -2532,7 +2628,7 @@ public class GameLauncher extends Activity
 	private void SetGameModToCommand(String mod)
 	{
 		String arg = Q3EUtils.q3ei.GetGameCommandParm();
-		if(Q3EUtils.q3ei.isQ1)
+		if(Q3EUtils.q3ei.isQ1 || Q3EUtils.q3ei.isDOOM)
 			SetParam(arg, mod);
 		else
 			SetProp(arg, mod);
@@ -2541,7 +2637,7 @@ public class GameLauncher extends Activity
 	private String GetGameModFromCommand()
 	{
 		String arg = Q3EUtils.q3ei.GetGameCommandParm();
-		if(Q3EUtils.q3ei.isQ1)
+		if(Q3EUtils.q3ei.isQ1 || Q3EUtils.q3ei.isDOOM)
 			return GetParam(arg);
 		else
 			return GetProp(arg);
@@ -2550,7 +2646,7 @@ public class GameLauncher extends Activity
 	private void RemoveGameModFromCommand()
 	{
 		String arg = Q3EUtils.q3ei.GetGameCommandParm();
-		if(Q3EUtils.q3ei.isQ1)
+		if(Q3EUtils.q3ei.isQ1 || Q3EUtils.q3ei.isDOOM)
 			RemoveParam(arg);
 		else
 			RemoveProp(arg);
@@ -2624,7 +2720,7 @@ public class GameLauncher extends Activity
 		public CheckBox cb_s_useOpenAL;
 		public CheckBox cb_s_useEAXReverb;
 		public Switch readonly_command;
-		public CheckBox cb_translucentStencilShadow;
+		public CheckBox cb_stencilShadowTranslucent;
 		public Switch editable_temp_command;
 		public LinearLayout temp_cmdline;
 		public LinearLayout renderer_section;
@@ -2639,8 +2735,14 @@ public class GameLauncher extends Activity
 		public RadioGroup rg_fs_rtcwgame;
 		public RadioGroup rg_fs_tdmgame;
 		public RadioGroup rg_fs_d3bfggame;
+		public RadioGroup rg_fs_doomgame;
 		public Spinner launcher_tab2_joystick_visible;
 		public TextView launcher_fs_game_subdir;
+		public CheckBox cb_stencilShadowSoft;
+		public EditText edt_harm_r_stencilShadowAlpha;
+		public RadioGroup rg_r_autoAspectRatio;
+		public CheckBox cb_stencilShadowCombine;
+		public EditText edt_harm_r_shadowMapAlpha;
 
         public void Setup()
         {
@@ -2707,7 +2809,7 @@ public class GameLauncher extends Activity
 			cb_s_useOpenAL = findViewById(R.id.cb_s_useOpenAL);
 			cb_s_useEAXReverb = findViewById(R.id.cb_s_useEAXReverb);
 			readonly_command = findViewById(R.id.readonly_command);
-			cb_translucentStencilShadow = findViewById(R.id.cb_translucentStencilShadow);
+			cb_stencilShadowTranslucent = findViewById(R.id.cb_stencilShadowTranslucent);
 			editable_temp_command = findViewById(R.id.editable_temp_command);
 			temp_cmdline = findViewById(R.id.temp_cmdline);
 			renderer_section = findViewById(R.id.renderer_section);
@@ -2722,8 +2824,14 @@ public class GameLauncher extends Activity
 			rg_fs_rtcwgame = findViewById(R.id.rg_fs_rtcwgame);
 			rg_fs_tdmgame = findViewById(R.id.rg_fs_tdmgame);
 			rg_fs_d3bfggame = findViewById(R.id.rg_fs_d3bfggame);
+			rg_fs_doomgame = findViewById(R.id.rg_fs_doomgame);
 			launcher_tab2_joystick_visible = findViewById(R.id.launcher_tab2_joystick_visible);
 			launcher_fs_game_subdir = findViewById(R.id.launcher_fs_game_subdir);
+			cb_stencilShadowSoft = findViewById(R.id.cb_stencilShadowSoft);
+			edt_harm_r_stencilShadowAlpha = findViewById(R.id.edt_harm_r_stencilShadowAlpha);
+			rg_r_autoAspectRatio = findViewById(R.id.rg_r_autoAspectRatio);
+			cb_stencilShadowCombine = findViewById(R.id.cb_stencilShadowCombine);
+			edt_harm_r_shadowMapAlpha = findViewById(R.id.edt_harm_r_shadowMapAlpha);
         }
     }
 }

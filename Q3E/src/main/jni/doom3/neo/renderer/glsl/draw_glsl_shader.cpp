@@ -443,9 +443,15 @@ static void RB_GLSL_GetShaderSources(idList<GLSLShaderProp> &ret)
 #endif
 
 	// translucent stencil shadow
-#ifdef _TRANSLUCENT_STENCIL_SHADOW
+#ifdef _STENCIL_SHADOW_IMPROVE
 	ret.Append(GLSL_SHADER_SOURCE("interactionTranslucent", SHADER_INTERACTIONTRANSLUCENT, &interactionTranslucentShader, INTERACTION_TRANSLUCENT_VERT, INTERACTION_TRANSLUCENT_FRAG, "", ""));
 	ret.Append(GLSL_SHADER_SOURCE("interactionBlinnphongTranslucent", SHADER_INTERACTIONBLINNPHONGTRANSLUCENT, &interactionBlinnPhongTranslucentShader, INTERACTION_TRANSLUCENT_VERT, INTERACTION_TRANSLUCENT_FRAG, "BLINN_PHONG", "BLINN_PHONG"));
+
+	// soft stencil shadow
+#ifdef _SOFT_STENCIL_SHADOW
+	ret.Append(GLSL_SHADER_SOURCE("interactionSoft", SHADER_INTERACTIONSOFT, &interactionSoftShader, INTERACTION_SOFT_VERT, INTERACTION_SOFT_FRAG, "", ""));
+	ret.Append(GLSL_SHADER_SOURCE("interactionBlinnphongSoft", SHADER_INTERACTIONBLINNPHONGSOFT, &interactionBlinnPhongSoftShader, INTERACTION_SOFT_VERT, INTERACTION_SOFT_FRAG, "BLINN_PHONG", "BLINN_PHONG"));
+#endif
 #endif
 }
 
@@ -879,7 +885,7 @@ static bool RB_GLSL_InitShaders(void)
 	REQUIRE_SHADER;
 #endif
 
-#ifdef _TRANSLUCENT_STENCIL_SHADOW
+#ifdef _STENCIL_SHADOW_IMPROVE
 	UNNECESSARY_SHADER;
 	for(int i = SHADER_STENCIL_SHADOW_BEGIN; i <= SHADER_STENCIL_SHADOW_END; i++)
 	{

@@ -22,6 +22,7 @@ GPLv3
 * obj format static model
 * dae format static model
 * pure soft shadow with shadow-mapping
+* soft shadow with stencil-shadow
 * OpenGLES2.0/OpenGLES3.0
 * OpenAL(soft) and EFX Reverb
 * no-lighting rendering and no-lighting material
@@ -39,8 +40,9 @@ GPLv3
 | TexGen shader                                                                              |                               Yes                               |                              -                              |
 | Shadow mapping for pure soft shadow                                                        |                               Yes                               |                              -                              |
 | Translucent stencil shadow                                                                 |                               Yes                               |                              -                              |
+| Soft stencil shadow                                                                        |                   Yes<br/>(Only OpenGLES3.1+)                   |                              -                              |
 | OpenGL ES version                                                                          | 2.0 and 3.0+<br/>(shadow mapping shaders has different version) |                      2.0(3.0+ compat)                       |
-| No lighting                                                                                |               Yes<br/>(And support switch in gaming)                |                             Yes                             |
+| No lighting                                                                                |             Yes<br/>(And support switch in gaming)              |                             Yes                             |
 
 ###### Support games
 
@@ -152,7 +154,7 @@ Tag with `-free` only for F-Droid update.
 > 7. _OPENGLES3: Add OpenGLES3.0 support.
 > 8. _OPENAL _OPENAL_EFX _OPENAL_SOFT: Add OpenAL(soft) and EFX Reverb support.
 > 9. _NO_LIGHT: Add no lighting support.
-> 10. _TRANSLUCENT_STENCIL_SHADOW: Add translucent stencil shadow support.
+> 10. _STENCIL_SHADOW_IMPROVE: Add stencil shadow improve support(soft shadow(OpenGLES3.1+), translucent shadow, force combine global shadow and self local shadow).
 
 #### If want to port `Quake4` or `Prey(2006)` to PC or other platform of based on `DOOM3` engine open-source version, because DIII4A based on Android platform and OpenGLES, so has some differences with original version. But I mark some macros in source as patches at all changes, although must find these macros in source code and manual use these patches.
 #### And for keeping original DOOM3 source file structures, for all new source files, I put them on a new folder, and in these folder has same directory structure with DOOM3(e.g. framework, renderer, idlib...).

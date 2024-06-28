@@ -239,6 +239,7 @@ idCVar r_screenshotPngCompression("r_screenshotPngCompression", "3", CVAR_RENDER
 
 #ifdef _RAVEN
 idCVar r_skipSky("r_skipSky", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "Dark sky");
+idCVar r_aspectRatio("r_aspectRatio",			"-1",			CVAR_RENDERER | CVAR_INTEGER | CVAR_ARCHIVE, "aspect ratio of view:\n0 = 4:3\n1 = 16:9\n2 = 16:10\n-1 = auto (guess from resolution)", -1, 2);
 #endif
 
 /*
@@ -2446,9 +2447,14 @@ void idRenderSystemLocal::InitOpenGL(void)
 
 		globalImages->ReloadAllImages();
 
-#ifdef _SHADOW_MAPPING
+//#ifdef _SHADOW_MAPPING
 		Framebuffer::Init();
-#endif
+//#endif
+		// offlineScreenRenderer.Init(glConfig.vidWidth, glConfig.vidHeight);
+		// if(USING_GLES31)
+		if(idStencilTexture::IsAvailable())
+			stencilTexture.Init(glConfig.vidWidth, glConfig.vidHeight);
+		
 		err = qglGetError();
 
 		if (err != GL_NO_ERROR) {
@@ -2556,6 +2562,12 @@ void GL_CheckErrors(const char *name)
 	common->Printf("GL_CheckErrors for %s: %s\n", name, s);
 }
 
+#include "rb/Framebuffer.cpp"
+#include "rb/OfflineScreenRenderer.cpp"
+#include "rb/StencilTexture.cpp"
+#include "matrix/RenderMatrix.cpp"
+#include "matrix/GLMatrix.cpp"
+
 #ifdef _SHADOW_MAPPING
 // RB: shadow mapping parameters
 idCVar r_useShadowMapping( "r_useShadowMapping", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "use shadow mapping instead of stencil shadows" );
@@ -2586,13 +2598,17 @@ idCVar harm_r_useLightScissors("harm_r_useLightScissors", "3", CVAR_RENDERER | C
 idCVar harm_r_shadowMapDepthBuffer( "harm_r_shadowMapDepthBuffer", "0", CVAR_RENDERER | CVAR_INIT | CVAR_INTEGER, "0 = Auto; 1 = depth texture; 2 = color texture's red; 3 = color texture's rgba", 0, 3, idCmdSystem::ArgCompletion_Integer<0, 3> );
 idCVar harm_r_shadowMapNonParallelLightUltra( "harm_r_shadowMapNonParallelLightUltra", "0", CVAR_RENDERER | CVAR_BOOL/*//k next version open: | CVAR_ARCHIVE*/, "non parallel light allow ultra quality shadow map texture" );
 
-#include "rb/Framebuffer.cpp"
 #include "tr/tr_shadowmapping.cpp"
-#include "matrix/RenderMatrix.cpp"
-#include "matrix/GLMatrix.cpp"
 #endif
 
-#ifdef _TRANSLUCENT_STENCIL_SHADOW
+#ifdef _STENCIL_SHADOW_IMPROVE
 idCVar harm_r_stencilShadowTranslucent( "harm_r_stencilShadowTranslucent", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_ARCHIVE, "enable translucent shadow in stencil shadow" );
 idCVar harm_r_stencilShadowAlpha( "harm_r_stencilShadowAlpha", "0.5", CVAR_RENDERER | CVAR_FLOAT | CVAR_ARCHIVE, "translucent shadow's alpha in stencil shadow" );
+#ifdef _SOFT_STENCIL_SHADOW
+idCVar harm_r_stencilShadowSoft( "harm_r_stencilShadowSoft", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_ARCHIVE, "enable soft stencil shadow(Only OpenGLES3.1+)" );
+idCVar harm_r_stencilShadowSoftBias( "harm_r_stencilShadowSoftBias", "-1", CVAR_RENDERER | CVAR_FLOAT | CVAR_ARCHIVE, "soft stencil shadow sampler BIAS(-1 to automatic, 0 to disable)" );
+idCVar harm_r_stencilShadowSoftCopyStencilBuffer( "harm_r_stencilShadowSoftCopyStencilBuffer", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_ARCHIVE, "copy stencil buffer directly for soft stencil shadow.\n0 = copy depth buffer and bind and renderer stencil buffer to texture directly\n1 = copy stencil buffer to texture directly" ); // I don't sure any GPUs are allowed to copy stencil buffer directly.
 #endif
+#endif
+
+idCVar harm_r_autoAspectRatio("harm_r_autoAspectRatio",			"1",			CVAR_RENDERER | CVAR_INTEGER | CVAR_ARCHIVE, "automatic setup aspect ratio of view:\n0 = manual\n1 = force setup r_aspectRatio to -1\n2 = automatic setup r_aspectRatio to 0,1,2 by screen size", 0, 2);

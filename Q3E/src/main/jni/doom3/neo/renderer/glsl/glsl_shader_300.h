@@ -1174,6 +1174,59 @@ GLSL_SHADER const char ES3_TEXGEN_FRAG[] =
 "}\n"
 ;
 
+
+
+#define ES3_SAMPLE_POISSON_DISK_TYPE 0
+#if ES3_SAMPLE_POISSON_DISK_TYPE == 1
+#define ES3_SAMPLE_POISSON_DISK \
+		"#define SAMPLES 9\n" \
+		"vec2 sampleOffsetTable[SAMPLES] = vec2[SAMPLES](\n" \
+		"  vec2(0.0, 0.0),\n" \
+		"  vec2(1.0, 1.0), vec2(1.0, -1.0), vec2(-1.0, -1.0), vec2(-1.0, 1.0),\n" \
+		"  vec2(1.0, 0.0), vec2(-1.0, 0.0), vec2(0.0, -1.0), vec2(0.0, 1.0)\n" \
+        ");\n"
+#elif ES3_SAMPLE_POISSON_DISK_TYPE == 2
+#define ES3_SAMPLE_POISSON_DISK \
+        "#define SAMPLES 13\n" \
+        "vec2 sampleOffsetTable[SAMPLES] = vec2[SAMPLES](\n"\
+		"  vec2( 0.6111618, 0.1050905 ), \n" \
+		"  vec2( 0.1088336, 0.1127091 ), \n" \
+		"  vec2( 0.3030421, -0.6292974 ), \n" \
+		"  vec2( 0.4090526, 0.6716492 ), \n" \
+		"  vec2( -0.1608387, -0.3867823 ), \n" \
+		"  vec2( 0.7685862, -0.6118501 ), \n" \
+		"  vec2( -0.1935026, -0.856501 ), \n" \
+		"  vec2( -0.4028573, 0.07754025 ), \n" \
+		"  vec2( -0.6411021, -0.4748057 ), \n" \
+		"  vec2( -0.1314865, 0.8404058 ), \n" \
+		"  vec2( -0.7005203, 0.4596822 ), \n" \
+		"  vec2( -0.9713828, -0.06329931 ),\n" \
+		"  vec2( 0.0, 0.0 )\n" \
+        ");\n"
+#else
+#define ES3_SAMPLE_POISSON_DISK \
+        "#define SAMPLES 17\n" \
+        "vec2 sampleOffsetTable[SAMPLES] = vec2[SAMPLES](\n" \
+		"  vec2( -0.94201624, -0.39906216 ), \n" \
+		"  vec2( 0.94558609, -0.76890725 ), \n" \
+		"  vec2( -0.094184101, -0.92938870 ), \n" \
+		"  vec2( 0.34495938, 0.29387760 ), \n" \
+		"  vec2( -0.91588581, 0.45771432 ), \n" \
+		"  vec2( -0.81544232, -0.87912464 ), \n" \
+		"  vec2( -0.38277543, 0.27676845 ), \n" \
+		"  vec2( 0.97484398, 0.75648379 ), \n" \
+		"  vec2( 0.44323325, -0.97511554 ), \n" \
+		"  vec2( 0.53742981, -0.47373420 ), \n" \
+		"  vec2( -0.26496911, -0.41893023 ), \n" \
+		"  vec2( 0.79197514, 0.19090188 ), \n" \
+		"  vec2( -0.24188840, 0.99706507 ), \n" \
+		"  vec2( -0.81409955, 0.91437590 ), \n" \
+		"  vec2( 0.19984126, 0.78641367 ), \n" \
+		"  vec2( 0.14383161, -0.14100790 ), \n" \
+		"  vec2( 0.0, 0.0 )\n" \
+        ");\n"
+#endif
+
 #ifdef _SHADOW_MAPPING
 // shadow map
 GLSL_SHADER const char ES3_DEPTH_VERT[] =
@@ -1421,13 +1474,7 @@ GLSL_SHADER const char ES3_INTERACTION_SHADOW_MAPPING_FRAG[] =
         "#endif\n"
         "\n"
 		"highp float shadow = 0.0;\n"
-		"#define SAMPLES 9\n"
-        "\n"
-		"vec2 sampleOffsetTable[SAMPLES] = vec2[SAMPLES](\n"
-		"	vec2(0.0, 0.0),\n"
-		"	vec2(1.0, 1.0), vec2(1.0, -1.0), vec2(-1.0, -1.0), vec2(-1.0, 1.0),\n"
-		"	vec2(1.0, 0.0), vec2(-1.0, 0.0), vec2(0.0, -1.0), vec2(0.0, 1.0)\n"
-        ");\n"
+		ES3_SAMPLE_POISSON_DISK
 		"#ifdef _POINT_LIGHT\n"
 		"	int shadowIndex = 0;\n"
 		"	highp vec3 toLightGlobal = normalize( var_VertexToLight );\n"
@@ -1523,7 +1570,7 @@ GLSL_SHADER const char ES3_DEPTH_PERFORATED_FRAG[] =
 ;
 #endif
 
-#ifdef _TRANSLUCENT_STENCIL_SHADOW
+#ifdef _STENCIL_SHADOW_IMPROVE
 // interaction(translucent)
 GLSL_SHADER const char ES3_INTERACTION_TRANSLUCENT_VERT[] =
 		"#version 300 es\n"
@@ -1688,6 +1735,197 @@ GLSL_SHADER const char ES3_INTERACTION_TRANSLUCENT_FRAG[] =
 		"_gl_FragColor = vec4(color, 1.0) * var_Color * u_uniformParm0;\n"
 		"}\n"
 ;
+
+#ifdef _SOFT_STENCIL_SHADOW
+// interaction(soft)
+GLSL_SHADER const char ES3_INTERACTION_SOFT_VERT[] =
+		"#version 300 es\n"
+		"//#pragma optimize(off)\n"
+		"\n"
+		"precision highp float;\n"
+		"\n"
+		"//#define BLINN_PHONG\n"
+		"\n"
+		"out vec2 var_TexDiffuse;\n"
+		"out vec2 var_TexNormal;\n"
+		"out vec2 var_TexSpecular;\n"
+		"out vec4 var_TexLight;\n"
+		"out lowp vec4 var_Color;\n"
+		"out vec3 var_L;\n"
+		"#if defined(BLINN_PHONG)\n"
+		"out vec3 var_H;\n"
+		"#else\n"
+		"out vec3 var_V;\n"
+		"#endif\n"
+		"\n"
+		"in vec4 attr_TexCoord;\n"
+		"in vec3 attr_Tangent;\n"
+		"in vec3 attr_Bitangent;\n"
+		"in vec3 attr_Normal;\n"
+		"in highp vec4 attr_Vertex;\n"
+		"in lowp vec4 attr_Color;\n"
+		"\n"
+		"uniform vec4 u_lightProjectionS;\n"
+		"uniform vec4 u_lightProjectionT;\n"
+		"uniform vec4 u_lightFalloff;\n"
+		"uniform vec4 u_lightProjectionQ;\n"
+		"uniform lowp vec4 u_colorModulate;\n"
+		"uniform lowp vec4 u_colorAdd;\n"
+		"uniform lowp vec4 u_glColor;\n"
+		"\n"
+		"uniform vec4 u_lightOrigin;\n"
+		"uniform vec4 u_viewOrigin;\n"
+		"\n"
+		"uniform vec4 u_bumpMatrixS;\n"
+		"uniform vec4 u_bumpMatrixT;\n"
+		"uniform vec4 u_diffuseMatrixS;\n"
+		"uniform vec4 u_diffuseMatrixT;\n"
+		"uniform vec4 u_specularMatrixS;\n"
+		"uniform vec4 u_specularMatrixT;\n"
+		"\n"
+		"uniform highp mat4 u_modelViewProjectionMatrix;\n"
+		"\n"
+		"void main(void)\n"
+		"{\n"
+		"mat3 M = mat3(attr_Tangent, attr_Bitangent, attr_Normal);\n"
+		"\n"
+		"var_TexNormal.x = dot(u_bumpMatrixS, attr_TexCoord);\n"
+		"var_TexNormal.y = dot(u_bumpMatrixT, attr_TexCoord);\n"
+		"\n"
+		"var_TexDiffuse.x = dot(u_diffuseMatrixS, attr_TexCoord);\n"
+		"var_TexDiffuse.y = dot(u_diffuseMatrixT, attr_TexCoord);\n"
+		"\n"
+		"var_TexSpecular.x = dot(u_specularMatrixS, attr_TexCoord);\n"
+		"var_TexSpecular.y = dot(u_specularMatrixT, attr_TexCoord);\n"
+		"\n"
+		"var_TexLight.x = dot(u_lightProjectionS, attr_Vertex);\n"
+		"var_TexLight.y = dot(u_lightProjectionT, attr_Vertex);\n"
+		"var_TexLight.z = dot(u_lightFalloff, attr_Vertex);\n"
+		"var_TexLight.w = dot(u_lightProjectionQ, attr_Vertex);\n"
+		"\n"
+		"vec3 L = u_lightOrigin.xyz - attr_Vertex.xyz;\n"
+		"vec3 V = u_viewOrigin.xyz - attr_Vertex.xyz;\n"
+		"#if defined(BLINN_PHONG)\n"
+		"vec3 H = normalize(L) + normalize(V);\n"
+		"#endif\n"
+		"\n"
+		"var_L = L * M;\n"
+		"#if defined(BLINN_PHONG)\n"
+		"var_H = H * M;\n"
+		"#else\n"
+		"var_V = V * M;\n"
+		"#endif\n"
+		"\n"
+		"var_Color = (attr_Color / 255.0) * u_colorModulate + u_colorAdd;\n"
+		"\n"
+		"gl_Position = u_modelViewProjectionMatrix * attr_Vertex;\n"
+		"}\n"
+;
+GLSL_SHADER const char ES3_INTERACTION_SOFT_FRAG[] =
+		"#version 300 es\n"
+		"//#pragma optimize(off)\n"
+		"\n"
+		"precision highp float;\n"
+		"\n"
+		"//#define BLINN_PHONG\n"
+		"\n"
+		"//#define HALF_LAMBERT\n"
+		"\n"
+		"in vec2 var_TexDiffuse;\n"
+		"in vec2 var_TexNormal;\n"
+		"in vec2 var_TexSpecular;\n"
+		"in vec4 var_TexLight;\n"
+		"in lowp vec4 var_Color;\n"
+		"in vec3 var_L;\n"
+		"#if defined(BLINN_PHONG)\n"
+		"in vec3 var_H;\n"
+		"#else\n"
+		"in vec3 var_V;\n"
+		"#endif\n"
+		"\n"
+		"uniform vec4 u_diffuseColor;\n"
+		"uniform vec4 u_specularColor;\n"
+		"uniform float u_specularExponent;\n"
+		"\n"
+		"uniform sampler2D u_fragmentMap0;	/* u_bumpTexture */\n"
+		"uniform sampler2D u_fragmentMap1;	/* u_lightFalloffTexture */\n"
+		"uniform sampler2D u_fragmentMap2;	/* u_lightProjectionTexture */\n"
+		"uniform sampler2D u_fragmentMap3;	/* u_diffuseTexture */\n"
+		"uniform sampler2D u_fragmentMap4;	/* u_specularTexture */\n"
+		"uniform sampler2D u_fragmentMap5;	/* u_specularFalloffTexture */\n"
+		"uniform mediump usampler2D u_fragmentMap6;	/* stencil shadow texture */\n"
+		"uniform highp vec4 u_nonPowerOfTwo;\n"
+		"uniform highp vec4 u_windowCoords;\n"
+		"uniform lowp float u_uniformParm0; // shadow alpha\n"
+		"uniform lowp float u_uniformParm1; // sampler bias\n"
+		"out vec4 _gl_FragColor;\n"
+		"\n"
+		"void main(void)\n"
+		"{\n"
+		"//float u_specularExponent = 4.0;\n"
+		"\n"
+		"vec3 L = normalize(var_L);\n"
+		"#if defined(BLINN_PHONG)\n"
+		"vec3 H = normalize(var_H);\n"
+		"vec3 N = 2.0 * texture(u_fragmentMap0, var_TexNormal.st).agb - 1.0;\n"
+		"#else\n"
+		"vec3 V = normalize(var_V);\n"
+		"vec3 N = normalize(2.0 * texture(u_fragmentMap0, var_TexNormal.st).agb - 1.0);\n"
+		"#endif\n"
+		"\n"
+		"float NdotL = clamp(dot(N, L), 0.0, 1.0);\n"
+		"#if defined(HALF_LAMBERT)\n"
+		"NdotL *= 0.5;\n"
+		"NdotL += 0.5;\n"
+		"NdotL = NdotL * NdotL;\n"
+		"#endif\n"
+		"#if defined(BLINN_PHONG)\n"
+		"float NdotH = clamp(dot(N, H), 0.0, 1.0);\n"
+		"#endif\n"
+		"\n"
+		"vec3 lightProjection = textureProj(u_fragmentMap2, var_TexLight.xyw).rgb;\n"
+		"vec3 lightFalloff = texture(u_fragmentMap1, vec2(var_TexLight.z, 0.5)).rgb;\n"
+		"vec3 diffuseColor = texture(u_fragmentMap3, var_TexDiffuse).rgb * u_diffuseColor.rgb;\n"
+		"vec3 specularColor = 2.0 * texture(u_fragmentMap4, var_TexSpecular).rgb * u_specularColor.rgb;\n"
+		"\n"
+		"#if defined(BLINN_PHONG)\n"
+		"float specularFalloff = pow(NdotH, u_specularExponent);\n"
+		"#else\n"
+		"vec3 R = -reflect(L, N);\n"
+		"float RdotV = clamp(dot(R, V), 0.0, 1.0);\n"
+		"float specularFalloff = pow(RdotV, u_specularExponent);\n"
+		"#endif\n"
+		"\n"
+		"vec3 color;\n"
+		"color = diffuseColor;\n"
+		"color += specularFalloff * specularColor;\n"
+		"color *= NdotL * lightProjection;\n"
+		"color *= lightFalloff;\n"
+		"\n"
+        ES3_SAMPLE_POISSON_DISK
+        "\n"
+        "float shadow = 0.0;\n"
+        "for (int i = 0; i < SAMPLES; ++i) {\n"
+        "  vec2 screenTexCoord = gl_FragCoord.xy * u_windowCoords.xy;\n"
+        "  screenTexCoord = screenTexCoord * u_nonPowerOfTwo.xy;\n"
+        "  /*\n"
+        "    vec2 texSize = vec2(textureSize(u_fragmentMap6, 0));\n"
+        "    vec2 pixSize = vec2(1.0, 1.0) / texSize;\n"
+        "    vec2 baseTexCoord = gl_FragCoord.xy * pixSize;\n"
+        "    screenTexCoord = baseTexCoord;\n"
+        "  */\n"
+        "  screenTexCoord += sampleOffsetTable[i] * u_nonPowerOfTwo.zw * u_uniformParm1;\n"
+        "  float t = float(texture(u_fragmentMap6, screenTexCoord).r);\n"
+        "  float f= clamp(129.0 - t, u_uniformParm0, 1.0);\n"
+        "  shadow += f;\n"
+        "}\n"
+        "const highp float sampleAvg = 1.0 / float(SAMPLES);\n"
+        "shadow *= sampleAvg;\n"
+        "color *= shadow;\n"
+		"_gl_FragColor = vec4(color, 1.0) * var_Color;\n"
+		"}\n"
+;
+#endif
 #endif
 
 #endif
