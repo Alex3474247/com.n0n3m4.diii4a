@@ -907,18 +907,18 @@ bool P_GiveBody(AActor *actor, int num, int max)
 		}
 		else if (num > 0)
 		{
-			if (player->health < max)
-			{
+			//if (player->health < max)
+			//{
 				num = int(num * G_SkillProperty(SKILLP_HealthFactor));
 				if (num < 1) num = 1;
 				player->health += num;
-				if (player->health > max)
+				/*if (player->health > max)
 				{
 					player->health = max;
-				}
+				}*/
 				actor->health = player->health;
 				return true;
-			}
+			//}
 		}
 	}
 	else
