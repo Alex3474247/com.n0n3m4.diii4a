@@ -329,18 +329,21 @@ void Add_Ammo( gentity_t *ent, int weapon, int count, qboolean fillClip ) {
 	case WP_DYNAMITE:
 		COM_BitSet( ent->client->ps.weapons, ammoweap );
 
-	/*case WP_TESLA:
+	case WP_TESLA:
 	case WP_FLAMETHROWER:
 		noPack = qtrue;
-		break;*/
+		break;
 	default:
 		break;
 	}
 
-	/*if ( fillClip || noPack ) {
+	if ( fillClip ) {
 		Fill_Clip( &ent->client->ps, weapon );
-	}*/
-
+	}
+    
+    if (noPack)
+    ent->client->ps.ammoclip[ammoweap] += count;
+    
 	if ( ent->aiCharacter ) {
 		noPack = qfalse;    // let AI's deal with their own clip/ammo handling
 
@@ -358,9 +361,9 @@ void Add_Ammo( gentity_t *ent, int weapon, int count, qboolean fillClip ) {
 		}
 	}
 
-	if ( ent->client->ps.ammoclip[ammoweap] > ammoTable[ammoweap].maxclip ) {
+	/*if ( ent->client->ps.ammoclip[ammoweap] > ammoTable[ammoweap].maxclip ) {
 		ent->client->ps.ammoclip[ammoweap] = ammoTable[ammoweap].maxclip;
-	}
+	}*/
 
 }
 

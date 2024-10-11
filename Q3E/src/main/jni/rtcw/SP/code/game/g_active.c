@@ -499,9 +499,9 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 				}
 			} else {
 				// count down health when over max
-				if ( ent->health > client->ps.stats[STAT_MAX_HEALTH] ) {
-					ent->health--;
-				}
+				//if ( ent->health > client->ps.stats[STAT_MAX_HEALTH] ) {
+				//	ent->health--;
+				//}
 			}
 		}
 // JPW NERVE
@@ -520,16 +520,16 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 				}
 			} else {
 				// count down health when over max
-				if ( ent->health > client->ps.stats[STAT_MAX_HEALTH] ) {
-					ent->health--;
-				}
+				//if ( ent->health > client->ps.stats[STAT_MAX_HEALTH] ) {
+				//	ent->health--;
+				//}
 			}
 		}
 // jpw
 		// count down armor when over max
-		if ( client->ps.stats[STAT_ARMOR] > client->ps.stats[STAT_MAX_HEALTH] ) {
-			client->ps.stats[STAT_ARMOR]--;
-		}
+		//if ( client->ps.stats[STAT_ARMOR] > client->ps.stats[STAT_MAX_HEALTH] ) {
+		//	client->ps.stats[STAT_ARMOR]--;
+		//}
 	}
 }
 
