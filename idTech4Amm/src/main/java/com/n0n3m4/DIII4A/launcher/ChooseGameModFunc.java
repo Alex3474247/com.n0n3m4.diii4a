@@ -93,10 +93,12 @@ public final class ChooseGameModFunc extends GameLauncherFunc
                 Q3EGlobals.GAME_BASE_RTCW,
                 Q3EGlobals.GAME_BASE_DOOM3BFG,
                 Q3EGlobals.GAME_BASE_TDM,
-                Q3EGlobals.GAME_BASE_GZDOOM
+                Q3EGlobals.GAME_BASE_GZDOOM,
+                Q3EGlobals.GAME_BASE_ETW,
+                Q3EGlobals.GAME_BASE_REALRTCW
         ));
         List<String> blackList = new ArrayList<>();
-        boolean standalone = PreferenceManager.getDefaultSharedPreferences(m_gameLauncher).getBoolean(Q3EPreference.GAME_STANDALONE_DIRECTORY, false);
+        boolean standalone = PreferenceManager.getDefaultSharedPreferences(m_gameLauncher).getBoolean(Q3EPreference.GAME_STANDALONE_DIRECTORY, true);
         if(!standalone)
         {
             blackList.addAll(TotalList);
@@ -110,7 +112,9 @@ public final class ChooseGameModFunc extends GameLauncherFunc
                     Q3EGlobals.GAME_SUBDIR_QUAKE3,
                     Q3EGlobals.GAME_SUBDIR_RTCW,
                     Q3EGlobals.GAME_SUBDIR_TDM,
-                    Q3EGlobals.GAME_SUBDIR_GZDOOM
+                    Q3EGlobals.GAME_SUBDIR_GZDOOM,
+                    Q3EGlobals.GAME_SUBDIR_ETW,
+                    Q3EGlobals.GAME_SUBDIR_REALRTCW
             ));
         }
 
@@ -149,6 +153,20 @@ public final class ChooseGameModFunc extends GameLauncherFunc
             else
                 blackList.remove(Q3EGlobals.GAME_BASE_RTCW);
         }
+        else if(Q3EUtils.q3ei.isETW)
+        {
+            if(standalone)
+                blackList.add(Q3EGlobals.GAME_BASE_ETW);
+            else
+                blackList.remove(Q3EGlobals.GAME_BASE_ETW);
+        }
+        else if(Q3EUtils.q3ei.isRealRTCW)
+        {
+            if(standalone)
+                blackList.add(Q3EGlobals.GAME_BASE_REALRTCW);
+            else
+                blackList.remove(Q3EGlobals.GAME_BASE_REALRTCW);
+        }
 /*        else if(Q3EUtils.q3ei.isTDM)
         {
             blackList.remove(Q3EGlobals.GAME_BASE_TDM);
@@ -161,7 +179,23 @@ public final class ChooseGameModFunc extends GameLauncherFunc
                 blackList.remove(Q3EGlobals.GAME_BASE_DOOM3);
         }
 
-        for (FileBrowser.FileModel fileModel : fileBrowser.FileList())
+        String gameHomePath = Q3EUtils.q3ei.GetGameHomeDirectoryPath();
+        if(null != gameHomePath)
+        {
+            int i = gameHomePath.indexOf("/");
+            if(i > 0)
+                blackList.add(gameHomePath.substring(0, i));
+            else
+                blackList.add(gameHomePath);
+        }
+
+        List<FileBrowser.FileModel> fileModels;
+        if(UsingFile)
+            fileModels = fileBrowser.ListAllFiles();
+        else
+            fileModels = fileBrowser.FileList();
+
+        for (FileBrowser.FileModel fileModel : fileModels)
         {
             String name = "";
             if(blackList.contains(fileModel.name))
@@ -195,6 +229,16 @@ public final class ChooseGameModFunc extends GameLauncherFunc
             {
                 if(Q3EGlobals.GAME_BASE_RTCW.equals(fileModel.name))
                     name = Q3EGlobals.GAME_NAME_RTCW;
+            }
+            else if(Q3EUtils.q3ei.isETW)
+            {
+                if(Q3EGlobals.GAME_BASE_ETW.equals(fileModel.name))
+                    name = Q3EGlobals.GAME_NAME_ETW;
+            }
+            else if(Q3EUtils.q3ei.isRealRTCW)
+            {
+                if(Q3EGlobals.GAME_BASE_REALRTCW.equals(fileModel.name))
+                    name = Q3EGlobals.GAME_NAME_REALRTCW;
             }
 /*            else if(Q3EUtils.q3ei.isTDM)
             {
@@ -242,6 +286,14 @@ public final class ChooseGameModFunc extends GameLauncherFunc
                         break;
                     case Q3EGlobals.GAME_DOOM3BFG:
                         if(!Q3EUtils.q3ei.isD3BFG)
+                            continue;
+                        break;
+                    case Q3EGlobals.GAME_ETW:
+                        if(!Q3EUtils.q3ei.isETW)
+                            continue;
+                        break;
+                    case Q3EGlobals.GAME_REALRTCW:
+                        if(!Q3EUtils.q3ei.isRealRTCW)
                             continue;
                         break;
                     case Q3EGlobals.GAME_DOOM3:

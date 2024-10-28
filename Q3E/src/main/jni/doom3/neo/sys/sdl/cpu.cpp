@@ -195,8 +195,8 @@ void Sys_FPU_SetFTZ(bool enable) {
 Sys_GetProcessorId
 ================
 */
-cpuid_t Sys_GetProcessorId( void ) {
-#if 1 //k: force generic
+int Sys_GetProcessorId( void ) {
+#if 0 //k: force generic
     return CPUID_GENERIC;
 #else
 	int flags = CPUID_GENERIC;
@@ -234,5 +234,26 @@ Sys_FPU_SetPrecision
 void Sys_FPU_SetPrecision() {
 #if defined(_MSC_VER) && defined(_M_IX86)
 	_controlfp(_PC_64, _MCW_PC);
+#endif
+}
+
+/*
+========================
+Sys_CPUCount
+
+numLogicalCPUCores	- the number of logical CPU per core
+numPhysicalCPUCores	- the total number of cores per package
+numCPUPackages		- the total number of packages (physical processors)
+========================
+*/
+void Sys_CPUCount( int& numLogicalCPUCores, int& numPhysicalCPUCores, int& numCPUPackages )
+{
+#ifdef _WIN32
+    extern void Sys_Win_CPUCount( int& numLogicalCPUCores, int& numPhysicalCPUCores, int& numCPUPackages );
+    Sys_Win_CPUCount(numLogicalCPUCores, numPhysicalCPUCores, numCPUPackages);
+#else
+    numPhysicalCPUCores = SDL_GetCPUCount();
+	numLogicalCPUCores = numPhysicalCPUCores;
+	numCPUPackages = 1;
 #endif
 }

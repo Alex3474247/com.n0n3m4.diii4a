@@ -87,7 +87,7 @@ public class Q3EGameHelper
 
         if (!Q3EUtils.q3ei.IsInitGame()) // not from GameLauncher::startActivity
         {
-            Q3EUtils.q3ei.standalone = preferences.getBoolean(Q3EPreference.GAME_STANDALONE_DIRECTORY, false);
+            Q3EUtils.q3ei.standalone = preferences.getBoolean(Q3EPreference.GAME_STANDALONE_DIRECTORY, true);
 
             Q3EKeyCodes.InitD3Keycodes();
 
@@ -106,7 +106,7 @@ public class Q3EGameHelper
             {
                 extraCommand += " +disconnect";
             }
-            if(preferences.getBoolean(Q3EPreference.pref_harm_auto_quick_load, false) && (Q3EUtils.q3ei.IsIdTech4() || Q3EUtils.q3ei.isRTCW))
+            if(preferences.getBoolean(Q3EPreference.pref_harm_auto_quick_load, false) && (Q3EUtils.q3ei.IsIdTech4() || Q3EUtils.q3ei.isRTCW || Q3EUtils.q3ei.isRealRTCW))
             {
                 extraCommand += " +loadGame QuickSave";
             }
@@ -124,16 +124,22 @@ public class Q3EGameHelper
         Q3EUtils.q3ei.joystick_smooth = preferences.getBoolean(Q3EPreference.pref_analog, true);
         Q3EUtils.q3ei.VOLUME_UP_KEY_CODE = Q3EKeyCodes.GetRealKeyCode(preferences.getInt(Q3EPreference.VOLUME_UP_KEY, Q3EKeyCodes.KeyCodesGeneric.K_F3));
         Q3EUtils.q3ei.VOLUME_DOWN_KEY_CODE = Q3EKeyCodes.GetRealKeyCode(preferences.getInt(Q3EPreference.VOLUME_DOWN_KEY, Q3EKeyCodes.KeyCodesGeneric.K_F2));
-        // DOOM 3: hardscorps mod template disable smooth joystick
-        /*if(Q3EUtils.q3ei.joystick_smooth)
+
+        // DOOM 3: Hardscorps and Quake4: hardqore mod template disable smooth joystick
+        if(Q3EUtils.q3ei.joystick_smooth)
         {
-            if(!Q3EUtils.q3ei.isQ4 && !Q3EUtils.q3ei.isPrey && !Q3EUtils.q3ei.isQ2)
+            String game = preferences.getString(Q3EUtils.q3ei.GetGameModPreferenceKey(), "");
+            if(Q3EUtils.q3ei.isQ4)
             {
-                String game = preferences.getString(Q3EUtils.q3ei.GetGameModPreferenceKey(), "");
+                if("hardqore".equals(game))
+                    Q3EUtils.q3ei.joystick_smooth = false;
+            }
+            else if(Q3EUtils.q3ei.isD3)
+            {
                 if("hardscorps".equals(game))
                     Q3EUtils.q3ei.joystick_smooth = false;
             }
-        }*/
+        }
 
         Q3EUtils.q3ei.SetAppStoragePath(m_context);
 
@@ -750,7 +756,11 @@ public class Q3EGameHelper
         // if(Q3EUtils.q3ei.isTDM) subdatadir = "dnf"; // Test a new game using TDM
 
         int refreshRate = (int)Q3EUtils.GetRefreshRate(m_context);
-        String appHome = Q3EUtils.GetAppStoragePath(m_context, null);
+        String appHome = Q3EUtils.GetAppInternalSearchPath(m_context, null);
+		appHome = KStr.AppendPath(appHome, subdatadir);
+
+        int eventQueue = Q3EPreference.GetIntFromString(preferences, Q3EPreference.EVENT_QUEUE, 0);
+        Q3EJNI.PreInit(eventQueue);
 
         boolean res = Q3EJNI.init(
                 GetEngineLib(),
@@ -769,6 +779,7 @@ public class Q3EGameHelper
                 usingMouse,
                 refreshRate,
                 appHome,
+                Q3EUtils.q3ei.joystick_smooth,
                 runBackground > 0
         );
         if(!res)

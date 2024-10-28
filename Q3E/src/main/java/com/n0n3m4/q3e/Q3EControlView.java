@@ -31,7 +31,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.opengl.GLES11;
-import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.preference.PreferenceManager;
@@ -46,23 +45,19 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.n0n3m4.q3e.device.Q3EMouseDevice;
-import com.n0n3m4.q3e.gl.Q3EGL;
 import com.n0n3m4.q3e.gl.Q3EConfigChooser;
 import com.n0n3m4.q3e.karin.KKeyToolBar;
-import com.n0n3m4.q3e.karin.KOnceRunnable;
 import com.n0n3m4.q3e.onscreen.Button;
 import com.n0n3m4.q3e.onscreen.Disc;
 import com.n0n3m4.q3e.onscreen.Finger;
 import com.n0n3m4.q3e.onscreen.Joystick;
 import com.n0n3m4.q3e.onscreen.MouseControl;
+import com.n0n3m4.q3e.onscreen.MouseButton;
 import com.n0n3m4.q3e.onscreen.Paintable;
 import com.n0n3m4.q3e.onscreen.Slider;
 import com.n0n3m4.q3e.onscreen.TouchListener;
 import com.n0n3m4.q3e.onscreen.UiLoader;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -243,29 +238,25 @@ public class Q3EControlView extends GLSurfaceView implements GLSurfaceView.Rende
 
             for (int i = 0; i < Q3EUtils.q3ei.UI_SIZE; i++)
             {
+                boolean visible = uildr.CheckVisible(i);
+                Log.i("Q3EControlView", "On-screen button " + i + " -> " + (visible ? "show" : "hide"));
+                if(!visible)
+                    continue;
                 Object o = uildr.LoadElement(i, false);
                 touch_elements.add((TouchListener) o);
                 paint_elements.add((Paintable) o);
             }
-
-/*            if (Q3EUtils.q3ei.isRTCW)
-            {
-                actbutton = (Button) touch_elements.get(Q3EUtils.q3ei.RTCW4A_UI_ACTION);
-                kickbutton = (Button) touch_elements.get(Q3EUtils.q3ei.RTCW4A_UI_KICK);
-            } else
-            {
-                actbutton = null;
-                kickbutton = null;
-            }*/
 
             if (hideonscr)
             {
                 touch_elements.clear();
             }
             //must be last
-            touch_elements.add(new MouseControl(this, false));
-            touch_elements.add(new MouseControl(this, mPrefs.getBoolean(Q3EPreference.pref_2fingerlmb, false)));
-            touch_elements.add(new MouseControl(this, false));
+            //touch_elements.add(new MouseControl(this, false));
+            touch_elements.add(new MouseControl(this));
+            if(mPrefs.getBoolean(Q3EPreference.pref_2fingerlmb, false))
+                touch_elements.add(new MouseButton(this));
+            //touch_elements.add(new MouseControl(this, false));
 
             SortOnScreenButtons(); //k sort priority
 
@@ -525,9 +516,14 @@ public class Q3EControlView extends GLSurfaceView implements GLSurfaceView.Rende
             return true;
         }
 
-        int actionMasked = event.getActionMasked();
         int actionIndex = event.getActionIndex();
         int pid = event.getPointerId(actionIndex);
+        if(pid >= fingers.length)
+        {
+            return true;
+        }
+
+        int actionMasked = event.getActionMasked();
         if ((actionMasked == MotionEvent.ACTION_DOWN) || (actionMasked == MotionEvent.ACTION_POINTER_DOWN))
         {
             int x = (int) event.getX(actionIndex);
@@ -545,32 +541,36 @@ public class Q3EControlView extends GLSurfaceView implements GLSurfaceView.Rende
         //k try
         {
             Arrays.fill(handle_elements, null);
-            int handled = 0;
+            int handledIndexOfElements = 0;
             for (Finger f : fingers)
             {
                 if (f.target != null)
                 {
                     // check is handled: only once on a button
                     int i = 0;
-                    while(i < handled)
+                    while(i < handledIndexOfElements)
                     {
                         if(null == handle_elements[i] || handle_elements[i] == f.target)
                             break;
                         i++;
                     }
-                    if(i < handled)
-                        continue;
-                    handle_elements[handled] = f.target;
-                    handled++;
+                    if(i < handledIndexOfElements)
+                    {
+                        // if(!f.target.SupportMultiTouch())
+                            continue;
+                    }
+                    else
+                    {
+                        handle_elements[handledIndexOfElements] = f.target;
+                        handledIndexOfElements++;
+                    }
 
                     if (!f.onTouchEvent(event))
                         f.target = null;
                 }
             }
         }
-        //k catch (Exception ignored)
-        {
-        }
+        //k catch (Exception ignored) { }
 
         if ((actionMasked == MotionEvent.ACTION_UP) || (actionMasked == MotionEvent.ACTION_POINTER_UP) || (actionMasked == MotionEvent.ACTION_CANCEL))
         {
@@ -623,12 +623,8 @@ public class Q3EControlView extends GLSurfaceView implements GLSurfaceView.Rende
             Toast.makeText(getContext(), R.string.click_back_again_to_exit, Toast.LENGTH_LONG).show();
         else if (m_pressBackCount == Q3EGlobals.CONST_DOUBLE_PRESS_BACK_TO_EXIT_COUNT)
         {
-            m_renderView.Shutdown();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
-                ((Activity) getContext()).finishAffinity();
-            else
-                ((Activity) getContext()).finish();
-            System.exit(0);
+            //m_renderView.Shutdown();
+            Q3E.Finish();
             return true;
         }
         return res;
@@ -699,20 +695,23 @@ public class Q3EControlView extends GLSurfaceView implements GLSurfaceView.Rende
         {
             if (Q3EUtils.q3ei.callbackObj.notinmenu && !Q3EUtils.q3ei.callbackObj.inLoading)
             {
-                float x, y;
-                switch (m_display.getRotation()) {
-                    case Surface.ROTATION_270: // invert
-                        x = -event.values[0];
-                        y = -event.values[1];
-                        break;
-                    case Surface.ROTATION_90:
-                    default:
-                        x = event.values[0];
-                        y = event.values[1];
-                        break;
-                }
+                //if(event.values[0] != 0.0f || event.values[1] != 0.0f)
+                {
+                    float x, y;
+                    switch (m_display.getRotation()) {
+                        case Surface.ROTATION_270: // invert
+                            x = -event.values[0];
+                            y = -event.values[1];
+                            break;
+                        case Surface.ROTATION_90:
+                        default:
+                            x = event.values[0];
+                            y = event.values[1];
+                            break;
+                    }
 
-                Q3EUtils.q3ei.callbackObj.sendMotionEvent(-x * m_xAxisGyroSens, y * m_yAxisGyroSens);
+                    Q3EUtils.q3ei.callbackObj.sendMotionEvent(-x * m_xAxisGyroSens, y * m_yAxisGyroSens);
+                }
             }
         }
     }
@@ -814,7 +813,9 @@ public class Q3EControlView extends GLSurfaceView implements GLSurfaceView.Rende
             return Q3EGlobals.TYPE_JOYSTICK;
         if(touchListener instanceof Disc)
             return Q3EGlobals.TYPE_DISC;
-        return Q3EGlobals.TYPE_MOUSE;
+        if(touchListener instanceof MouseControl)
+            return Q3EGlobals.TYPE_MOUSE;
+        return Q3EGlobals.TYPE_MOUSE_BUTTON;
     }
 
     private void SortOnScreenButtons()
@@ -825,7 +826,8 @@ public class Q3EControlView extends GLSurfaceView implements GLSurfaceView.Rende
                 Q3EGlobals.TYPE_SLIDER,
                 Q3EGlobals.TYPE_DISC,
                 Q3EGlobals.TYPE_JOYSTICK,
-                Q3EGlobals.TYPE_MOUSE
+                Q3EGlobals.TYPE_MOUSE,
+                Q3EGlobals.TYPE_MOUSE_BUTTON
         );
 
         Arrays.sort(touchListeners, new Comparator<TouchListener>() {

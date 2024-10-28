@@ -199,6 +199,9 @@ typedef struct {
 	idVec3	pos;
 } aasLocation_t;
 
+#ifdef _MOD_VIEW_BODY
+class idViewBody;
+#endif
 class idPlayer : public idActor
 {
 	public:
@@ -324,6 +327,13 @@ class idPlayer : public idActor
 		idVec3 firstPersonViewOrigin_playerViewOrigin; // melee
 		idVec3 firstPersonViewOrigin_viewWeaponOrigin; // launch
 		idVec3 fullBodyAwarenessOffset;
+
+#ifdef _MOD_VIEW_BODY
+		void SetupViewBody( void );
+		void UpdateBody(void);
+		friend class idViewBody;
+		idEntityPtr<idViewBody> viewBody;
+#endif
 #endif
 
 	public:
@@ -432,6 +442,7 @@ class idPlayer : public idActor
 		void					NextWeapon(void);
 		void					NextBestWeapon(void);
 		void					PrevWeapon(void);
+    	void					LastWeapon					( void ); // RAVEN: switch last weapon
 		void					SelectWeapon(int num, bool force);
 		void					DropWeapon(bool died) ;
 		void					StealWeapon(idPlayer *player);

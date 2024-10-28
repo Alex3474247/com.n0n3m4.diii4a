@@ -66,11 +66,14 @@ idCVar r_useInfiniteFarZ("r_useInfiniteFarZ", "1", CVAR_RENDERER | CVAR_BOOL, "u
 idCVar r_znear("r_znear", "3", CVAR_RENDERER | CVAR_FLOAT, "near Z clip plane distance", 0.001f, 200.0f);
 
 #ifdef _NO_LIGHT
-idCVar r_noLight("r_noLight", "0", CVAR_RENDERER | CVAR_INTEGER/*CVAR_BOOL | CVAR_ARCHIVE*/, "lighting disable hack: 0 - using interaction lighting; 1 - disable lighting(not allow switch); 2 - disable lighting(allow switch with 0)");
+idCVar r_noLight("r_noLight", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_INIT, "lighting disable hack");
 #endif
-idCVar r_useETC1("r_useETC1", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_ARCHIVE, "use ETC1 compression");
-idCVar r_useETC1Cache("r_useETC1cache", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_ARCHIVE, "use ETC1 compression");
-idCVar r_useDXT("r_useDXT", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_ARCHIVE, "use DXT compression if possible");
+idCVar r_useETC1("r_useETC1", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_INIT, "use ETC1 compression");
+idCVar r_useETC1Cache("r_useETC1cache", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_INIT, "use ETC1 compression");
+idCVar r_useDXT("r_useDXT", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_INIT, "use DXT compression if possible");
+#ifdef _OPENGLES3
+idCVar r_useETC2("r_useETC2", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_INIT, "use ETC2 compression on OpenGLES3.0+");
+#endif
 
 idCVar r_ignoreGLErrors("r_ignoreGLErrors", "1", CVAR_RENDERER | CVAR_BOOL, "ignore GL errors");
 idCVar r_finish("r_finish", "0", CVAR_RENDERER | CVAR_BOOL, "force a call to glFinish() every frame");
@@ -222,13 +225,13 @@ idCVar r_materialOverride("r_materialOverride", "", CVAR_RENDERER, "overrides al
 
 idCVar r_debugRenderToTexture("r_debugRenderToTexture", "0", CVAR_RENDERER | CVAR_INTEGER, "");
 
-idCVar harm_r_maxFps( "harm_r_maxFps", "0", CVAR_RENDERER | CVAR_INTEGER | CVAR_ARCHIVE, "Limit maximum FPS. 0 = unlimited" );
-idCVar harm_r_shadowCarmackInverse("harm_r_shadowCarmackInverse", "0", CVAR_INTEGER|CVAR_RENDERER|CVAR_ARCHIVE, "[Harmattan]: Stencil shadow using Carmack-Inverse.");
+idCVar harm_r_maxFps( "r_maxFps", "0", CVAR_RENDERER | CVAR_INTEGER | CVAR_ARCHIVE, "Limit maximum FPS. 0 = unlimited" );
+idCVar harm_r_shadowCarmackInverse("harm_r_shadowCarmackInverse", "0", CVAR_INTEGER|CVAR_RENDERER|CVAR_ARCHIVE, "Stencil shadow using Carmack-Inverse.");
 idCVar r_scaleMenusTo43( "r_scaleMenusTo43", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "Scale menus, fullscreen videos and PDA to 4:3 aspect ratio" );
 //k: temp memory allocate in stack / heap control on Android
 #ifdef _DYNAMIC_ALLOC_STACK_OR_HEAP
 // #warning "For fix `DOOM3: The lost mission` mod, when load `game/le_hell` map(loading resource `models/mapobjects/hell/hellintro.lwo` model, a larger scene, alloca() stack out of memory)."
-/*static */idCVar harm_r_maxAllocStackMemory("harm_r_maxAllocStackMemory", "524288", CVAR_INTEGER|CVAR_RENDERER|CVAR_ARCHIVE, "[Harmattan]: Control allocate temporary memory when load model data on Android, default value is `524288` bytes(Because stack memory is limited on Android, exam `game/le_hell` map's `models/mapobjects/hell/hellintro.lwo` in `DOOM3: The lost mission` mod). If less than this `byte` value, call `alloca` in stack memory, else call `malloc`/`calloc` in heap memory(0 - Always heap, Negative - Always stack, Positive - Max stack memory limit).");
+/*static */idCVar harm_r_maxAllocStackMemory("harm_r_maxAllocStackMemory", "524288", CVAR_INTEGER|CVAR_RENDERER|CVAR_ARCHIVE, "Control allocate temporary memory when load model data, default value is `524288` bytes(Because stack memory is limited on OS:\n 0 = Always heap;\n Negative = Always stack;\n Positive = Max stack memory limit(If less than this `byte` value, call `alloca` in stack memory, else call `malloc`/`calloc` in heap memory)).");
 #endif
 
 #ifdef _USING_STB
@@ -478,6 +481,22 @@ vidmode_t r_vidModes[] = {
 	{ "Mode  6: 1152x864",		1152,	864 },
 	{ "Mode  7: 1280x1024",		1280,	1024 },
 	{ "Mode  8: 1600x1200",		1600,	1200 },
+        // DG: from here on: modes I added.
+    { "Mode  9: 1280x720",		1280,	720 },
+    { "Mode 10: 1366x768",		1366,	768 },
+    { "Mode 11: 1440x900",		1440,	900 },
+    { "Mode 12: 1400x1050",		1400,	1050 },
+    { "Mode 13: 1600x900",		1600,	900 },
+    { "Mode 14: 1680x1050",		1680,	1050 },
+    { "Mode 15: 1920x1080",		1920,	1080 },
+    { "Mode 16: 1920x1200",		1920,	1200 },
+    { "Mode 17: 2048x1152",		2048,	1152 },
+    { "Mode 18: 2560x1600",		2560,	1600 },
+    { "Mode 19: 3200x2400",		3200,	2400 },
+    { "Mode 20: 3840x2160",		3840,   2160 },
+    { "Mode 21: 4096x2304",		4096,   2304 },
+    { "Mode 22: 2880x1800",		2880,   1800 },
+    { "Mode 23: 2560x1440",		2560,   1440 },
 };
 static int	s_numVidModes = (sizeof(r_vidModes) / sizeof(r_vidModes[0]));
 
@@ -614,6 +633,9 @@ void R_InitOpenGL(void)
 
 	cmdSystem->AddCommand("reloadGLSLprograms", R_ReloadGLSLPrograms_f, CMD_FL_RENDERER, "reloads GLSL programs");
 	R_ReloadGLSLPrograms_f(idCmdArgs());
+
+    // Init framebuffer: shadow map, stencil texture
+    Framebuffer::Init();
 
 	// allocate the vertex array range or vertex objects
 	vertexCache.Init();
@@ -2055,6 +2077,12 @@ void R_VidRestart_f(const idCmdArgs &args)
 		soundSystem->ShutdownHW();
 		Sys_ShutdownInput();
 		globalImages->PurgeAllImages();
+
+        // delete framebuffer: shadow map, stencil texture
+        Framebuffer::Shutdown();
+        // delete all shaders
+        R_GLSL_Shutdown();
+
 		// free the context and close the window
 		GLimp_Shutdown();
 		glConfig.isInitialized = false;
@@ -2238,8 +2266,11 @@ void R_InitCommands(void)
 #endif
 	extern void R_ExportGLSLShaderSource_f(const idCmdArgs &args);
 	extern void R_PrintGLSLShaderSource_f(const idCmdArgs &args);
+	extern void R_ExportDevShaderSource_f(const idCmdArgs &args);
+	common->Printf("[Harmattan]: GLSL command features: \n    exportGLSLShaderSource: export GLSL shader source to filesystem.\n    reloadGLSLprograms: reload external shader source.\n    printGLSLShaderSource: print shader source.\n    exportDevShaderSource: export original C-String GLSL shader source to filesystem.\n");
 	cmdSystem->AddCommand("exportGLSLShaderSource", R_ExportGLSLShaderSource_f, CMD_FL_RENDERER, "export internal GLSL shader source to game data directory\nUsage: COMMAND [name1 name2 ...] [save_path]");
 	cmdSystem->AddCommand("printGLSLShaderSource", R_PrintGLSLShaderSource_f, CMD_FL_RENDERER, "print internal GLSL shader source\nUsage: COMMAND [name1 name2 ...]");
+	cmdSystem->AddCommand("exportDevShaderSource", R_ExportDevShaderSource_f, CMD_FL_RENDERER, "export internal original C-String GLSL shader source for developer");
 #ifdef _EXTRAS_TOOLS
 	MD5Anim_AddCommand();
 	ModelTest_AddCommand();
@@ -2381,6 +2412,9 @@ void idRenderSystemLocal::Shutdown(void)
 
 	globalImages->Shutdown();
 
+    // delete framebuffer: shadow map, stencil texture
+    Framebuffer::Shutdown();
+
 	// close the r_logFile
 	if (logFile) {
 		fprintf(logFile, "*** CLOSING LOG ***\n");
@@ -2403,6 +2437,8 @@ void idRenderSystemLocal::Shutdown(void)
 
 	Clear();
 
+    // delete all shaders
+    R_GLSL_Shutdown();
 	ShutdownOpenGL();
 }
 
@@ -2446,14 +2482,6 @@ void idRenderSystemLocal::InitOpenGL(void)
 		R_InitOpenGL();
 
 		globalImages->ReloadAllImages();
-
-//#ifdef _SHADOW_MAPPING
-		Framebuffer::Init();
-//#endif
-		// offlineScreenRenderer.Init(glConfig.vidWidth, glConfig.vidHeight);
-		// if(USING_GLES31)
-		if(idStencilTexture::IsAvailable())
-			stencilTexture.Init(glConfig.vidWidth, glConfig.vidHeight);
 		
 		err = qglGetError();
 
@@ -2520,46 +2548,48 @@ int idRenderSystemLocal::GetScreenHeight(void) const
 	return glConfig.vidHeight;
 }
 
-void GL_CheckErrors(const char *name)
+bool GL_CheckErrors(const char *name)
 {
 	int		err;
 	char	s[64];
-	int		i;
+	int		i = 0;
 
 	// check for up to 10 errors pending
-	err = qglGetError();
+    while ((err = qglGetError()) != GL_NO_ERROR) {
+        i++;
 
-	if (err == GL_NO_ERROR) {
-		common->Printf("GL_CheckErrors for %s: NO_ERROR\n", name);
-		return;
-	}
-
-	switch (err) {
-		case GL_INVALID_ENUM:
-			strcpy(s, "GL_INVALID_ENUM");
-			break;
-		case GL_INVALID_VALUE:
-			strcpy(s, "GL_INVALID_VALUE");
-			break;
-		case GL_INVALID_OPERATION:
-			strcpy(s, "GL_INVALID_OPERATION");
-			break;
+        switch (err) {
+            case GL_INVALID_ENUM:
+                strcpy(s, "GL_INVALID_ENUM");
+                break;
+            case GL_INVALID_VALUE:
+                strcpy(s, "GL_INVALID_VALUE");
+                break;
+            case GL_INVALID_OPERATION:
+                strcpy(s, "GL_INVALID_OPERATION");
+                break;
 #if !defined(GL_ES_VERSION_2_0)
-			case GL_STACK_OVERFLOW:
+                case GL_STACK_OVERFLOW:
             strcpy(s, "GL_STACK_OVERFLOW");
             break;
         case GL_STACK_UNDERFLOW:
             strcpy(s, "GL_STACK_UNDERFLOW");
             break;
 #endif
-		case GL_OUT_OF_MEMORY:
-			strcpy(s, "GL_OUT_OF_MEMORY");
-			break;
-		default:
-			idStr::snPrintf(s, sizeof(s), "%x", err);
-			break;
-	}
-	common->Printf("GL_CheckErrors for %s: %s\n", name, s);
+            case GL_OUT_OF_MEMORY:
+                strcpy(s, "GL_OUT_OF_MEMORY");
+                break;
+            default:
+                idStr::snPrintf(s, sizeof(s), "%x", err);
+                break;
+        }
+        common->Printf("GL_CheckErrors(%d) for %s: %s\n", i, name, s);
+    }
+
+    if (i == 0) {
+        common->Printf("GL_CheckErrors for %s: NO_ERROR\n", name);
+    }
+    return i == 0;
 }
 
 #include "rb/Framebuffer.cpp"
@@ -2585,17 +2615,19 @@ idCVar r_shadowMapLodBias( "r_shadowMapLodBias", "0", CVAR_RENDERER | CVAR_INTEG
 idCVar r_shadowMapPolygonFactor( "r_shadowMapPolygonFactor", "0" /*"2"*/, CVAR_RENDERER | CVAR_FLOAT, "polygonOffset factor for drawing shadow buffer" );
 idCVar r_shadowMapPolygonOffset( "r_shadowMapPolygonOffset", "0" /*"3000"*/, CVAR_RENDERER | CVAR_FLOAT, "polygonOffset units for drawing shadow buffer" );
 idCVar r_shadowMapOccluderFacing( "r_shadowMapOccluderFacing", "2", CVAR_RENDERER | CVAR_INTEGER, "0 = front faces, 1 = back faces, 2 = twosided" );
-idCVar r_forceShadowMapsOnAlphaTestedSurfaces( "r_forceShadowMapsOnAlphaTestedSurfaces", "1", CVAR_RENDERER | CVAR_BOOL | CVAR_ARCHIVE, "0 = same shadowing as with stencil shadows, 1 = ignore noshadows for alpha tested materials" );
+idCVar r_forceShadowMapsOnAlphaTestedSurfaces( "r_forceShadowMapsOnAlphaTestedSurfaces", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_ARCHIVE, "0 = same shadowing as with stencil shadows, 1 = ignore noshadows for alpha tested materials" );
 // RB end
 
-idCVar harm_r_shadowMapLod( "harm_r_shadowMapLod", "-1", CVAR_RENDERER | CVAR_INTEGER, "force using shadow map LOD(0 - 4, -1: auto)" );
+idCVar harm_r_shadowMapLod( "harm_r_shadowMapLod", "-1", CVAR_RENDERER | CVAR_INTEGER, "force using shadow map LOD(0 - 4, -1 = auto)" );
 idCVar harm_r_shadowMapBias( "harm_r_shadowMapBias", "0.001", CVAR_RENDERER | CVAR_FLOAT | CVAR_ARCHIVE, "shadow's depth compare BIAS in shadow mapping" );
 idCVar harm_r_shadowMapAlpha( "harm_r_shadowMapAlpha", "1.0", CVAR_RENDERER | CVAR_FLOAT | CVAR_ARCHIVE, "shadow's alpha in shadow mapping" );
+#if 0
 idCVar harm_r_shadowMapSampleFactor( "harm_r_shadowMapSampleFactor", "-1.0", CVAR_RENDERER | CVAR_FLOAT | CVAR_ARCHIVE, "soft shadow's sample factor in shadow mapping(0: disable, -1: auto, > 0: multiple)" );
 idCVar harm_r_shadowMapFrustumNear( "harm_r_shadowMapFrustumNear", "4.0", CVAR_RENDERER | CVAR_FLOAT | CVAR_ARCHIVE, "shadow map render frustum near" );
 idCVar harm_r_shadowMapFrustumFar( "harm_r_shadowMapFrustumFar", "-2.5", CVAR_RENDERER | CVAR_FLOAT | CVAR_ARCHIVE, "shadow map render frustum far(0: 2.5 x light's radius, < 0: light's radius x multiple, > 0: using fixed value)" );
+#endif
 idCVar harm_r_useLightScissors("harm_r_useLightScissors", "3", CVAR_RENDERER | CVAR_INTEGER, "0 = no scissor, 1 = non-clipped scissor, 2 = near-clipped scissor, 3 = fully-clipped scissor", 0, 3, idCmdSystem::ArgCompletion_Integer<0, 3> );
-idCVar harm_r_shadowMapDepthBuffer( "harm_r_shadowMapDepthBuffer", "0", CVAR_RENDERER | CVAR_INIT | CVAR_INTEGER, "0 = Auto; 1 = depth texture; 2 = color texture's red; 3 = color texture's rgba", 0, 3, idCmdSystem::ArgCompletion_Integer<0, 3> );
+idCVar harm_r_shadowMapDepthBuffer( "harm_r_shadowMapDepthBuffer", "0", CVAR_RENDERER | CVAR_INIT | CVAR_INTEGER, "render depth to color or depth texture in OpenGLES2.0. 0 = Auto; 1 = depth texture; 2 = color texture's red; 3 = color texture's rgba", 0, 3, idCmdSystem::ArgCompletion_Integer<0, 3> );
 idCVar harm_r_shadowMapNonParallelLightUltra( "harm_r_shadowMapNonParallelLightUltra", "0", CVAR_RENDERER | CVAR_BOOL/*//k next version open: | CVAR_ARCHIVE*/, "non parallel light allow ultra quality shadow map texture" );
 idCVar harm_r_shadowMapJitterScale( "harm_r_shadowMapJitterScale", "2.5", CVAR_RENDERER | CVAR_FLOAT | CVAR_ARCHIVE, "scale factor for jitter offset" );
 
@@ -2607,7 +2639,7 @@ idCVar harm_r_stencilShadowTranslucent( "harm_r_stencilShadowTranslucent", "0", 
 idCVar harm_r_stencilShadowAlpha( "harm_r_stencilShadowAlpha", "1.0", CVAR_RENDERER | CVAR_FLOAT | CVAR_ARCHIVE, "translucent shadow's alpha in stencil shadow" );
 #ifdef _SOFT_STENCIL_SHADOW
 idCVar harm_r_stencilShadowSoft( "harm_r_stencilShadowSoft", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_ARCHIVE, "enable soft stencil shadow(Only OpenGLES3.1+)" );
-idCVar harm_r_stencilShadowSoftBias( "harm_r_stencilShadowSoftBias", "-1", CVAR_RENDERER | CVAR_FLOAT | CVAR_ARCHIVE, "soft stencil shadow sampler BIAS(-1 to automatic, 0 to disable)" );
+idCVar harm_r_stencilShadowSoftBias( "harm_r_stencilShadowSoftBias", "-1", CVAR_RENDERER | CVAR_FLOAT | CVAR_ARCHIVE, "soft stencil shadow sampler BIAS(-1 = automatic; 0 = disable; positive = value)" );
 idCVar harm_r_stencilShadowSoftCopyStencilBuffer( "harm_r_stencilShadowSoftCopyStencilBuffer", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_ARCHIVE, "copy stencil buffer directly for soft stencil shadow.\n0 = copy depth buffer and bind and renderer stencil buffer to texture directly\n1 = copy stencil buffer to texture directly" ); // I don't sure any GPUs are allowed to copy stencil buffer directly.
 #endif
 #endif

@@ -37,6 +37,11 @@ static idDynamicBlockAlloc<byte, 1<<20, 1<<10>	soundCacheAllocator;
 #else
 static idDynamicAlloc<byte, 1<<20, 1<<10>		soundCacheAllocator;
 #endif
+#ifdef _OPENAL
+#ifdef _OPENAL_SOFT
+static idCVar harm_s_useAmplitudeDataOpenAL("harm_s_useAmplitudeDataOpenAL", "0", CVAR_SOUND | CVAR_BOOL | CVAR_INIT, "Use amplitude data on OpenAL(It cause large shake)");
+#endif
+#endif
 
 
 /*
@@ -551,6 +556,9 @@ void idSoundSample::Load(void)
 					common->Error("idSoundCache: error loading data into OpenAL hardware buffer");
 #endif
 				} else {
+#ifdef _OPENAL_SOFT //k: 2024 for large shake in idSoundWorld::CurrentShakeAmplitudeForPosition, using non-OpenAL compute amplitude
+					if(harm_s_useAmplitudeDataOpenAL.GetBool()) {
+#endif
 					// Compute amplitude block size
 					int blockSize = 512 * objectInfo.nSamplesPerSec / 44100 ;
 
@@ -574,6 +582,9 @@ void idSoundSample::Load(void)
 						((short *)amplitudeData)[(i / blockSize) * 2     ] = min;
 						((short *)amplitudeData)[(i / blockSize) * 2 + 1 ] = max;
 					}
+#ifdef _OPENAL_SOFT //k: 2024 for large shake in idSoundWorld::CurrentShakeAmplitudeForPosition, using non-OpenAL compute amplitude
+					}
+#endif
 
 					hardwareBuffer = true;
 				}
@@ -584,11 +595,12 @@ void idSoundSample::Load(void)
 		if (objectInfo.wFormatTag == WAVE_FORMAT_TAG_OGG) {
 #if defined(_OPENAL_SOFT)
 
-			if ((objectSize < ((int) objectInfo.nSamplesPerSec * idSoundSystemLocal::s_decompressionLimit.GetInteger()))) {
+			if ((objectSize < ((int) objectInfo.nSamplesPerSec * idSoundSystemLocal::s_decompressionLimit.GetInteger())))
 #else
 
-			if ((alIsExtensionPresent(ID_ALCHAR "EAX-RAM") == AL_TRUE) && (objectSize < ((int) objectInfo.nSamplesPerSec * idSoundSystemLocal::s_decompressionLimit.GetInteger()))) {
+			if ((alIsExtensionPresent(ID_ALCHAR "EAX-RAM") == AL_TRUE) && (objectSize < ((int) objectInfo.nSamplesPerSec * idSoundSystemLocal::s_decompressionLimit.GetInteger())))
 #endif
+			{
 				alGetError();
 				alGenBuffers(1, &openalBuffer);
 
@@ -645,6 +657,9 @@ void idSoundSample::Load(void)
 						common->Error("idSoundCache: error loading data into OpenAL hardware buffer");
 #endif
 					else {
+#ifdef _OPENAL_SOFT //k: 2024 for large shake in idSoundWorld::CurrentShakeAmplitudeForPosition, using non-OpenAL compute amplitude
+						if(harm_s_useAmplitudeDataOpenAL.GetBool()) {
+#endif
 						// Compute amplitude block size
 						int blockSize = 512 * objectInfo.nSamplesPerSec / 44100 ;
 
@@ -668,6 +683,9 @@ void idSoundSample::Load(void)
 							((short *)amplitudeData)[(i / blockSize) * 2     ] = min;
 							((short *)amplitudeData)[(i / blockSize) * 2 + 1 ] = max;
 						}
+#ifdef _OPENAL_SOFT //k: 2024 for large shake in idSoundWorld::CurrentShakeAmplitudeForPosition, using non-OpenAL compute amplitude
+						}
+#endif
 
 						hardwareBuffer = true;
 					}
@@ -679,12 +697,15 @@ void idSoundSample::Load(void)
 		}
 
 		// Free memory if sample was loaded into hardware
+#ifdef _OPENAL_SOFT //k: 2024 for large shake in idSoundWorld::CurrentShakeAmplitudeForPosition, using non-OpenAL compute amplitude
+		if(harm_s_useAmplitudeDataOpenAL.GetBool())
+#endif
 		if (hardwareBuffer) {
 			soundCacheAllocator.Free(nonCacheData);
 			nonCacheData = NULL;
 		}
 	}
-	#endif
+#endif
 	fh.Close();
 }
 

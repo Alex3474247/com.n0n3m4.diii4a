@@ -84,6 +84,14 @@ endif()
 option(DEDICATED							"Build the dedicated server" 												OFF)
 option(ONATIVE								"Optimize for the host CPU" 												OFF)
 option(REPRODUCIBLE_BUILD 					"Replace __DATE__ and __TIME__ by hardcoded values for reproducible builds" OFF)
+option(CONSOLE								"Run on console" 															OFF)
+
+# For dev: Quick build
+option(BUILD_D3								"Build DOOM 3"																ON)
+option(BUILD_Q4								"Build Quake 4"																ON)
+option(BUILD_PREY							"Build Prey"																ON)
+option(BUILD_D3_MOD							"Build all DOOM3 mods"														ON)
+option(BUILD_Q4_MOD							"Build all Quake4 mods"														ON)
 
 # Extras engine extensions
 if(ANDROID)
@@ -92,21 +100,28 @@ endif()
 option(OPENGLES3							"OpenGLES3 support"															ON)
 option(OPENAL								"OpenAL(soft, OpenSL as backend) support"									ON)
 option(MULTITHREAD							"Multi-Thread support"														ON)
-option(USING_STB							"Using stb"																	ON)
+option(USE_STB_IMAGE						"Using stb_image"															ON)
 option(SUPPORT_OBJ							"Support obj model"															ON)
 option(SUPPORT_DAE							"Support dae model" 														ON)
 option(SHADOW_MAPPING						"Shadow mapping support" 													ON)
 option(NO_LIGHT								"r_noLight support" 														ON)
 option(STENCIL_SHADOW_IMPROVE				"Improve stencil shadow(translucent, soft(Only OpenGLES3.1+))" 				ON)
 option(EXTRAS_TOOLS							"Add extras commands" 														OFF)
+option(USE_MINIZ							"use miniz and minizip" 													OFF)
+option(USE_STB_OGG							"use stb_vorbis" 															OFF)
 
 # DOOM3 cores
+if(BUILD_D3)
 option(CORE									"Build the core" 															ON)
 option(BASE									"Build the base game code" 													ON)
-option(D3XP									"Build the d3xp game code" 													ON)
+
+option(D3_MOD_FULL_BODY_AWARENESS			"Build doom3 full body awareness mod support" 								ON)
+endif()
 
 # DOOM3 mods
-option(D3_MOD_FULL_BODY_AWARENESS			"Build doom3 full body awareness mod support" 								ON)
+if(BUILD_D3_MOD)
+option(D3XP									"Build the d3xp game code" 													ON)
+
 option(D3LE									"Build the d3le game code" 													ON)
 option(CDOOM								"Build the cdoom game code" 												ON)
 option(RIVENSIN								"Build the rivensin game code" 												ON)
@@ -116,18 +131,31 @@ option(SABOT								"Build the sabot game code" 												ON)
 option(HEXENEOC								"Build the hexeneoc game code" 												ON)
 option(FRAGGINGFREE							"Build the fraggingfree game code" 											ON)
 option(LIBRECOOP							"Build the librecoop game code" 											ON)
+option(LIBRECOOPXP							"Build the librecoopxp game code" 											ON)
+option(PERFECTED							"Build the perfected game code" 											ON)
+option(PERFECTEDROE							"Build the perfected_roe game code" 											ON)
+endif()
 
 # Quake4
+if(BUILD_Q4)
 option(RAVEN								"Build the raven core" 														ON)
 option(RAVEN_BSE_FX							"OpenBSE with Fx in Raven Quake 4" 											ON)
 option(QUAKE4								"Build the quake4 game code" 												ON)
 option(Q4_MOD_FULL_BODY_AWARENESS			"Build quake4 full body awareness mod support" 								ON)
 option(Q4_MOD_BOTS							"Build quake4 bots mod support" 											ON)
+endif()
+
+# Quake4 mods
+if(BUILD_Q4_MOD)
+option(HARDQORE								"Build the hardqore game code" 												ON)
+endif()
 
 # Prey 2006
+if(BUILD_PREY)
 option(HUMANHEAD							"Build the humanhead core" 													ON)
 option(PREY									"Build the prey game code" 													ON)
 option(PREY_MOD_FULL_BODY_AWARENESS			"Build prey full body awareness mod support" 								ON)
+endif()
 
 # Print env
 if(OPENSLES)
@@ -150,6 +178,10 @@ if(EXTRAS_TOOLS)
 	add_definitions(-D_EXTRAS_TOOLS)
 	message(STATUS "Build extras tools support")
 endif()
+
+# ETC2 support: but using C++11, so build a static library
+add_subdirectory(renderer/etc/EtcLib)
+set(local_libs "static_EtcLib")
 
 # Using traditional C++98
 set(CMAKE_CXX_STANDARD "98")
@@ -201,7 +233,15 @@ elseif(cpu STREQUAL "aarch64")
 elseif(cpu MATCHES "i.86")
 	set(cpu "x86")
 elseif(cpu MATCHES "[aA][mM][dD]64" OR cpu MATCHES "[xX]64")
+	if(MSVC)
+		if(CMAKE_SIZEOF_VOID_P EQUAL 8) # sizeof(void*) == 8 => must be amd64
+			set(cpu "x86_64")
+		else() # should be i386
+			set(cpu "x86")
+		endif()
+	else()
 	set(cpu "x86_64")
+	endif()
 elseif(cpu MATCHES "[aA][rR][mM].*") # some kind of arm..
 	# On 32bit Raspbian gcc -dumpmachine returns sth starting with "arm-",
 	# while clang -dumpmachine says "arm6k-..." - try to unify that to "arm"
@@ -216,11 +256,11 @@ add_definitions(-DD3_ARCH="${cpu}" -DD3_SIZEOFPTR=${CMAKE_SIZEOF_VOID_P})
 # Stores in variable <var> either 1 or 0 indicating whether the target architecture is big or little endian.
 # test_big_endian(big_endian)
 if(CMAKE_CXX_BYTE_ORDER EQUAL BIG_ENDIAN)
-	set(big_endian, "1")
+	set(big_endian 1)
 else()
-	set(big_endian, "0")
+	set(big_endian 0)
 endif()
-add_definitions(-BUILD_IS_BIG_ENDIAN="${big_endian}")
+add_definitions(-DBUILD_IS_BIG_ENDIAN=${big_endian})
 
 # target os
 if(APPLE)
@@ -270,8 +310,12 @@ if(CMAKE_MAJOR_VERSION LESS 3 OR ( CMAKE_MAJOR_VERSION EQUAL 3 AND CMAKE_MINOR_V
 endif()
 
 # libs
+if(USE_MINIZ)
+	add_definitions(-D_MINIZ)
+else()
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
+endif()
 
 # OpenAL using internal OpenAL-soft
 #[[find_package(OpenAL REQUIRED)
@@ -287,7 +331,7 @@ if(WIN32)
 	include_directories(${SDL2_INCLUDE_DIR})
 	set(SDLx_LIBRARY ${SDL2_LIBRARIES})
 	add_definitions(-D_SDL)
-	include_directories("externlibs/include")
+	include_directories("${CMAKE_CURRENT_SOURCE_DIR}/externlibs/include")
 	set(sys_libs ${sys_libs} ${SDLx_LIBRARY})
 endif()
 
@@ -487,10 +531,17 @@ if(WIN32)
 			ole32
 			dsound ksuser #k
 			)
+	set(DIRECTXSDK_INCLUDE_DIR)
 elseif(ANDROID)
-	set(sys_libs ${sys_libs} android dl EGL z)
+	set(sys_libs ${sys_libs} android dl EGL)
+	if(NOT USE_MINIZ)
+		set(sys_libs ${sys_libs} z)
+	endif()
 else() #TODO linux
-	set(sys_libs ${sys_libs} X11 dl EGL z pthread)
+	set(sys_libs ${sys_libs} X11 dl EGL pthread)
+	if(NOT USE_MINIZ)
+		set(sys_libs ${sys_libs} z)
+	endif()
 endif()
 
 # fallback for cmake versions without GNUInstallDirs
@@ -541,7 +592,6 @@ function(add_globbed_headers SRCLIST PATHPREFIX)
 	set(${SRCLIST} ${tmp_hdrs} ${${SRCLIST}})
 endfunction()
 
-set(local_libs static_ogg)
 if(COMPILE_CURL STREQUAL "1")
 	if(NOT WIN32)
 		set(local_libs ${local_libs} static_curl)
@@ -551,9 +601,13 @@ if(COMPILE_CURL STREQUAL "1")
 	message(STATUS "Build cURL")
 endif()
 
-if(USING_STB)
+if(USE_STB_IMAGE)
 	set(CORE_DEFINES "${CORE_DEFINES};_USING_STB")
 	message(STATUS "Using stb jpeg image")
+endif()
+if(USE_STB_OGG)
+	set(CORE_DEFINES "${CORE_DEFINES};_USING_STB_OGG")
+	message(STATUS "Using stb oggvorbis")
 endif()
 if(SUPPORT_OBJ)
 	set(CORE_DEFINES "${CORE_DEFINES};_MODEL_OBJ")
@@ -580,6 +634,9 @@ if(STENCIL_SHADOW_IMPROVE)
 		message(STATUS "Add soft stencil shadow support")
 	endif()
 	message(STATUS "Add stencil shadow support: ${stencil_shadow_improve_desc}")
+endif()
+if(USE_MINIZ)
+	message(STATUS "Using minizip and miniz instead of zlib")
 endif()
 
 if(OPENAL)
@@ -641,7 +698,7 @@ set(src_jpeg
 		)
 
 add_globbed_headers(src_jpeg "externlibs/jpeg-8d")
-include_directories("externlibs/jpeg-8d")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/externlibs/jpeg-8d")
 add_library(static_jpeg STATIC ${src_jpeg})
 
 set(local_libs ${local_libs} static_jpeg)
@@ -695,9 +752,8 @@ set(src_renderer
 	renderer/tr_trace.cpp
 	renderer/tr_trisurf.cpp
 	renderer/tr_turboshadow.cpp
-	renderer/etc/etc_android.cpp
-	renderer/etc/etc_rg_etc1.cpp
 	renderer/tr_rendertools.cpp
+	renderer/etc/etc.cpp
     renderer/matrix/esTransform.c
 )
 
@@ -868,6 +924,12 @@ set(src_idlib
 	idlib/math/Rotation.cpp
 	idlib/math/Simd.cpp
 	idlib/math/Simd_Generic.cpp
+	idlib/math/Simd_AltiVec.cpp
+	idlib/math/Simd_MMX.cpp
+	idlib/math/Simd_3DNow.cpp
+	idlib/math/Simd_SSE.cpp
+	idlib/math/Simd_SSE2.cpp
+	idlib/math/Simd_SSE3.cpp
 	idlib/math/Vector.cpp
 	idlib/BitMsg.cpp
 	idlib/LangDict.cpp
@@ -960,6 +1022,112 @@ set(base_game_src
 		physics/Push.cpp
 		)
 
+set(base_q4game_src ${base_game_src})
+list(REMOVE_ITEM base_q4game_src
+		Fx.cpp
+		PlayerIcon.cpp
+		SmokeParticles.cpp
+		ai/AI_Vagary.cpp
+		#gamesys/TypeInfo.cpp
+		)
+list(APPEND base_q4game_src
+		Effect.cpp
+		FreeView.cpp
+		Game_Debug.cpp
+		Game_Log.cpp
+		Healing_Station.cpp
+		IconManager.cpp
+		Instance.cpp
+		Playback.cpp
+		Player_Cheats.cpp
+		Player_States.cpp
+		spawner.cpp
+		SplineMover.cpp
+		Icon.cpp
+		LipSync.cpp
+		TramGate.cpp
+		gamesys/State.cpp
+		script/ScriptFuncUtility.cpp
+		vehicle/Vehicle.cpp
+		vehicle/VehicleAnimated.cpp
+		vehicle/VehicleController.cpp
+		vehicle/VehicleDriver.cpp
+		vehicle/VehicleMonster.cpp
+		vehicle/VehicleParts.cpp
+		vehicle/VehiclePosition.cpp
+		vehicle/VehicleRigid.cpp
+		vehicle/VehicleSpline.cpp
+		vehicle/VehicleStatic.cpp
+		vehicle/Vehicle_DropPod.cpp
+		vehicle/Vehicle_Walker.cpp
+		client/ClientAFEntity.cpp
+		client/ClientEffect.cpp
+		client/ClientEntity.cpp
+		client/ClientModel.cpp
+		client/ClientMoveable.cpp
+		ai/AAS_Find.cpp
+		ai/Monster_Berserker.cpp
+		ai/Monster_BossBuddy.cpp
+		ai/Monster_BossMakron.cpp
+		ai/Monster_ConvoyGround.cpp
+		ai/Monster_ConvoyHover.cpp
+		ai/Monster_FailedTransfer.cpp
+		ai/Monster_Fatty.cpp
+		ai/Monster_Gladiator.cpp
+		ai/Monster_Grunt.cpp
+		ai/Monster_Gunner.cpp
+		ai/Monster_Harvester.cpp
+		ai/Monster_HarvesterDispersal.cpp
+		ai/Monster_HeavyHoverTank.cpp
+		ai/Monster_IronMaiden.cpp
+		ai/Monster_LightTank.cpp
+		ai/Monster_NetworkGuardian.cpp
+		ai/Monster_RepairBot.cpp
+		ai/Monster_Scientist.cpp
+		ai/Monster_Sentry.cpp
+		ai/Monster_SlimyTransfer.cpp
+		ai/Monster_StreamProtector.cpp
+		ai/Monster_StroggFlyer.cpp
+		ai/Monster_StroggHover.cpp
+		ai/Monster_StroggMarine.cpp
+		ai/Monster_TeleportDropper.cpp
+		ai/Monster_Turret.cpp
+		ai/Monster_TurretFlying.cpp
+		ai/AI_Actions.cpp
+		ai/AI_Announcements.cpp
+		ai/AI_Debug.cpp
+		ai/AI_Manager.cpp
+		ai/AI_Medic.cpp
+		ai/AI_Move.cpp
+		ai/AI_States.cpp
+		ai/AI_Tactical.cpp
+		ai/AI_Util.cpp
+		ai/VehicleAI.cpp
+		ai/AAS_tactical.cpp
+		weapon/WeaponBlaster.cpp
+		weapon/WeaponGrenadeLauncher.cpp
+		weapon/WeaponMachinegun.cpp
+		weapon/WeaponRailgun.cpp
+		weapon/WeaponDarkMatterGun.cpp
+		weapon/WeaponHyperblaster.cpp
+		weapon/WeaponNailgun.cpp
+		weapon/WeaponRocketLauncher.cpp
+		weapon/WeaponGauntlet.cpp
+		weapon/WeaponLightningGun.cpp
+		weapon/WeaponNapalmGun.cpp
+		weapon/WeaponShotgun.cpp
+		mp/Buying.cpp
+		mp/CTF.cpp
+		mp/GameState.cpp
+		mp/Tourney.cpp
+		mp/VoiceComms.cpp
+		mp/stats/StatEvent.cpp
+		mp/stats/StatManager.cpp
+		mp/stats/StatWindow.cpp
+		physics/Physics_Particle.cpp
+		physics/Physics_VehicleMonster.cpp
+		)
+
 function(set_src_dir DSTLIST PATHPREFIX SRCLIST)
 	set(list, "")
 	math(EXPR last_index "${ARGC}-1")
@@ -974,7 +1142,7 @@ set(DOOM3_MOD_DIR "${MOD_DIR}/doom3")
 set(QUAKE4_MOD_DIR "${MOD_DIR}/quake4")
 set(PREY_MOD_DIR "${MOD_DIR}/prey")
 
-include_directories("externlibs")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/externlibs")
 
 if(NOT WIN32)
 	if(COMPILE_CURL STREQUAL "1")
@@ -1076,11 +1244,14 @@ add_globbed_headers(src_ogg "externlibs/libogg")
 add_globbed_headers(src_ogg "externlibs/libvorbis")
 include_directories("externlibs/libogg/include")
 include_directories("externlibs/libvorbis/include")
+if(ANDROID)
 include_directories("sys/android")
+endif()
 add_library(static_ogg STATIC ${src_ogg})
-target_include_directories(static_ogg PRIVATE "externlibs/libogg/include/ogg")
-target_include_directories(static_ogg PRIVATE "externlibs/libvorbis/include/vorbis")
-target_include_directories(static_ogg PRIVATE "externlibs/libvorbis/lib")
+target_include_directories(static_ogg PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/externlibs/libogg/include/ogg")
+target_include_directories(static_ogg PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/externlibs/libvorbis/include/vorbis")
+target_include_directories(static_ogg PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/externlibs/libvorbis/lib")
+set(local_libs ${local_libs} static_ogg)
 
 set(src_core
 	${src_renderer}
@@ -1178,7 +1349,7 @@ endif()
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX neo FILES ${src_idlib})
 
 # raven
-if(RAVEN OR QUAKE4)
+if(RAVEN OR QUAKE4 OR BUILD_Q4_MOD)
 	set(raven_idlib_src
 			raven/idlib/LexerFactory.cpp
 			raven/idlib/TextCompiler.cpp
@@ -1193,6 +1364,7 @@ if(RAVEN OR QUAKE4)
 		set_target_properties(idlib_raven PROPERTIES COMPILE_FLAGS "-fPIC")
 	endif()
 	set_target_properties(idlib_raven PROPERTIES COMPILE_DEFINITIONS "_RAVEN")
+	target_include_directories(idlib_raven PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/raven")
 
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX neo FILES ${src_idlib_raven})
 endif()
@@ -1211,10 +1383,12 @@ if(HUMANHEAD OR PREY)
 		set_target_properties(idlib_humanhead PROPERTIES COMPILE_FLAGS "-fPIC")
 	endif()
 	set_target_properties(idlib_humanhead PROPERTIES COMPILE_DEFINITIONS "_HUMANHEAD;HUMANHEAD")
+	target_include_directories(idlib_humanhead PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/humanhead")
 
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX neo FILES ${src_idlib_humanhead})
 endif()
 
+# DOOM3
 if(CORE)
 	message(STATUS "Build core")
 endif()
@@ -1251,12 +1425,26 @@ endif()
 if(LIBRECOOP)
 	message(STATUS "Build librecoop")
 endif()
+if(LIBRECOOPXP)
+	message(STATUS "Build librecoopxp")
+endif()
+if(PERFECTED)
+	message(STATUS "Build perfected")
+endif()
+if(PERFECTEDROE)
+	message(STATUS "Build perfected_roe")
+endif()
+# Quake 4
 if(RAVEN)
 	message(STATUS "Build raven core")
 endif()
 if(QUAKE4)
 	message(STATUS "Build q4base")
 endif()
+if(HARDQORE)
+	message(STATUS "Build hardqore")
+endif()
+# Prey
 if(HUMANHEAD)
 	message(STATUS "Build humanhead core")
 endif()
@@ -1264,6 +1452,7 @@ if(PREY)
 	message(STATUS "Build prey")
 endif()
 
+message(STATUS "=================================")
 message(STATUS "C++ STL: ${CMAKE_ANDROID_STL_TYPE}")
 message(STATUS "arch ABI: ${CMAKE_ANDROID_ARCH_ABI}")
 message(STATUS "API level: ${CMAKE_SYSTEM_VERSION}")
@@ -1276,8 +1465,9 @@ message(STATUS "-l(static): ${local_libs}")
 message(STATUS "pointer size: ${CMAKE_SIZEOF_VOID_P}")
 message(STATUS "CORE_DEFINES: ${CORE_DEFINES}")
 message(STATUS "ldflags: ${ldflags}")
+message(STATUS "=================================")
 
-#message(FATAL_ERROR "STOP")
+# message(FATAL_ERROR "STOP") # For debug output
 
 if(CORE)
 	if(ANDROID)
@@ -1290,12 +1480,24 @@ if(CORE)
 				)
 	else()
 		set(DOOM3BINARY "Doom3")
+		if(CONSOLE)
 		add_executable(${DOOM3BINARY}
 				${src_core}
 				${src_sys_base}
 				${src_sys_core}
 				${src_editor_tools}
 				)
+		else()
+			add_executable(${DOOM3BINARY} WIN32 MACOSX_BUNDLE
+					${src_core}
+					${src_sys_base}
+					${src_sys_core}
+					${src_editor_tools}
+					)
+		endif()
+		if(WIN32 AND MSVC AND NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+			target_include_directories(${DOOM3BINARY} PRIVATE ${DIRECTXSDK_INCLUDE_PATH})
+		endif()
 	endif()
 
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX neo FILES ${src_core} ${src_sys_base} ${src_sys_core} ${src_editor_tools})
@@ -1332,6 +1534,7 @@ if(BASE)
 	set(d3_compile_definitions "GAME_DLL")
 	if(D3_MOD_FULL_BODY_AWARENESS)
 		set(d3_compile_definitions "${d3_compile_definitions};_MOD_FULL_BODY_AWARENESS")
+		set(d3_compile_definitions "${d3_compile_definitions};_MOD_VIEW_BODY")
 		message(STATUS "Build doom3 full body awareness mod support")
 	endif()
 	set_target_properties(game PROPERTIES COMPILE_DEFINITIONS "${d3_compile_definitions}")
@@ -1648,6 +1851,95 @@ if(LIBRECOOP)
 	endif()
 endif()
 
+if(LIBRECOOPXP)
+	# librecoopxp
+	set(src_librecoopxp ${base_game_src})
+	set(librecoopxp_game_src
+			Grabber.cpp
+			physics/Force_Grab.cpp
+			)
+	list(APPEND src_librecoopxp ${librecoopxp_game_src})
+	set_src_dir(src_librecoopxp "${DOOM3_MOD_DIR}/librecoopxp" ${src_librecoopxp})
+	add_globbed_headers(src_librecoopxp "${DOOM3_MOD_DIR}/librecoopxp")
+
+	add_library(librecoopxp SHARED ${src_librecoopxp})
+	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX neo FILES ${src_librecoopxp})
+	#set_target_properties(librecoopxp PROPERTIES PREFIX "")
+	set_target_properties(librecoopxp PROPERTIES COMPILE_DEFINITIONS "GAME_DLL;_D3XP;CTF;_LIBRECOOPXP")
+	target_include_directories(librecoopxp PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/${DOOM3_MOD_DIR}/librecoopxp")
+	set_target_properties(librecoopxp PROPERTIES LINK_FLAGS "${ldflags}")
+	set_target_properties(librecoopxp PROPERTIES INSTALL_NAME_DIR "@executable_path")
+	target_link_libraries(librecoopxp idlib)
+
+	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
+		install(TARGETS librecoopxp
+				RUNTIME DESTINATION "${bindir}"
+				LIBRARY DESTINATION "${libdir}"
+				ARCHIVE DESTINATION "${libdir}"
+				)
+	endif()
+endif()
+
+if(PERFECTED)
+	# perfected
+	set(src_perfected ${base_game_src})
+	set(perfected_game_src
+			Grab.cpp
+			Grabber.cpp
+			physics/Force_Grab.cpp
+			)
+	list(APPEND src_perfected ${perfected_game_src})
+	set_src_dir(src_perfected "${DOOM3_MOD_DIR}/perfected" ${src_perfected})
+	add_globbed_headers(src_perfected "${DOOM3_MOD_DIR}/perfected")
+
+	add_library(perfected SHARED ${src_perfected})
+	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX neo FILES ${src_perfected})
+	#set_target_properties(perfected PROPERTIES PREFIX "")
+	set_target_properties(perfected PROPERTIES COMPILE_DEFINITIONS "GAME_DLL;_PERFECTED")
+	target_include_directories(perfected PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/${DOOM3_MOD_DIR}/perfected")
+	set_target_properties(perfected PROPERTIES LINK_FLAGS "${ldflags}")
+	set_target_properties(perfected PROPERTIES INSTALL_NAME_DIR "@executable_path")
+	target_link_libraries(perfected idlib)
+
+	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
+		install(TARGETS perfected
+				RUNTIME DESTINATION "${bindir}"
+				LIBRARY DESTINATION "${libdir}"
+				ARCHIVE DESTINATION "${libdir}"
+				)
+	endif()
+endif()
+
+if(PERFECTEDROE)
+	# perfected_roe
+	set(src_perfectedroe ${base_game_src})
+	set(perfectedroe_game_src
+			Grab.cpp
+			Grabber.cpp
+			physics/Force_Grab.cpp
+			)
+	list(APPEND src_perfectedroe ${perfectedroe_game_src})
+	set_src_dir(src_perfectedroe "${DOOM3_MOD_DIR}/perfectedroe" ${src_perfectedroe})
+	add_globbed_headers(src_perfectedroe "${DOOM3_MOD_DIR}/perfectedroe")
+
+	add_library(perfected_roe SHARED ${src_perfectedroe})
+	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX neo FILES ${src_perfectedroe})
+	#set_target_properties(perfected_roe PROPERTIES PREFIX "")
+	set_target_properties(perfected_roe PROPERTIES COMPILE_DEFINITIONS "GAME_DLL;_D3XP;CTF;_PERFECTEDROE")
+	target_include_directories(perfected_roe PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/${DOOM3_MOD_DIR}/perfectedroe")
+	set_target_properties(perfected_roe PROPERTIES LINK_FLAGS "${ldflags}")
+	set_target_properties(perfected_roe PROPERTIES INSTALL_NAME_DIR "@executable_path")
+	target_link_libraries(perfected_roe idlib)
+
+	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
+		install(TARGETS perfected_roe
+				RUNTIME DESTINATION "${bindir}"
+				LIBRARY DESTINATION "${libdir}"
+				ARCHIVE DESTINATION "${libdir}"
+				)
+	endif()
+endif()
+
 if(RAVEN)
 	# raven engine source
 	set(raven_renderer_src
@@ -1703,12 +1995,24 @@ if(RAVEN)
 				)
 	else()
 		set(QUAKE4BINARY "Quake4")
+		if(CONSOLE)
 		add_executable(${QUAKE4BINARY}
 				${src_core_raven}
 				${src_sys_base}
 				${src_sys_core}
 				${src_editor_tools}
 		)
+		else()
+			add_executable(${QUAKE4BINARY} WIN32 MACOSX_BUNDLE
+					${src_core_raven}
+					${src_sys_base}
+					${src_sys_core}
+					${src_editor_tools}
+					)
+		endif()
+		if(WIN32 AND MSVC AND NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+			target_include_directories(${QUAKE4BINARY} PRIVATE ${DIRECTXSDK_INCLUDE_PATH})
+		endif()
 	endif()
 
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX neo FILES ${src_core_raven} ${src_sys_base} ${src_sys_core} ${src_editor_tools})
@@ -1719,6 +2023,7 @@ if(RAVEN)
 	endif()
 	set_target_properties(${QUAKE4BINARY} PROPERTIES COMPILE_DEFINITIONS "${raven_compile_definitions};${CORE_DEFINES}")
 	set_target_properties(${QUAKE4BINARY} PROPERTIES LINK_FLAGS "${ldflags}")
+	target_include_directories(${QUAKE4BINARY} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/raven")
 
 	target_link_libraries(${QUAKE4BINARY}
 			idlib_raven
@@ -1737,113 +2042,11 @@ endif()
 
 if(QUAKE4)
 	# quake4 game source
-	set(src_quake4 ${base_game_src})
+	set(src_quake4 ${base_q4game_src})
 	set(quake4_game_src
-			Effect.cpp
-			FreeView.cpp
-			Game_Debug.cpp
-			Game_Log.cpp
-			Healing_Station.cpp
-			IconManager.cpp
-			Instance.cpp
-			Playback.cpp
-			Player_Cheats.cpp
-			Player_States.cpp
-			spawner.cpp
-			SplineMover.cpp
-			Icon.cpp
-			LipSync.cpp
-			TramGate.cpp
-			gamesys/State.cpp
-			script/ScriptFuncUtility.cpp
-			vehicle/Vehicle.cpp
-			vehicle/VehicleAnimated.cpp
-			vehicle/VehicleController.cpp
-			vehicle/VehicleDriver.cpp
-			vehicle/VehicleMonster.cpp
-			vehicle/VehicleParts.cpp
-			vehicle/VehiclePosition.cpp
-			vehicle/VehicleRigid.cpp
-			vehicle/VehicleSpline.cpp
-			vehicle/VehicleStatic.cpp
-			vehicle/Vehicle_DropPod.cpp
-			vehicle/Vehicle_Walker.cpp
-			client/ClientAFEntity.cpp
-			client/ClientEffect.cpp
-			client/ClientEntity.cpp
-			client/ClientModel.cpp
-			client/ClientMoveable.cpp
-			ai/AAS_Find.cpp
-			ai/Monster_Berserker.cpp
-			ai/Monster_BossBuddy.cpp
-			ai/Monster_BossMakron.cpp
-			ai/Monster_ConvoyGround.cpp
-			ai/Monster_ConvoyHover.cpp
-			ai/Monster_FailedTransfer.cpp
-			ai/Monster_Fatty.cpp
-			ai/Monster_Gladiator.cpp
-			ai/Monster_Grunt.cpp
-			ai/Monster_Gunner.cpp
-			ai/Monster_Harvester.cpp
-			ai/Monster_HarvesterDispersal.cpp
-			ai/Monster_HeavyHoverTank.cpp
-			ai/Monster_IronMaiden.cpp
-			ai/Monster_LightTank.cpp
-			ai/Monster_NetworkGuardian.cpp
-			ai/Monster_RepairBot.cpp
-			ai/Monster_Scientist.cpp
-			ai/Monster_Sentry.cpp
-			ai/Monster_SlimyTransfer.cpp
-			ai/Monster_StreamProtector.cpp
-			ai/Monster_StroggFlyer.cpp
-			ai/Monster_StroggHover.cpp
-			ai/Monster_StroggMarine.cpp
-			ai/Monster_TeleportDropper.cpp
-			ai/Monster_Turret.cpp
-			ai/Monster_TurretFlying.cpp
-			ai/AI_Actions.cpp
-			ai/AI_Announcements.cpp
-			ai/AI_Debug.cpp
-			ai/AI_Manager.cpp
-			ai/AI_Medic.cpp
-			ai/AI_Move.cpp
-			ai/AI_States.cpp
-			ai/AI_Tactical.cpp
-			ai/AI_Util.cpp
-			ai/VehicleAI.cpp
-			ai/AAS_tactical.cpp
-			weapon/WeaponBlaster.cpp
-			weapon/WeaponGrenadeLauncher.cpp
-			weapon/WeaponMachinegun.cpp
-			weapon/WeaponRailgun.cpp
-			weapon/WeaponDarkMatterGun.cpp
-			weapon/WeaponHyperblaster.cpp
-			weapon/WeaponNailgun.cpp
-			weapon/WeaponRocketLauncher.cpp
-			weapon/WeaponGauntlet.cpp
-			weapon/WeaponLightningGun.cpp
-			weapon/WeaponNapalmGun.cpp
-			weapon/WeaponShotgun.cpp
-			mp/Buying.cpp
-			mp/CTF.cpp
-			mp/GameState.cpp
-			mp/Tourney.cpp
-			mp/VoiceComms.cpp
-			mp/stats/StatEvent.cpp
-			mp/stats/StatManager.cpp
-			mp/stats/StatWindow.cpp
-			physics/Physics_Particle.cpp
-			physics/Physics_VehicleMonster.cpp
 			bots/BotAASBuild.cpp
 			bots/BotAI.cpp
 			bots/BotSabot.cpp
-			)
-	list(REMOVE_ITEM src_quake4
-			Fx.cpp
-			PlayerIcon.cpp
-			SmokeParticles.cpp
-			ai/AI_Vagary.cpp
-			#gamesys/TypeInfo.cpp
 			)
 	list(APPEND src_quake4 ${quake4_game_src})
 	set_src_dir(src_quake4 "quake4" ${src_quake4})
@@ -1855,6 +2058,7 @@ if(QUAKE4)
 	set(q4_compile_definitions "GAME_DLL;_RAVEN;_QUAKE4")
 	if(Q4_MOD_FULL_BODY_AWARENESS)
 		set(q4_compile_definitions "${q4_compile_definitions};_MOD_FULL_BODY_AWARENESS")
+		set(q4_compile_definitions "${q4_compile_definitions};_MOD_VIEW_BODY")
 		message(STATUS "Build quake4 full body awareness mod support")
 	endif()
 	if(Q4_MOD_BOTS)
@@ -1866,9 +2070,35 @@ if(QUAKE4)
 	set_target_properties(q4game PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(q4game PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(q4game idlib_raven)
+	target_include_directories(q4game PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/raven")
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS q4game
+				RUNTIME DESTINATION "${bindir}"
+				LIBRARY DESTINATION "${libdir}"
+				ARCHIVE DESTINATION "${libdir}"
+				)
+	endif()
+endif()
+
+if(HARDQORE)
+	# hardqore game source
+	set(src_hardqore ${base_q4game_src})
+	set_src_dir(src_hardqore "${QUAKE4_MOD_DIR}/hardqore" ${src_hardqore})
+	add_globbed_headers(src_hardqore "${QUAKE4_MOD_DIR}/hardqore")
+
+	add_library(hardqore SHARED ${src_hardqore})
+	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX neo FILES ${src_hardqore})
+	#set_target_properties(hardqore PROPERTIES PREFIX "")
+	set_target_properties(hardqore PROPERTIES COMPILE_DEFINITIONS "GAME_DLL;_RAVEN;_QUAKE4;_HARDQORE")
+	target_include_directories(hardqore PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/${QUAKE4_MOD_DIR}/hardqore")
+	set_target_properties(hardqore PROPERTIES LINK_FLAGS "${ldflags}")
+	set_target_properties(hardqore PROPERTIES INSTALL_NAME_DIR "@executable_path")
+	target_link_libraries(hardqore idlib_raven)
+	target_include_directories(hardqore PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/raven")
+
+	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
+		install(TARGETS hardqore
 				RUNTIME DESTINATION "${bindir}"
 				LIBRARY DESTINATION "${libdir}"
 				ARCHIVE DESTINATION "${libdir}"
@@ -1919,18 +2149,31 @@ if(HUMANHEAD)
 				)
 	else()
 		set(PREYBINARY "Prey")
+		if(CONSOLE)
 		add_executable(${PREYBINARY}
 				${src_core_humanhead}
 				${src_sys_base}
 				${src_sys_core}
 				${src_editor_tools}
 				)
+		else()
+			add_executable(${PREYBINARY} WIN32 MACOSX_BUNDLE
+					${src_core_humanhead}
+					${src_sys_base}
+					${src_sys_core}
+					${src_editor_tools}
+					)
+		endif()
+		if(WIN32 AND MSVC AND NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+			target_include_directories(${PREYBINARY} PRIVATE ${DIRECTXSDK_INCLUDE_PATH})
+		endif()
 	endif()
 
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX neo FILES ${src_core_humanhead} ${src_sys_base} ${src_sys_core} ${src_editor_tools})
 
 	set_target_properties(${PREYBINARY} PROPERTIES COMPILE_DEFINITIONS "_HUMANHEAD;${CORE_DEFINES}")
 	set_target_properties(${PREYBINARY} PROPERTIES LINK_FLAGS "${ldflags}")
+	target_include_directories(${PREYBINARY} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/humanhead")
 
 	target_link_libraries(${PREYBINARY}
 			idlib_humanhead
@@ -2138,6 +2381,7 @@ if(PREY)
 	set_target_properties(preygame PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(preygame PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(preygame idlib_humanhead)
+	target_include_directories(preygame PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/humanhead")
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS preygame

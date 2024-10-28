@@ -974,6 +974,9 @@ extern idCVar r_noLight;				// no lighting
 extern idCVar r_useETC1;				// ETC1 compression
 extern idCVar r_useETC1Cache;				// use ETC1 cache
 extern idCVar r_useDXT;					// DXT compression
+#ifdef _OPENGLES3
+extern idCVar r_useETC2;				// ETC2 compression
+#endif
 
 extern idCVar r_finish;					// force a call to glFinish() every frame
 extern idCVar r_frontBuffer;			// draw to front buffer for debugging
@@ -1153,6 +1156,7 @@ GL wrapper/helper functions
 void	GL_SelectTexture(int unit);
 void	GL_UseProgram(shaderProgram_s *program);
 void	GL_Uniform1fv(GLint location, const GLfloat *value);
+void	GL_Uniform2fv(GLint location, const GLfloat *value);
 void	GL_Uniform3fv(GLint location, const GLfloat *value);
 void	GL_Uniform4fv(GLint location, const GLfloat *value);
 void 	GL_Uniform1i(GLint location, GLint w);
@@ -1168,7 +1172,7 @@ void	GL_ClearStateDelta(void);
 void	GL_State(int stateVector);
 void	GL_TexEnv(int env);
 void	GL_Cull(int cullType);
-void    GL_CheckErrors(const char *name);
+bool    GL_CheckErrors(const char *name);
 void	GL_SelectTextureForce(int unit);
 
 const int GLS_SRCBLEND_ZERO						= 0x00000001;
@@ -1504,38 +1508,50 @@ typedef enum {
 	SHADER_ZFILL,
 	SHADER_ZFILLCLIP,
 	SHADER_CUBEMAP,
-	SHADER_REFLECTIONCUBEMAP,
+	SHADER_ENVIRONMENT,
+    SHADER_BUMPY_ENVIRONMENT,
 	SHADER_FOG,
 	SHADER_BLENDLIGHT,
-	SHADER_INTERACTIONBLINNPHONG,
+	SHADER_INTERACTION_PBR,
+	SHADER_INTERACTION_BLINNPHONG,
+    SHADER_AMBIENT_LIGHTING,
 	SHADER_DIFFUSECUBEMAP,
 	SHADER_TEXGEN,
 	// new stage
 	SHADER_HEATHAZE,
-	SHADER_HEATHAZEWITHMASK,
-	SHADER_HEATHAZEWITHMASKANDVERTEX,
+	SHADER_HEATHAZE_WITH_MASK,
+	SHADER_HEATHAZE_WITH_MASK_AND_VERTEX,
 	SHADER_COLORPROCESS,
 	// shadow mapping
 #ifdef _SHADOW_MAPPING
 	SHADER_DEPTH,
-    SHADER_DEPTHPERFORATED,
-	SHADER_DEPTHCOLOR, // OpenGLES2.0 only
-	SHADER_DEPTHPERFORATEDCOLOR, // OpenGLES2.0 only
-	SHADER_INTERACTIONPOINTLIGHT,
-	SHADER_INTERACTIONBLINNPHONGPOINTLIGHT,
-	SHADER_INTERACTIONPARALLELLIGHT,
-	SHADER_INTERACTIONBLINNPHONGPARALLELLIGHT,
-	SHADER_INTERACTIONSPOTLIGHT,
-	SHADER_INTERACTIONBLINNPHONGSPOTLIGHT,
+    SHADER_DEPTH_PERFORATED,
+	SHADER_DEPTH_COLOR, // OpenGLES2.0 only
+	SHADER_DEPTH_PERFORATED_COLOR, // OpenGLES2.0 only
+	SHADER_INTERACTION_POINT_LIGHT,
+	SHADER_INTERACTION_PBR_POINT_LIGHT,
+	SHADER_INTERACTION_BLINNPHONG_POINT_LIGHT,
+    SHADER_AMBIENT_LIGHTING_POINT_LIGHT,
+	SHADER_INTERACTION_PARALLEL_LIGHT,
+	SHADER_INTERACTION_PBR_PARALLEL_LIGHT,
+	SHADER_INTERACTION_BLINNPHONG_PARALLEL_LIGHT,
+    SHADER_AMBIENT_LIGHTING_PARALLEL_LIGHT,
+	SHADER_INTERACTION_SPOT_LIGHT,
+	SHADER_INTERACTION_PBR_SPOT_LIGHT,
+	SHADER_INTERACTION_BLINNPHONG_SPOT_LIGHT,
+    SHADER_AMBIENT_LIGHTING_SPOT_LIGHT,
 #endif
 	// translucent stencil shadow
 #ifdef _STENCIL_SHADOW_IMPROVE
-	SHADER_INTERACTIONTRANSLUCENT,
-	SHADER_INTERACTIONBLINNPHONGTRANSLUCENT,
-
+	SHADER_INTERACTION_TRANSLUCENT,
+	SHADER_INTERACTION_PBR_TRANSLUCENT,
+	SHADER_INTERACTION_BLINNPHONG_TRANSLUCENT,
+    SHADER_AMBIENT_LIGHTING_TRANSLUCENT,
 #ifdef _SOFT_STENCIL_SHADOW
-	SHADER_INTERACTIONSOFT,
-	SHADER_INTERACTIONBLINNPHONGSOFT,
+	SHADER_INTERACTION_SOFT,
+	SHADER_INTERACTION_PBR_SOFT,
+	SHADER_INTERACTION_BLINNPHONG_SOFT,
+    SHADER_AMBIENT_LIGHTING_SOFT,
 #endif
 #endif
     // costum
@@ -1550,16 +1566,16 @@ typedef enum {
 
 #ifdef _SHADOW_MAPPING
 #define SHADER_SHADOW_MAPPING_BEGIN SHADER_DEPTH
-#define SHADER_SHADOW_MAPPING_END SHADER_INTERACTIONBLINNPHONGSPOTLIGHT
+#define SHADER_SHADOW_MAPPING_END SHADER_AMBIENT_LIGHTING_SPOT_LIGHT
 #endif
 
 #ifdef _STENCIL_SHADOW_IMPROVE
 #ifdef _SOFT_STENCIL_SHADOW
-#define SHADER_STENCIL_SHADOW_BEGIN SHADER_INTERACTIONTRANSLUCENT
-#define SHADER_STENCIL_SHADOW_END SHADER_INTERACTIONBLINNPHONGSOFT
+#define SHADER_STENCIL_SHADOW_BEGIN SHADER_INTERACTION_TRANSLUCENT
+#define SHADER_STENCIL_SHADOW_END SHADER_AMBIENT_LIGHTING_SOFT
 #else
-#define SHADER_STENCIL_SHADOW_BEGIN SHADER_INTERACTIONTRANSLUCENT
-#define SHADER_STENCIL_SHADOW_END SHADER_INTERACTIONBLINNPHONGTRANSLUCENT
+#define SHADER_STENCIL_SHADOW_BEGIN SHADER_INTERACTION_TRANSLUCENT
+#define SHADER_STENCIL_SHADOW_END SHADER_INTERACTION_BLINNPHONG_TRANSLUCENT
 #endif
 #endif
 
@@ -1689,8 +1705,8 @@ typedef struct shaderProgram_s {
 #ifdef _SHADOW_MAPPING
 	GLint		shadowMVPMatrix;
 	GLint		globalLightOrigin;
-    GLint		bias;
 #endif
+
 	char 		name[HARM_SHADER_NAME_LENGTH];
     int         type; // glsl_program_t
 } shaderProgram_t;
@@ -1748,7 +1764,7 @@ class idGLSLShaderManager
 public:
 	~idGLSLShaderManager();
 	int Add(shaderProgram_t *shader); // return added shader's index
-	void Clear(void);
+    void Shutdown(void);
 	const shaderProgram_t * Find(const char *name) const;
 	const shaderProgram_t * Find(GLuint handle) const; // handle is OpenGL shader program's handle
 	shaderHandle_t Load(const GLSLShaderProp &prop); // frontend: if in multi-threading, only add on queue, because current thread has not OpenGL context; else if not in multi-threading, actual load directly. however always return a shader program handle, if has loaded, return OpenGL program handle(> 0), else return -(customShaders::index + 1), error return 0.
@@ -1781,6 +1797,7 @@ extern idGLSLShaderManager *shaderManager;
 /* This file was automatically generated.  Do not edit! */
 void R_ReloadGLSLPrograms_f(const idCmdArgs &args);
 void R_GLSL_Init(void);
+void R_GLSL_Shutdown(void);
 void RB_GLSL_DrawInteractions(void);
 void RB_GLSL_CreateDrawInteractions(const drawSurf_t *surf);
 void RB_GLSL_DrawInteraction(const drawInteraction_t *din);
@@ -2225,9 +2242,11 @@ extern idCVar r_forceShadowMapsOnAlphaTestedSurfaces;
 extern idCVar harm_r_shadowMapLod;
 extern idCVar harm_r_shadowMapBias;
 extern idCVar harm_r_shadowMapAlpha;
+#if 0
 extern idCVar harm_r_shadowMapSampleFactor;
 extern idCVar harm_r_shadowMapFrustumNear;
 extern idCVar harm_r_shadowMapFrustumFar;
+#endif
 extern idCVar harm_r_useLightScissors;
 extern idCVar harm_r_shadowMapDepthBuffer;
 extern idCVar harm_r_shadowMapNonParallelLightUltra;
@@ -2285,12 +2304,12 @@ extern float RB_overbright;
 	}
 #endif
 
-#define HARM_CHECK_SHADER_ERROR() GL_CheckErrors();
+#define HARM_CHECK_SHADER_ERROR(x) GL_CheckErrors(x);
 
 #else
 #define HARM_CHECK_SHADER(x)
 #define HARM_CHECK_SHADER_ATTR(x, index)
-#define HARM_CHECK_SHADER_ERROR()
+#define HARM_CHECK_SHADER_ERROR(x)
 #endif
 
 #ifdef _EXTRAS_TOOLS
@@ -2298,5 +2317,13 @@ void ModelTest_TestModel(int time);
 void MD5Anim_AddCommand(void);
 void ModelTest_AddCommand(void);
 #endif
+
+extern idCVar harm_r_lightingModel;
+#define r_interactionLightingModel harm_r_lightingModel.GetInteger()
+#define HARM_INTERACTION_SHADER_NOLIGHTING 0
+#define HARM_INTERACTION_SHADER_PHONG 1
+#define HARM_INTERACTION_SHADER_BLINNPHONG 2
+#define HARM_INTERACTION_SHADER_PBR 3
+#define HARM_INTERACTION_SHADER_AMBIENT 4
 
 #endif /* !__TR_LOCAL_H__ */

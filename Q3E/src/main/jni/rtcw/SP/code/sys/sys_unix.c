@@ -82,6 +82,16 @@ char *Sys_DefaultHomePath(void)
 			else
 				Q_strcat(homePath, sizeof(homePath), HOMEPATH_NAME_MACOSX);
 		}
+#elif defined(__ANDROID__) //karin: HOME env to cwd
+		if( ( p1 = getenv( "HOME" ) ) != NULL || (p1 = Sys_Cwd()) != NULL )
+		{
+			Com_sprintf(homePath, sizeof(homePath), "%s%c", p1, PATH_SEP);
+
+			if(com_homepath->string[0])
+				Q_strcat(homePath, sizeof(homePath), com_homepath->string);
+			else
+				Q_strcat(homePath, sizeof(homePath), HOMEPATH_NAME_UNIX);
+		}
 #else
 #ifdef USE_XDG
 		if( ( p1 = getenv( "XDG_DATA_HOME" ) ) != NULL )
@@ -792,13 +802,62 @@ Sys_Dialog
 Display a *nix dialog box
 ==============
 */
+#ifdef __ANDROID__ //karin: show dialog on Android
+extern int Android_OpenDialog(const char *title, const char *message, int num, const char *buttons[]);
+#endif
 dialogResult_t Sys_Dialog( dialogType_t type, const char *message, const char *title )
 {
-#ifdef __ANDROID__
-    extern void (*show_toast)(const char *text);
-	if(show_toast)
-		(*show_toast)(message);
-	return DR_OK;
+#ifdef __ANDROID__ //karin: show dialog on Android
+    const char *buttons[4] = { NULL, NULL, NULL, NULL };
+    int base = 0;
+    int res = -1;
+    switch (type)
+    {
+        case DT_YES_NO:
+            base = 2;
+            buttons[0 + base] = "Yes";
+            buttons[1 + base] = "No";
+            res = Android_OpenDialog(title, message, 2, buttons + base);
+            break;
+        case DT_OK_CANCEL:
+            buttons[0] = "Ok";
+            buttons[1] = "Cancel";
+            res = Android_OpenDialog(title, message, 2, buttons);
+            break;
+        default:
+            buttons[0] = "Ok";
+            Android_OpenDialog(title, message, 1, buttons);
+            res = 1;
+            break;
+    }
+
+    if (res < 0)
+    {
+	    Com_DPrintf( S_COLOR_YELLOW "WARNING: failed to show a dialog\n" );
+        return DR_OK;
+    }
+
+    if (res == 0)
+    {
+	    Com_DPrintf( S_COLOR_YELLOW "WARNING: no selection\n" );
+        return DR_CANCEL;
+    }
+
+    int buttonId;
+    if(res == 1) {
+        if(base == 0)
+            buttonId = DR_OK;
+        else
+            buttonId = DR_YES;
+    }
+    else
+    {
+        if(base == 0)
+            buttonId = DR_CANCEL;
+        else
+            buttonId = DR_NO;
+    }
+    return buttonId;
 #else
 	typedef enum
 	{

@@ -20,8 +20,11 @@
 package com.n0n3m4.q3e;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.util.Log;
 
-import com.n0n3m4.q3e.karin.KOnceRunnable;
 import com.n0n3m4.q3e.onscreen.Q3EGUI;
 
 import java.nio.ByteBuffer;
@@ -29,6 +32,7 @@ import java.util.LinkedList;
 
 public class Q3ECallbackObj
 {
+    private static final String TAG = "Q3ECallbackObj";
     public Q3EAudioTrack mAudioTrack;
     public Q3EControlView vw;
     public int state = Q3EGlobals.STATE_NONE;
@@ -36,6 +40,7 @@ public class Q3ECallbackObj
     public static boolean reqThreadrunning = false;
 
     private Q3EGUI gui;
+    private Q3EEventEngine eventEngine = new Q3EEventEngineJava();
 
     private final LinkedList<Runnable> m_eventQueue = new LinkedList<>();
     public boolean notinmenu = true; // inGaming
@@ -224,83 +229,105 @@ public class Q3ECallbackObj
 
     public void sendAnalog(final boolean down, final float x, final float y)
     {
-        PushEvent(new KOnceRunnable()
-        {
-            @Override
-            public void Run()
-            {
-                Q3EJNI.sendAnalog(down ? 1 : 0, x, y);
-            }
-        });
+        eventEngine.SendAnalogEvent(down, x, y);
     }
 
     public void sendKeyEvent(final boolean down, final int keycode, final int charcode)
     {
-        PushEvent(new KOnceRunnable()
-        {
-            @Override
-            public void Run()
-            {
-                Q3EJNI.sendKeyEvent(down ? 1 : 0, keycode, charcode);
-            }
-        });
+        eventEngine.SendKeyEvent(down, keycode, charcode);
     }
 
     public void sendMotionEvent(final float deltax, final float deltay)
     {
-        PushEvent(new KOnceRunnable()
-        {
-            @Override
-            public void Run()
-            {
-                Q3EJNI.sendMotionEvent(deltax, deltay);
-            }
-        });
+        eventEngine.SendMotionEvent(deltax, deltay);
     }
 
     public void InitGUIInterface(Activity context)
     {
         gui = new Q3EGUI(context);
+        int eventQueue = Q3EPreference.GetIntFromString(context, Q3EPreference.EVENT_QUEUE, 0);
+        if(eventQueue == 1)
+        {
+            Log.i(TAG, "Using native event queue");
+            eventEngine = new Q3EEventEngineNative();
+        }
+        else
+        {
+            Log.i(TAG, "Using java event queue");
+            eventEngine = new Q3EEventEngineJava();
+        }
     }
 
     public void ShowToast(String text)
     {
-        if(null != gui)
+        //if(null != gui)
             gui.Toast(text);
     }
 
     public void CloseVKB()
     {
-        if (null != vw)
-        {
-            vw.post(new Runnable() {
-                @Override
-                public void run() {
-                    Q3EUtils.CloseVKB(vw);
-                }
-            });
-        }
+        vw.post(new Runnable() {
+            @Override
+            public void run() {
+                Q3EUtils.CloseVKB(vw);
+            }
+        });
     }
 
     public void OpenVKB()
     {
-        if (null != vw)
-        {
-            vw.post(new Runnable() {
-                @Override
-                public void run() {
-                    Q3EUtils.OpenVKB(vw);
-                }
-            });
-        }
+        vw.post(new Runnable() {
+            @Override
+            public void run() {
+                Q3EUtils.OpenVKB(vw);
+            }
+        });
     }
 
     public void ToggleToolbar(boolean on)
     {
-        if (null != vw)
+        vw.ToggleToolbar(on);
+    }
+
+
+    public void OpenURL(String url)
+    {
+        vw.post(new Runnable()
         {
-            vw.ToggleToolbar(on);
-        }
+            @Override
+            public void run()
+            {
+                Uri uri = Uri.parse(url);
+                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+                vw.getContext().startActivity(intent);
+            }
+        });
+    }
+
+    public int OpenDialog(String title, String message, String[] buttons)
+    {
+        //if(null != gui)
+            return gui.MessageDialog(title, message, buttons);
+        //else return Q3EGUI.DIALOG_ERROR;
+    }
+
+    public void Finish()
+    {
+        if(null == Q3E.activity || Q3E.activity.isFinishing())
+            return;
+        Q3E.activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run()
+            {
+                Q3E.Finish();
+            }
+        });
+    }
+
+    public void SetupSmoothJoystick(boolean enable)
+    {
+        Q3EUtils.q3ei.joystick_smooth = enable;
     }
 }
 

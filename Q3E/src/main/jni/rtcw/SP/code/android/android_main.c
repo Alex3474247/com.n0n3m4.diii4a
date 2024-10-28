@@ -633,7 +633,7 @@ extern clientStatic_t cls;
 
 extern qboolean com_fullyInitialized;
 
-static void * game_main(void *data);
+static void * game_main(int argc, char **argv);
 
 #include "sys_android.c"
 
@@ -643,7 +643,7 @@ void GLimp_CheckGLInitialized(void)
 }
 
 // RTCW game main thread loop
-static void * game_main(void *data)
+void * game_main(int argc, char **argv)
 {
 	int   i;
 	char  commandLine[ MAX_STRING_CHARS ] = { 0 };
@@ -662,18 +662,18 @@ static void * game_main(void *data)
 		argc = 1;
 #endif
 
-	Sys_ParseArgs( q3e_argc, q3e_argv );
-	Sys_SetBinaryPath( Sys_Dirname( q3e_argv[ 0 ] ) );
+	Sys_ParseArgs( argc, argv );
+	Sys_SetBinaryPath( Sys_Dirname( argv[ 0 ] ) );
 	Sys_SetDefaultInstallPath( DEFAULT_BASEDIR );
 
 	// Concatenate the command line for passing to Com_Init
-	for( i = 1; i < q3e_argc; i++ )
+	for( i = 1; i < argc; i++ )
 	{
-		const qboolean containsSpaces = strchr(q3e_argv[i], ' ') != NULL;
+		const qboolean containsSpaces = strchr(argv[i], ' ') != NULL;
 		if (containsSpaces)
 			Q_strcat( commandLine, sizeof( commandLine ), "\"" );
 
-		Q_strcat( commandLine, sizeof( commandLine ), q3e_argv[ i ] );
+		Q_strcat( commandLine, sizeof( commandLine ), argv[ i ] );
 
 		if (containsSpaces)
 			Q_strcat( commandLine, sizeof( commandLine ), "\"" );
@@ -706,7 +706,7 @@ static void * game_main(void *data)
 	Q3E_End();
 	main_thread = 0;
 	//IsInitialized = false;
-	Com_Printf("[Harmattan]: Leave RTCW main thread.\n");
+	Com_Printf("[Harmattan]: Leave " Q3E_GAME_NAME " main thread.\n");
 	return 0;
 }
 
@@ -739,28 +739,6 @@ char *Sys_GetClipboardData(void)
 #else
 	return Android_GetClipboardData();
 #endif
-}
-
-void Sys_SyncState(void)
-{
-	//if (setState)
-	{
-		static int prev_state = -1;
-		/* We are in game and neither console/ui is active */
-		//if (cls.state == CA_ACTIVE && Key_GetCatcher() == 0)
-
-		int state = (((cl.snap.ps.serverCursorHint==HINT_DOOR_ROTATING)||(cl.snap.ps.serverCursorHint==HINT_DOOR)
-				  ||(cl.snap.ps.serverCursorHint==HINT_BUTTON)||(cl.snap.ps.serverCursorHint==HINT_ACTIVATE)) << 0) | ((clc.state == CA_ACTIVE && Key_GetCatcher() == 0) << 1) | ((cl.snap.ps.serverCursorHint==HINT_BREAKABLE) << 2);
-//cl.snap.ps.pm_flags & PMF_DUCKED;
-//    else
-//        state = 0;
-
-		if (state != prev_state)
-		{
-			setState(state);
-			prev_state = state;
-		}
-	}
 }
 
 /*

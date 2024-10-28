@@ -25,6 +25,8 @@ public final class GameManager
             Q3EGlobals.GAME_DOOM3BFG,
             Q3EGlobals.GAME_TDM,
             Q3EGlobals.GAME_GZDOOM,
+            Q3EGlobals.GAME_ETW,
+            Q3EGlobals.GAME_REALRTCW,
     };
 
     public GameManager()
@@ -34,20 +36,21 @@ public final class GameManager
 
     public static class GameProp
     {
-        public final int index;
-        public final String game;
-        public final String fs_game;
-        public final String fs_game_base;
-        //public boolean harm_fs_gameLibPath = true;
+        public final int     index;
+        public final String  game;
+        public final String  fs_game;
+        public final String  fs_game_base;
         public final boolean is_user;
+        public final String  lib;
 
-        public GameProp(int index, String game, String fs_game, String fs_game_base, boolean is_user)
+        public GameProp(int index, String game, String fs_game, String fs_game_base, boolean is_user, String lib)
         {
             this.index = index;
             this.game = game;
             this.fs_game = fs_game;
             this.fs_game_base = fs_game_base;
             this.is_user = is_user;
+            this.lib = lib;
         }
 
         public boolean IsGame(String game)
@@ -79,7 +82,7 @@ public final class GameManager
         for (Game value : values)
         {
             props = GameProps.get(value.type);
-            prop = new GameProp(props.size(), value.game, value.fs_game, value.fs_game_base, false);
+            prop = new GameProp(props.size(), value.game, value.fs_game, value.fs_game_base, false, value.lib);
             props.add(prop);
         }
     }
@@ -126,6 +129,14 @@ public final class GameManager
         {
             list = GameProps.get(Q3EGlobals.GAME_GZDOOM);
         }
+        else if (Q3EUtils.q3ei.isETW)
+        {
+            list = GameProps.get(Q3EGlobals.GAME_ETW);
+        }
+        else if (Q3EUtils.q3ei.isRealRTCW)
+        {
+            list = GameProps.get(Q3EGlobals.GAME_REALRTCW);
+        }
         else
         {
             list = GameProps.get(Q3EGlobals.GAME_DOOM3);
@@ -141,7 +152,7 @@ public final class GameManager
             }
         }
         if(null == res)
-            res = new GameProp(0, "", game, "", userMod);
+            res = new GameProp(0, "", game, "", userMod, "");
         return res;
     }
 
@@ -157,6 +168,11 @@ public final class GameManager
             }
         }
         return null;
+    }
+
+    public List<GameProp> GetGame(String game)
+    {
+        return GameProps.get(game);
     }
 
     public static int GetGameIcon()
@@ -179,6 +195,10 @@ public final class GameManager
             return R.drawable.d3bfg_icon;
         else if (Q3EUtils.q3ei.isDOOM)
             return R.drawable.gzdoom_icon;
+        else if (Q3EUtils.q3ei.isETW)
+            return R.drawable.etw_icon;
+        else if (Q3EUtils.q3ei.isRealRTCW)
+            return R.drawable.realrtcw_icon;
         else
             return R.drawable.d3_icon;
     }
@@ -203,7 +223,61 @@ public final class GameManager
             return R.color.theme_d3bfg_main_color;
         else if (Q3EUtils.q3ei.isDOOM)
             return R.color.theme_gzdoom_main_color;
+        else if (Q3EUtils.q3ei.isETW)
+            return R.color.theme_etw_main_color;
+        else if (Q3EUtils.q3ei.isRealRTCW)
+            return R.color.theme_realrtcw_main_color;
         else
             return R.color.theme_doom3_main_color;
+    }
+
+    public static int GetGameNameTs(String name)
+    {
+        if(Q3EGlobals.GAME_PREY.equalsIgnoreCase(name))
+            return R.string.prey_2006;
+        else if(Q3EGlobals.GAME_QUAKE4.equalsIgnoreCase(name))
+            return R.string.quake_4;
+        else if(Q3EGlobals.GAME_QUAKE2.equalsIgnoreCase(name))
+            return R.string.quake_2;
+        else if(Q3EGlobals.GAME_QUAKE3.equalsIgnoreCase(name))
+            return R.string.quake_3;
+        else if(Q3EGlobals.GAME_RTCW.equalsIgnoreCase(name))
+            return R.string.rtcw;
+        else if(Q3EGlobals.GAME_TDM.equalsIgnoreCase(name))
+            return R.string.tdm;
+        else if(Q3EGlobals.GAME_QUAKE1.equalsIgnoreCase(name))
+            return R.string.quake_1;
+        else if(Q3EGlobals.GAME_DOOM3BFG.equalsIgnoreCase(name))
+            return R.string.doom_3_bfg;
+        else if(Q3EGlobals.GAME_GZDOOM.equalsIgnoreCase(name))
+            return R.string.doom;
+        else if(Q3EGlobals.GAME_ETW.equalsIgnoreCase(name))
+            return R.string.etw;
+        else if(Q3EGlobals.GAME_REALRTCW.equalsIgnoreCase(name))
+            return R.string.realrtcw;
+        else
+            return R.string.doom_3;
+    }
+
+    public String[] GetGameLibs(String name, boolean makePlatform)
+    {
+        List<GameProp> gameProps = GameProps.get(name);
+        List<String> list = new ArrayList<>();
+        for (GameProp gameProp : gameProps)
+        {
+            if(!list.contains(gameProp.lib))
+                list.add(gameProp.lib);
+        }
+        if(!makePlatform)
+            return list.toArray(new String[0]);
+        else
+        {
+            String[] res = new String[list.size()];
+            for (int i = 0; i < list.size(); i++)
+            {
+                res[i] = "lib" + list.get(i) + ".so";
+            }
+            return res;
+        }
     }
 }

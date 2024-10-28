@@ -4,19 +4,18 @@ import com.n0n3m4.q3e.Q3EControlView;
 import com.n0n3m4.q3e.Q3EKeyCodes;
 import com.n0n3m4.q3e.Q3EUtils;
 
+import java.util.Arrays;
+
 public class MouseControl implements TouchListener
 {
-    private Q3EControlView view;
-    private boolean alreadydown;
+    private final Q3EControlView view;
     private int lx;
     private int ly;
-    private boolean isleftbutton;
+    private boolean clicked = false;
 
-    public MouseControl(Q3EControlView vw, boolean islmb)
+    public MouseControl(Q3EControlView vw)
     {
         view = vw;
-        alreadydown = false;
-        isleftbutton = islmb;
     }
 
     @Override
@@ -24,22 +23,24 @@ public class MouseControl implements TouchListener
     {
         if (act == 1)
         {
-            if (isleftbutton)
-                Q3EUtils.q3ei.callbackObj.sendKeyEvent(true, Q3EKeyCodes.KeyCodes.K_MOUSE1, 0);//Can be sent twice, unsafe.
-            alreadydown = true;
+            clicked = true;
+            lx = x;
+            ly = y;
+        }
+        else if (act == -1)
+        {
+            clicked = false;
+            lx = 0;
+            ly = 0;
         }
         else
         {
-            Q3EUtils.q3ei.callbackObj.sendMotionEvent(x - lx, y - ly);
-        }
-        lx = x;
-        ly = y;
-
-        if (act == -1)
-        {
-            if (isleftbutton)
-                Q3EUtils.q3ei.callbackObj.sendKeyEvent(false, Q3EKeyCodes.KeyCodes.K_MOUSE1, 0);//Can be sent twice, unsafe.
-            alreadydown = false;
+            if(clicked)
+            {
+                Q3EUtils.q3ei.callbackObj.sendMotionEvent(x - lx, y - ly);
+            }
+            lx = x;
+            ly = y;
         }
         return true;
     }
@@ -47,6 +48,6 @@ public class MouseControl implements TouchListener
     @Override
     public boolean isInside(int x, int y)
     {
-        return !alreadydown;
+        return !clicked;
     }
 }

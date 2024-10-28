@@ -34,14 +34,15 @@ import java.util.Set;
 
 public class Q3EInterface
 {
-	private static int[] _defaultArgs;
-	private static int[] _defaultType;
 	static {
 		Q3EKeyCodes.InitD3Keycodes();
 		InitDefaultTypeTable();
 		InitDefaultArgTable();
 	}
-	
+
+	private static int[] _defaultArgs;
+	private static int[] _defaultType;
+
 	public int UI_SIZE;
 	public String[] defaults_table;
 	public String[] texture_table;
@@ -52,27 +53,28 @@ public class Q3EInterface
 	public boolean isQ1=false;
 	public boolean isQ2=false;
 	public boolean isQ3=false;
-	public boolean isD3=false;	
+	public boolean isD3=false;
 	public boolean isD3BFG=false;
     public boolean isQ4 = false;
 	public boolean isPrey = false;
 	public boolean isTDM = false;
 	public boolean isDOOM = false;
-	
+	public boolean isETW = false;
+	public boolean isRealRTCW = false;
+
 	public String default_path = Environment.getExternalStorageDirectory() + "/diii4a";
-	
+
 	public String libname;
 	public String config_name;
 	public String game;
 	public String game_name;
 	public String game_base;
-	public String[] libs;
 	public String datadir;
 	public boolean standalone = false;
 	public String subdatadir;
 
 	public Q3ECallbackObj callbackObj;
-    
+
     public boolean view_motion_control_gyro = false;
     public String start_temporary_extra_command = "";
 	public String cmd = Q3EGlobals.GAME_EXECUABLE;
@@ -115,6 +117,10 @@ public class Q3EInterface
 			return Q3EGlobals.LIB_ENGINE4_D3BFG;
 		else if(isDOOM)
 			return Q3EGlobals.LIB_ENGINE1_DOOM;
+		else if(isETW)
+			return Q3EGlobals.LIB_ENGINE3_ETW;
+		else if(isRealRTCW)
+			return Q3EGlobals.LIB_ENGINE3_REALRTCW;
 		else
 			return Q3EGlobals.LIB_ENGINE_ID;
 	}
@@ -139,6 +145,10 @@ public class Q3EInterface
 			return Q3EGlobals.CONFIG_FILE_DOOM3BFG;
 		else if(isDOOM)
 			return Q3EGlobals.CONFIG_FILE_GZDOOM;
+		else if(isETW)
+			return Q3EGlobals.CONFIG_FILE_ETW;
+		else if(isRealRTCW)
+			return Q3EGlobals.CONFIG_FILE_REALRTCW;
 		else
 			return Q3EGlobals.CONFIG_FILE_DOOM3;
 	}
@@ -163,6 +173,10 @@ public class Q3EInterface
 			return Q3EGlobals.GAME_NAME_DOOM3BFG;
 		else if(isDOOM)
 			return Q3EGlobals.GAME_NAME_GZDOOM;
+		else if(isETW)
+			return Q3EGlobals.GAME_NAME_ETW;
+		else if(isRealRTCW)
+			return Q3EGlobals.GAME_NAME_REALRTCW;
 		else
 			return Q3EGlobals.GAME_NAME_DOOM3;
 	}
@@ -187,6 +201,10 @@ public class Q3EInterface
 			return Q3EGlobals.GAME_DOOM3BFG;
 		else if(isDOOM)
 			return Q3EGlobals.GAME_GZDOOM;
+		else if(isETW)
+			return Q3EGlobals.GAME_ETW;
+		else if(isRealRTCW)
+			return Q3EGlobals.GAME_REALRTCW;
 		else
 			return Q3EGlobals.GAME_DOOM3;
 	}
@@ -211,32 +229,12 @@ public class Q3EInterface
 			return Q3EGlobals.GAME_BASE_DOOM3BFG;
 		else if(isDOOM)
 			return Q3EGlobals.GAME_BASE_GZDOOM;
+		else if(isETW)
+			return Q3EGlobals.GAME_BASE_ETW;
+		else if(isRealRTCW)
+			return Q3EGlobals.GAME_BASE_REALRTCW;
 		else
 			return Q3EGlobals.GAME_BASE_DOOM3;
-	}
-
-	public String[] GameLibs()
-	{
-		if(isPrey)
-			return Q3EGlobals.PREY_LIBS;
-		else if(isQ4)
-			return Q3EGlobals.Q4_LIBS;
-		else if(isQ2)
-			return Q3EGlobals.Q2_LIBS;
-		else if(isQ3)
-			return Q3EGlobals.Q3_LIBS;
-		else if(isRTCW)
-			return Q3EGlobals.RTCW_LIBS;
-		else if(isTDM)
-			return Q3EGlobals.TDM_LIBS;
-		else if(isQ1)
-			return Q3EGlobals.Q1_LIBS;
-		else if(isD3BFG)
-			return Q3EGlobals.D3BFG_LIBS;
-		else if(isDOOM)
-			return Q3EGlobals.GZDOOM_LIBS;
-		else
-			return Q3EGlobals.LIBS;
 	}
 
 	public String GameSubDirectory()
@@ -259,6 +257,10 @@ public class Q3EInterface
 			return Q3EGlobals.GAME_SUBDIR_DOOMBFG;
 		else if(isDOOM)
 			return Q3EGlobals.GAME_SUBDIR_GZDOOM;
+		else if(isETW)
+			return Q3EGlobals.GAME_SUBDIR_ETW;
+		else if(isRealRTCW)
+			return Q3EGlobals.GAME_SUBDIR_REALRTCW;
 		else
 			return Q3EGlobals.GAME_SUBDIR_DOOM3;
 	}
@@ -288,6 +290,10 @@ public class Q3EInterface
 			Q3EKeyCodes.InitD3BFGKeycodes();
 		else if(isDOOM)
 			Q3EKeyCodes.InitSDLKeycodes();
+		else if(isETW)
+			Q3EKeyCodes.InitQ3Keycodes();
+		else if(isRealRTCW)
+			Q3EKeyCodes.InitRTCWKeycodes();
 		else
 			Q3EKeyCodes.InitD3Keycodes();
 	}
@@ -320,11 +326,6 @@ public class Q3EInterface
 		game_base = GameBase();
 	}
 
-	private void SetupGameLibs()
-	{
-		libs = GameLibs();
-	}
-
 	public void SetupGame(String name)
 	{
 		Log.i(Q3EGlobals.CONST_Q3E_LOG_TAG, "SetupGame: " + name);
@@ -346,6 +347,10 @@ public class Q3EInterface
 			SetupDoom3BFG();
 		else if(Q3EGlobals.GAME_GZDOOM.equalsIgnoreCase(name))
 			SetupGZDoom();
+		else if(Q3EGlobals.GAME_ETW.equalsIgnoreCase(name))
+			SetupETW();
+		else if(Q3EGlobals.GAME_REALRTCW.equalsIgnoreCase(name))
+			SetupRealRTCW();
 		else
 			SetupDOOM3();
 	}
@@ -354,159 +359,110 @@ public class Q3EInterface
 	{
 		SetupGameTypeAndName();
 		SetupEngineLib();
-		SetupGameLibs();
 		SetupConfigFile();
 		SetupKeycodes();
 		SetupSubDir();
 	}
 
-	public void SetupDOOM3()
+	private void InitGameState()
 	{
-		isD3 = true;
+		isD3 = false;
 		isPrey = false;
 		isQ4 = false;
 		isTDM = false;
 		isQ2 = false;
-		isQ3 = false;
 		isRTCW = false;
+		isQ3 = false;
 		isQ1 = false;
 		isD3BFG = false;
 		isDOOM = false;
+		isETW = false;
+		isRealRTCW = false;
+	}
+
+	public void SetupDOOM3()
+	{
+		InitGameState();
+		isD3 = true;
 		SetupGameConfig();
 	}
 
 	public void SetupPrey()
 	{
+		InitGameState();
 		isD3 = true;
-		isQ4 = false;
 		isPrey = true;
-		isTDM = false;
-		isQ2 = false;
-		isQ3 = false;
-		isRTCW = false;
-		isQ1 = false;
-		isD3BFG = false;
-		isDOOM = false;
 		SetupGameConfig();
 	}
 
 	public void SetupQuake4()
 	{
+		InitGameState();
 		isD3 = true;
-		isPrey = false;
 		isQ4 = true;
-		isTDM = false;
-		isQ2 = false;
-		isQ3 = false;
-		isRTCW = false;
-		isQ1 = false;
-		isD3BFG = false;
-		isDOOM = false;
 		SetupGameConfig();
     }
 
 	public void SetupTDM()
 	{
-		isD3 = false; // true
-		isPrey = false;
-		isQ4 = false;
+		InitGameState();
 		isTDM = true;
-		isQ2 = false;
-		isQ3 = false;
-		isRTCW = false;
-		isQ1 = false;
-		isD3BFG = false;
-		isDOOM = false;
 		SetupGameConfig();
 	}
 
 	public void SetupQuake2()
 	{
-		isD3 = false;
-		isPrey = false;
-		isQ4 = false;
-		isTDM = false;
+		InitGameState();
 		isQ2 = true;
-		isQ3 = false;
-		isRTCW = false;
-		isQ1 = false;
-		isD3BFG = false;
-		isDOOM = false;
 		SetupGameConfig();
 	}
 
 	public void SetupRTCW()
 	{
-		isD3 = false;
-		isPrey = false;
-		isQ4 = false;
-		isTDM = false;
-		isQ2 = false;
-		isQ3 = false;
+		InitGameState();
 		isRTCW = true;
-		isQ1 = false;
-		isD3BFG = false;
-		isDOOM = false;
 		SetupGameConfig();
 	}
 
 	public void SetupQuake3()
 	{
-		isD3 = false;
-		isPrey = false;
-		isQ4 = false;
-		isTDM = false;
-		isQ2 = false;
-		isRTCW = false;
+		InitGameState();
 		isQ3 = true;
-		isQ1 = false;
-		isD3BFG = false;
-		isDOOM = false;
 		SetupGameConfig();
 	}
 
 	public void SetupQuake1()
 	{
-		isD3 = false;
-		isPrey = false;
-		isQ4 = false;
-		isTDM = false;
-		isQ2 = false;
-		isRTCW = false;
-		isQ3 = false;
+		InitGameState();
 		isQ1 = true;
-		isD3BFG = false;
-		isDOOM = false;
 		SetupGameConfig();
 	}
 
 	public void SetupDoom3BFG()
 	{
-		isD3 = false;
-		isPrey = false;
-		isQ4 = false;
-		isTDM = false;
-		isQ2 = false;
-		isRTCW = false;
-		isQ3 = false;
-		isQ1 = false;
+		InitGameState();
 		isD3BFG = true;
-		isDOOM = false;
 		SetupGameConfig();
 	}
 
 	public void SetupGZDoom()
 	{
-		isD3 = false;
-		isPrey = false;
-		isQ4 = false;
-		isTDM = false;
-		isQ2 = false;
-		isRTCW = false;
-		isQ3 = false;
-		isQ1 = false;
-		isD3BFG = false;
+		InitGameState();
 		isDOOM = true;
+		SetupGameConfig();
+	}
+
+	public void SetupETW()
+	{
+		InitGameState();
+		isETW = true;
+		SetupGameConfig();
+	}
+
+	public void SetupRealRTCW()
+	{
+		InitGameState();
+		isRealRTCW = true;
 		SetupGameConfig();
 	}
 
@@ -522,7 +478,7 @@ public class Q3EInterface
 
 	public boolean IsIdTech3()
 	{
-		return isQ3 || isRTCW;
+		return isQ3 || isRTCW || isETW || isRealRTCW;
 	}
 
 	public boolean IsIdTech2()
@@ -565,6 +521,10 @@ public class Q3EInterface
 			return "fs_game";
 		else if(isDOOM)
 			return "iwad";
+		else if(isETW)
+			return "fs_game";
+		else if(isRealRTCW)
+			return "fs_game";
 		else
 			return "fs_game";
 	}
@@ -621,6 +581,14 @@ public class Q3EInterface
         texture_table[Q3EGlobals.UI_WEAPON_PANEL] = "disc_weapon.png";
 
 		texture_table[Q3EGlobals.UI_SCORE] = "btn_score.png";
+
+		texture_table[Q3EGlobals.UI_0] = "btn_0.png";
+		texture_table[Q3EGlobals.UI_4] = "btn_4.png";
+		texture_table[Q3EGlobals.UI_5] = "btn_5.png";
+		texture_table[Q3EGlobals.UI_6] = "btn_6.png";
+		texture_table[Q3EGlobals.UI_7] = "btn_7.png";
+		texture_table[Q3EGlobals.UI_8] = "btn_8.png";
+		texture_table[Q3EGlobals.UI_9] = "btn_9.png";
     }
 
     public void InitTypeTable()
@@ -657,12 +625,200 @@ public class Q3EInterface
 
     public boolean IsInitGame()
 	{
-		return isD3 || isD3BFG || isQ2 || isQ1 || isQ3 || isRTCW || isTDM || isDOOM;
+		return isD3 || isD3BFG || isQ2 || isQ1 || isQ3 || isRTCW || isTDM || isDOOM || isETW || isRealRTCW;
 	}
 
 	public boolean IsStandaloneGame()
 	{
 		return isTDM || isDOOM;
+	}
+
+	public static String GetGameStandaloneDirectory(String name)
+	{
+		if(Q3EGlobals.GAME_PREY.equalsIgnoreCase(name))
+			return Q3EGlobals.GAME_SUBDIR_PREY;
+		else if(Q3EGlobals.GAME_QUAKE4.equalsIgnoreCase(name))
+			return Q3EGlobals.GAME_SUBDIR_QUAKE4;
+		else if(Q3EGlobals.GAME_QUAKE2.equalsIgnoreCase(name))
+			return Q3EGlobals.GAME_SUBDIR_QUAKE2;
+		else if(Q3EGlobals.GAME_QUAKE3.equalsIgnoreCase(name))
+			return Q3EGlobals.GAME_SUBDIR_QUAKE3;
+		else if(Q3EGlobals.GAME_RTCW.equalsIgnoreCase(name))
+			return Q3EGlobals.GAME_SUBDIR_RTCW;
+		else if(Q3EGlobals.GAME_TDM.equalsIgnoreCase(name))
+			return Q3EGlobals.GAME_SUBDIR_TDM;
+		else if(Q3EGlobals.GAME_QUAKE1.equalsIgnoreCase(name))
+			return Q3EGlobals.GAME_SUBDIR_QUAKE1;
+		else if(Q3EGlobals.GAME_DOOM3BFG.equalsIgnoreCase(name))
+			return Q3EGlobals.GAME_SUBDIR_DOOMBFG;
+		else if(Q3EGlobals.GAME_GZDOOM.equalsIgnoreCase(name))
+			return Q3EGlobals.GAME_SUBDIR_GZDOOM;
+		else if(Q3EGlobals.GAME_ETW.equalsIgnoreCase(name))
+			return Q3EGlobals.GAME_SUBDIR_ETW;
+		else if(Q3EGlobals.GAME_REALRTCW.equalsIgnoreCase(name))
+			return Q3EGlobals.GAME_SUBDIR_REALRTCW;
+		else
+			return Q3EGlobals.GAME_SUBDIR_DOOM3;
+	}
+
+	public String GetGameModPreferenceKey()
+	{
+		if(Q3EUtils.q3ei.isQ4)
+			return Q3EPreference.pref_harm_q4_fs_game;
+		else if(Q3EUtils.q3ei.isPrey)
+			return Q3EPreference.pref_harm_prey_fs_game;
+		else if(Q3EUtils.q3ei.isQ2)
+			return Q3EPreference.pref_harm_q2_fs_game;
+		else if(Q3EUtils.q3ei.isQ3)
+			return Q3EPreference.pref_harm_q3_fs_game;
+		else if(Q3EUtils.q3ei.isRTCW)
+			return Q3EPreference.pref_harm_rtcw_fs_game;
+		else if(Q3EUtils.q3ei.isTDM)
+			return Q3EPreference.pref_harm_tdm_fs_game;
+		else if(Q3EUtils.q3ei.isQ1)
+			return Q3EPreference.pref_harm_q1_fs_game;
+		else if(Q3EUtils.q3ei.isD3BFG)
+			return Q3EPreference.pref_harm_d3bfg_fs_game;
+		else if(Q3EUtils.q3ei.isDOOM)
+			return Q3EPreference.pref_harm_gzdoom_fs_game;
+		else if(Q3EUtils.q3ei.isETW)
+			return Q3EPreference.pref_harm_etw_fs_game;
+		else if(Q3EUtils.q3ei.isRealRTCW)
+			return Q3EPreference.pref_harm_realrtcw_fs_game;
+		else
+			return Q3EPreference.pref_harm_fs_game;
+	}
+
+	public String GetEnableModPreferenceKey()
+	{
+		if(Q3EUtils.q3ei.isQ4)
+			return Q3EPreference.pref_harm_q4_user_mod;
+		else if(Q3EUtils.q3ei.isPrey)
+			return Q3EPreference.pref_harm_prey_user_mod;
+		else if(Q3EUtils.q3ei.isQ2)
+			return Q3EPreference.pref_harm_q2_user_mod;
+		else if(Q3EUtils.q3ei.isQ3)
+			return Q3EPreference.pref_harm_q3_user_mod;
+		else if(Q3EUtils.q3ei.isRTCW)
+			return Q3EPreference.pref_harm_rtcw_user_mod;
+		else if(Q3EUtils.q3ei.isTDM)
+			return Q3EPreference.pref_harm_tdm_user_mod;
+		else if(Q3EUtils.q3ei.isQ1)
+			return Q3EPreference.pref_harm_q1_user_mod;
+		else if(Q3EUtils.q3ei.isD3BFG)
+			return Q3EPreference.pref_harm_d3bfg_user_mod;
+		else if(Q3EUtils.q3ei.isDOOM)
+			return Q3EPreference.pref_harm_gzdoom_user_mod;
+		else if(Q3EUtils.q3ei.isETW)
+			return Q3EPreference.pref_harm_etw_user_mod;
+		else if(Q3EUtils.q3ei.isRealRTCW)
+			return Q3EPreference.pref_harm_realrtcw_user_mod;
+		else
+			return Q3EPreference.pref_harm_user_mod;
+	}
+
+	public String GetGameModLibPreferenceKey()
+	{
+		if(Q3EUtils.q3ei.isQ4)
+			return Q3EPreference.pref_harm_q4_game_lib;
+		else if(Q3EUtils.q3ei.isPrey)
+			return Q3EPreference.pref_harm_prey_game_lib;
+		else if(Q3EUtils.q3ei.isQ2)
+			return Q3EPreference.pref_harm_q2_game_lib;
+		else if(Q3EUtils.q3ei.isQ3)
+			return Q3EPreference.pref_harm_q3_game_lib;
+		else if(Q3EUtils.q3ei.isRTCW)
+			return Q3EPreference.pref_harm_rtcw_game_lib;
+		else if(Q3EUtils.q3ei.isTDM)
+			return Q3EPreference.pref_harm_tdm_game_lib;
+		else if(Q3EUtils.q3ei.isQ1)
+			return Q3EPreference.pref_harm_q1_game_lib;
+		else if(Q3EUtils.q3ei.isD3BFG)
+			return Q3EPreference.pref_harm_d3bfg_game_lib;
+		else if(Q3EUtils.q3ei.isDOOM)
+			return Q3EPreference.pref_harm_gzdoom_game_lib;
+		else if(Q3EUtils.q3ei.isETW)
+			return Q3EPreference.pref_harm_etw_game_lib;
+		else if(Q3EUtils.q3ei.isRealRTCW)
+			return Q3EPreference.pref_harm_realrtcw_game_lib;
+		else
+			return Q3EPreference.pref_harm_game_lib;
+	}
+
+	public String GetGameCommandPreferenceKey()
+	{
+		if(Q3EUtils.q3ei.isQ4)
+			return Q3EPreference.pref_params_quake4;
+		else if(Q3EUtils.q3ei.isPrey)
+			return Q3EPreference.pref_params_prey;
+		else if(Q3EUtils.q3ei.isQ2)
+			return Q3EPreference.pref_params_q2;
+		else if(Q3EUtils.q3ei.isQ3)
+			return Q3EPreference.pref_params_q3;
+		else if(Q3EUtils.q3ei.isRTCW)
+			return Q3EPreference.pref_params_rtcw;
+		else if(Q3EUtils.q3ei.isTDM)
+			return Q3EPreference.pref_params_tdm;
+		else if(Q3EUtils.q3ei.isQ1)
+			return Q3EPreference.pref_params_q1;
+		else if(Q3EUtils.q3ei.isD3BFG)
+			return Q3EPreference.pref_params_d3bfg;
+		else if(Q3EUtils.q3ei.isDOOM)
+			return Q3EPreference.pref_params_gzdoom;
+		else if(Q3EUtils.q3ei.isETW)
+			return Q3EPreference.pref_params_etw;
+		else if(Q3EUtils.q3ei.isRealRTCW)
+			return Q3EPreference.pref_params_realrtcw;
+		else
+			return Q3EPreference.pref_params;
+	}
+
+	public String GetGameCommandRecordPreferenceKey()
+	{
+		if(Q3EUtils.q3ei.isQ4)
+			return Q3EPreference.pref_harm_q4_command_record;
+		else if(Q3EUtils.q3ei.isPrey)
+			return Q3EPreference.pref_harm_prey_command_record;
+		else if(Q3EUtils.q3ei.isQ2)
+			return Q3EPreference.pref_harm_q2_command_record;
+		else if(Q3EUtils.q3ei.isQ3)
+			return Q3EPreference.pref_harm_q3_command_record;
+		else if(Q3EUtils.q3ei.isRTCW)
+			return Q3EPreference.pref_harm_rtcw_command_record;
+		else if(Q3EUtils.q3ei.isTDM)
+			return Q3EPreference.pref_harm_tdm_command_record;
+		else if(Q3EUtils.q3ei.isQ1)
+			return Q3EPreference.pref_harm_q1_command_record;
+		else if(Q3EUtils.q3ei.isD3BFG)
+			return Q3EPreference.pref_harm_d3bfg_command_record;
+		else if(Q3EUtils.q3ei.isDOOM)
+			return Q3EPreference.pref_harm_gzdoom_command_record;
+		else if(Q3EUtils.q3ei.isETW)
+			return Q3EPreference.pref_harm_etw_command_record;
+		else if(Q3EUtils.q3ei.isRealRTCW)
+			return Q3EPreference.pref_harm_realrtcw_command_record;
+		else
+			return Q3EPreference.pref_harm_command_record;
+	}
+
+	public String GetGameHomeDirectoryPath()
+	{
+		if(Q3EUtils.q3ei.isD3BFG)
+			return ".local/share/rbdoom3bfg";
+		else if(Q3EUtils.q3ei.isQ2)
+			return ".yq2";
+		else if(Q3EUtils.q3ei.isQ3)
+			return ".q3a";
+		else if(Q3EUtils.q3ei.isRTCW)
+			return ".wolf";
+		else if(Q3EUtils.q3ei.isDOOM)
+			return ".config/gzdoom";
+		else if(Q3EUtils.q3ei.isETW)
+			return ".etlegacy/legacy";
+		else if(Q3EUtils.q3ei.isRealRTCW)
+			return ".realrtcw";
+		else
+			return null;
 	}
 
 	public void SetAppStoragePath(Context context)
@@ -706,6 +862,9 @@ public class Q3EInterface
 		type_table[Q3EGlobals.UI_WEAPON_PANEL] = Q3EGlobals.TYPE_DISC;
 
 		type_table[Q3EGlobals.UI_SCORE] = Q3EGlobals.TYPE_BUTTON;
+
+		for(int i = Q3EGlobals.UI_0; i <= Q3EGlobals.UI_9; i++)
+			type_table[i] = Q3EGlobals.TYPE_BUTTON;
 
 		_defaultType = Arrays.copyOf(type_table, type_table.length);
 	}
@@ -795,115 +954,42 @@ public class Q3EInterface
 		arg_table[Q3EGlobals.UI_SCORE * 4 + 2] = Q3EGlobals.ONSCREEN_BUTTON_TYPE_FULL;
 		arg_table[Q3EGlobals.UI_SCORE * 4 + 3] = 0;
 
+		arg_table[Q3EGlobals.UI_0 * 4] = Q3EKeyCodes.KeyCodesGeneric.K_F10;
+		arg_table[Q3EGlobals.UI_0 * 4 + 1] = Q3EGlobals.ONSCRREN_BUTTON_NOT_HOLD;
+		arg_table[Q3EGlobals.UI_0 * 4 + 2] = Q3EGlobals.ONSCREEN_BUTTON_TYPE_FULL;
+		arg_table[Q3EGlobals.UI_0 * 4 + 3] = 0;
+
+		arg_table[Q3EGlobals.UI_4 * 4] = Q3EKeyCodes.KeyCodesGeneric.K_F4;
+		arg_table[Q3EGlobals.UI_4 * 4 + 1] = Q3EGlobals.ONSCRREN_BUTTON_NOT_HOLD;
+		arg_table[Q3EGlobals.UI_4 * 4 + 2] = Q3EGlobals.ONSCREEN_BUTTON_TYPE_FULL;
+		arg_table[Q3EGlobals.UI_4 * 4 + 3] = 0;
+
+		arg_table[Q3EGlobals.UI_5 * 4] = Q3EKeyCodes.KeyCodesGeneric.K_F5;
+		arg_table[Q3EGlobals.UI_5 * 4 + 1] = Q3EGlobals.ONSCRREN_BUTTON_NOT_HOLD;
+		arg_table[Q3EGlobals.UI_5 * 4 + 2] = Q3EGlobals.ONSCREEN_BUTTON_TYPE_FULL;
+		arg_table[Q3EGlobals.UI_5 * 4 + 3] = 0;
+
+		arg_table[Q3EGlobals.UI_6 * 4] = Q3EKeyCodes.KeyCodesGeneric.K_F6;
+		arg_table[Q3EGlobals.UI_6 * 4 + 1] = Q3EGlobals.ONSCRREN_BUTTON_NOT_HOLD;
+		arg_table[Q3EGlobals.UI_6 * 4 + 2] = Q3EGlobals.ONSCREEN_BUTTON_TYPE_FULL;
+		arg_table[Q3EGlobals.UI_6 * 4 + 3] = 0;
+
+		arg_table[Q3EGlobals.UI_7 * 4] = Q3EKeyCodes.KeyCodesGeneric.K_F7;
+		arg_table[Q3EGlobals.UI_7 * 4 + 1] = Q3EGlobals.ONSCRREN_BUTTON_NOT_HOLD;
+		arg_table[Q3EGlobals.UI_7 * 4 + 2] = Q3EGlobals.ONSCREEN_BUTTON_TYPE_FULL;
+		arg_table[Q3EGlobals.UI_7 * 4 + 3] = 0;
+
+		arg_table[Q3EGlobals.UI_8 * 4] = Q3EKeyCodes.KeyCodesGeneric.K_F8;
+		arg_table[Q3EGlobals.UI_8 * 4 + 1] = Q3EGlobals.ONSCRREN_BUTTON_NOT_HOLD;
+		arg_table[Q3EGlobals.UI_8 * 4 + 2] = Q3EGlobals.ONSCREEN_BUTTON_TYPE_FULL;
+		arg_table[Q3EGlobals.UI_8 * 4 + 3] = 0;
+
+		arg_table[Q3EGlobals.UI_9 * 4] = Q3EKeyCodes.KeyCodesGeneric.K_F9;
+		arg_table[Q3EGlobals.UI_9 * 4 + 1] = Q3EGlobals.ONSCRREN_BUTTON_NOT_HOLD;
+		arg_table[Q3EGlobals.UI_9 * 4 + 2] = Q3EGlobals.ONSCREEN_BUTTON_TYPE_FULL;
+		arg_table[Q3EGlobals.UI_9 * 4 + 3] = 0;
+
 		_defaultArgs = Arrays.copyOf(arg_table, arg_table.length);
-	}
-
-	public String GetGameModPreferenceKey()
-	{
-		if(Q3EUtils.q3ei.isQ4)
-			return Q3EPreference.pref_harm_q4_fs_game;
-		else if(Q3EUtils.q3ei.isPrey)
-			return Q3EPreference.pref_harm_prey_fs_game;
-		else if(Q3EUtils.q3ei.isQ2)
-			return Q3EPreference.pref_harm_q2_fs_game;
-		else if(Q3EUtils.q3ei.isQ3)
-			return Q3EPreference.pref_harm_q3_fs_game;
-		else if(Q3EUtils.q3ei.isRTCW)
-			return Q3EPreference.pref_harm_rtqw_fs_game;
-		else if(Q3EUtils.q3ei.isTDM)
-			return Q3EPreference.pref_harm_tdm_fs_game;
-		else if(Q3EUtils.q3ei.isQ1)
-			return Q3EPreference.pref_harm_q1_fs_game;
-		else if(Q3EUtils.q3ei.isD3BFG)
-			return Q3EPreference.pref_harm_d3bfg_fs_game;
-		else if(Q3EUtils.q3ei.isDOOM)
-			return Q3EPreference.pref_harm_gzdoom_fs_game;
-		else
-			return Q3EPreference.pref_harm_fs_game;
-	}
-
-	public String GetEnableModPreferenceKey()
-	{
-		if(Q3EUtils.q3ei.isQ4)
-			return Q3EPreference.pref_harm_q4_user_mod;
-		else if(Q3EUtils.q3ei.isPrey)
-			return Q3EPreference.pref_harm_prey_user_mod;
-		else if(Q3EUtils.q3ei.isQ2)
-			return Q3EPreference.pref_harm_q2_user_mod;
-		else if(Q3EUtils.q3ei.isQ3)
-			return Q3EPreference.pref_harm_q3_user_mod;
-		else if(Q3EUtils.q3ei.isRTCW)
-			return Q3EPreference.pref_harm_rtqw_user_mod;
-		else if(Q3EUtils.q3ei.isTDM)
-			return Q3EPreference.pref_harm_tdm_user_mod;
-		else if(Q3EUtils.q3ei.isQ1)
-			return Q3EPreference.pref_harm_q1_user_mod;
-		else if(Q3EUtils.q3ei.isD3BFG)
-			return Q3EPreference.pref_harm_d3bfg_user_mod;
-		else if(Q3EUtils.q3ei.isDOOM)
-			return Q3EPreference.pref_harm_gzdoom_user_mod;
-		else
-			return Q3EPreference.pref_harm_user_mod;
-	}
-
-	public String GetGameModLibPreferenceKey()
-	{
-		if(Q3EUtils.q3ei.isQ4)
-			return Q3EPreference.pref_harm_q4_game_lib;
-		else if(Q3EUtils.q3ei.isPrey)
-			return Q3EPreference.pref_harm_prey_game_lib;
-		else if(Q3EUtils.q3ei.isQ2)
-			return Q3EPreference.pref_harm_q2_game_lib;
-		else if(Q3EUtils.q3ei.isQ3)
-			return Q3EPreference.pref_harm_q3_game_lib;
-		else if(Q3EUtils.q3ei.isRTCW)
-			return Q3EPreference.pref_harm_rtqw_game_lib;
-		else if(Q3EUtils.q3ei.isTDM)
-			return Q3EPreference.pref_harm_tdm_game_lib;
-		else if(Q3EUtils.q3ei.isQ1)
-			return Q3EPreference.pref_harm_q1_game_lib;
-		else if(Q3EUtils.q3ei.isD3BFG)
-			return Q3EPreference.pref_harm_d3bfg_game_lib;
-		else if(Q3EUtils.q3ei.isDOOM)
-			return Q3EPreference.pref_harm_gzdoom_game_lib;
-		else
-			return Q3EPreference.pref_harm_game_lib;
-	}
-
-	public String GetGameCommandPreferenceKey()
-	{
-		if(Q3EUtils.q3ei.isQ4)
-			return Q3EPreference.pref_params_quake4;
-		else if(Q3EUtils.q3ei.isPrey)
-			return Q3EPreference.pref_params_prey;
-		else if(Q3EUtils.q3ei.isQ2)
-			return Q3EPreference.pref_params_q2;
-		else if(Q3EUtils.q3ei.isQ3)
-			return Q3EPreference.pref_params_q3;
-		else if(Q3EUtils.q3ei.isRTCW)
-			return Q3EPreference.pref_params_rtqw;
-		else if(Q3EUtils.q3ei.isTDM)
-			return Q3EPreference.pref_params_tdm;
-		else if(Q3EUtils.q3ei.isQ1)
-			return Q3EPreference.pref_params_q1;
-		else if(Q3EUtils.q3ei.isD3BFG)
-			return Q3EPreference.pref_params_d3bfg;
-		else if(Q3EUtils.q3ei.isDOOM)
-			return Q3EPreference.pref_params_gzdoom;
-		else
-			return Q3EPreference.pref_params;
-	}
-
-	public String GetGameHomeDirectoryPath()
-	{
-		if(Q3EUtils.q3ei.isD3BFG)
-			return ".local/share/rbdoom3bfg";
-		else if(Q3EUtils.q3ei.isQ2)
-			return ".yq2";
-		else if(Q3EUtils.q3ei.isDOOM)
-			return ".config/gzdoom";
-		else
-			return null;
 	}
 
 	public void LoadTypeAndArgTablePreference(Context context)
@@ -934,30 +1020,6 @@ public class Q3EInterface
 			e.printStackTrace();
 			RestoreDefaultOnScreenConfig(arg_table, type_table);
 		}
-	}
-
-	public static String GetGameStandaloneDirectory(String name)
-	{
-		if(Q3EGlobals.GAME_PREY.equalsIgnoreCase(name))
-			return Q3EGlobals.GAME_SUBDIR_PREY;
-		else if(Q3EGlobals.GAME_QUAKE4.equalsIgnoreCase(name))
-			return Q3EGlobals.GAME_SUBDIR_QUAKE4;
-		else if(Q3EGlobals.GAME_QUAKE2.equalsIgnoreCase(name))
-			return Q3EGlobals.GAME_SUBDIR_QUAKE2;
-		else if(Q3EGlobals.GAME_QUAKE3.equalsIgnoreCase(name))
-			return Q3EGlobals.GAME_SUBDIR_QUAKE3;
-		else if(Q3EGlobals.GAME_RTCW.equalsIgnoreCase(name))
-			return Q3EGlobals.GAME_SUBDIR_RTCW;
-		else if(Q3EGlobals.GAME_TDM.equalsIgnoreCase(name))
-			return Q3EGlobals.GAME_SUBDIR_TDM;
-		else if(Q3EGlobals.GAME_QUAKE1.equalsIgnoreCase(name))
-			return Q3EGlobals.GAME_SUBDIR_QUAKE1;
-		else if(Q3EGlobals.GAME_DOOM3BFG.equalsIgnoreCase(name))
-			return Q3EGlobals.GAME_SUBDIR_DOOMBFG;
-		else if(Q3EGlobals.GAME_GZDOOM.equalsIgnoreCase(name))
-			return Q3EGlobals.GAME_SUBDIR_GZDOOM;
-		else
-			return Q3EGlobals.GAME_SUBDIR_DOOM3;
 	}
 
 	public boolean IS_D3()

@@ -12,12 +12,6 @@
     <string name="use_etc1_or_rgba4444_compression">Использовать ETC1 (или RGBA4444) сжатие</string>
     <string name="clear_vertex_buffer_cvar_harm_r_clearvertexbuffer">Очистить буфер вершин(harm_r_clearVertexBuffer)</string>
     <string name="use_etc1_or_rgba4444_cache">Использовать ETC1 (или RGBA4444) кэш</string>
-    <string name="don_t_clear_and_do_nothing">Без очистки</string>
-    <string name="it_is_default_original_graphics_maybe_and_out_of_memory_lead_to_crash_with_flash_screen">Оригинал по умолчанию, возможно нехватка памяти приведет к сбою с флэш-экраном.</string>
-    <string name="force_clear_vertex_buffer_on_every_end_frame">Принудительно очищать буфер вершин в каждом конечном кадре</string>
-    <string name="if_graphics_out_of_memory_and_crash_suggest_to_force_clear_vertex_buffer">Если нехватка памяти привела к сбою, включите принудительное удаление буфера вершин.</string>
-    <string name="force_delete_vertex_buffer_on_every_end_frame">Принудительное удаление буфера вершин в каждом конечном кадре</string>
-    <string name="also_like_2nd_and_delete_vbo_handle_maybe_slower_but_memory_safer">Удаляет буфер вершин, может быть медленнее, но безопаснее для памяти.</string>
     <string name="game_cvar_fs_game">Выбор игры</string>
     <string name="doom_iii">DOOM III</string>
     <string name="doom3_resurrection_of_evil_d3xp">DOOM3:Resurrection of Evil</string>
@@ -31,11 +25,10 @@
     <string name="input_your_mod_folder_name">Имя папки вашего мода</string>
     <string name="gamelib">Библиотека игры</string>
     <string name="multi_threading">Многопоточность</string>
-    <string name="light_model_cvar_harm_r_lightmodel">Выбрать модель освещения(harm_r_lightModel)</string>
+    <string name="light_model_cvar_harm_r_lightmodel">Выбрать модель освещения(harm_r_lightingModel)</string>
     <string name="phong">Phong</string>
     <string name="blinn_phong">Blinn-Phong</string>
-    <string name="specular_exponent_cvar_harm_r_specularexponent">Зеркальность(harm_r_specularExponent):</string>
-    <string name="specular_exponent_in_interaction_light_model_default_is_4_0">Показатель зеркальности света(по умолчанию 4.0)</string>
+    <string name="specular_exponent_in_interaction_light_model_default_is_4_0">Показатель зеркальности света</string>
     <string name="sound">Выбор звука(s_driver)</string>
     <string name="load_quicksave_when_start_game">Загружать автосохранение при запуске игры</string>
     <string name="edit_autoexec_cfg">Редактировать autoexec.cfg</string>
@@ -87,6 +80,7 @@
     <string name="quake_2">Quake 2</string>
     <string name="quake_3">Quake 3</string>
     <string name="rtcw">RTCW</string>
+    <string name="etw">ETW</string>
     <string name="tdm">Dark mod</string>
     <string name="doom">DOOM</string>
     <string name="prey_2006">Prey(2006)</string>
@@ -235,8 +229,6 @@
     <string name="e_g">прим.</string>
     <string name="add_game_library_file_success">Файл библиотеки игры успешно добавлен</string>
     <string name="add_game_library_file_fail">Не удалось добавить файл библиотеки игры!</string>
-    <string name="find_game_library_in_game_data_directory">Найти игровую библиотеку в каталоге игры</string>
-    <string name="if_game_library_file_named_gameaarch64_so_or_libgameaarch64_so_on_arm64_device_or_named_gamearm_so_or_libgamearm_so_on_arm32_device_found_at_game_working_directory_fs_game_folder_will_load_it_instead_of_default_game_library_of_apk">Файл библиотеки игры (с названием `gameaarch64.so` или `libgameaarch64.so` на устройстве arm64. И с названием `gamearm.so` или `libgamearm.so` на устройстве arm32) находится в `Рабочем каталоге игры`/`fs_game` папка, загрузит ее вместо игровой библиотеки apk по умолчанию.</string>
     <string name="translators">Переводчики</string>
     <string name="note">Примечание</string>
     <string name="open_source_license">OPEN-SOURCE ЛИЦЕНЗИЯ</string>
@@ -252,7 +244,7 @@
     <string name="extract_source">Извлечь ресурсы</string>
     <string name="tips">Советы</string>
     <string name="license">Лицензия</string>
-    <string name="maximum_fps_limit_0_unlimited">Максимальный FPS(0 = неограничен)(harm_r_maxFps)</string>
+    <string name="maximum_fps_limit_0_unlimited">Максимальный FPS(0 = неограничен)(r_maxFps)</string>
     <string name="limit_maximum_fps_default_is_0">Ограничить максимальный FPS (0 = неограничен)</string>
     <string name="edit_cvar">Редактор CVar</string>
     <string name="cvar_editor">CVar редактор</string>
@@ -336,5 +328,61 @@
     <string name="_scale_by_screen_area">Масштабировать по площади экрана</string>
     <string name="freedoom1_base">FreeDOOM 1</string>
     <string name="freedoom2_base">FreeDOOM 2</string>
+    <string name="setup_launcher_theme">Настройка темы лаунчера</string>
+    <string name="command_record">Запись команд</string>
+    <string name="choose_command_record">Выбрать запись команд</string>
+    <string name="choose">Выбрать</string>
+    <string name="must_choose_a_command">Необходимо выбрать команду</string>
+    <string name="empty_content">Пустой контэнт</string>
+    <string name="edit_command_record">Редактировать запись команд</string>
+    <string name="command">Команды</string>
+    <string name="command_exists">Команды существуют</string>
+    <string name="add_command_record">Добавить запись команд</string>
+    <string name="pbr">PBR</string>
+    <string name="specular_exponent_cvar_harm_r_specularexponent">Показатель зеркальности Phong(harm_r_specularExponent):</string>
+    <string name="use_etc2_compression">Использовать ETC2 сжатие</string>
+    <string name="blinnphong_specular_exponent_cvar_harm_r_specularexponentblinnphong">Показатель зеркальности Blinn-Phong(harm_r_specularExponentBlinnphong):</string>
+    <string name="blinnphong_specular_exponent_cvar_harm_r_specularexponentpbr">Показатель зеркальности PBR(harm_r_specularExponentPBR):</string>
+    <string name="blinnphong_specular_exponent">Показатель зеркальности Blinn-Phong</string>
+    <string name="pbr_specular_exponent">Показатель зеркальности PBR</string>
+    <string name="lighting">Освещение</string>
+    <string name="shadow">Тени</string>
+    <string name="image">Изображение</string>
+    <string name="current_game_data_path">Текущий путь к данным игры</string>
+    <string name="render_perforated_material_shadow_r_forceshadowmapsonalphatestedsurfaces">Render perforated material shadow(r_forceShadowMapsOnAlphaTestedSurfaces)</string>
+    <string name="stencil_shadow">Stencil shadow</string>
+    <string name="ambient">Ambient</string>
+    <string name="librecoop_roe">LibreCoop:RoE</string>
+    <string name="don_t_clear_and_do_nothing">Do nothing</string>
+    <string name="it_is_default_original_graphics_maybe_and_out_of_memory_lead_to_crash_with_flash_screen">Default original, it maybe cause crash with out of memory</string>
+    <string name="force_clear_vertex_buffer_on_every_end_frame">Free VBO on every frame</string>
+    <string name="if_graphics_out_of_memory_and_crash_suggest_to_force_clear_vertex_buffer">Suggest to free/delete VBO if graphics crash with out of memory</string>
+    <string name="force_delete_vertex_buffer_on_every_end_frame">Free and delete VBO on every frame</string>
+    <string name="also_like_2nd_and_delete_vbo_handle_maybe_slower_but_memory_safer">Also like 2nd, and delete VBO handle, maybe slower but memory safer</string>
+    <string name="find_game_library_in_game_data_directory">Find external game library in game data directory instead of default game library of apk</string>
+    <string name="using_external_game_library">Game library file name: arm64 = `gameaarch64.so` or `libgameaarch64.so`; arm32 = `gamearm.so` or `libgamearm.so`</string>
+    <string name="perfected_doom_3">Perfected Doom 3</string>
+    <string name="perfected_doom_3_resurrection_of_evil">Perfected Doom 3:Resurrection of Evil</string>
+    <string name="nolighting">No lighting</string>
+    <string name="ambient_lighting_brightness_harm_r_ambientlightingbrightness">Ambient lighting brightness(harm_r_ambientLightingBrightness):</string>
+    <string name="ambient_lighting_brightness">Ambient lighting brightness</string>
+    <string name="hardqore">Hardqore</string>
+    <string name="etw_base">Wolfenstein: Enemy Territory</string>
+    <string name="launcher">Launcher</string>
+    <string name="auto_save_buttons_settings_immediately_if_changed">Auto save buttons settings immediately if changed</string>
+    <string name="auto_save_button_settings">Auto save button settings</string>
+    <string name="copy">Copy</string>
+    <string name="show_preferences">Show preferences</string>
+    <string name="show_application_setting_preferences_contents">Show application setting preferences contents</string>
+    <string name="enable">Enable</string>
+    <string name="disable">Disable</string>
+    <string name="ignore">Ignore</string>
+    <string name="enable_game_standalone_directory">Enable game standalone directory</string>
+    <string name="idtech4amm_requires_enable_game_standalone_directory_since_version_57">idTech4A++ requires enable game standalone directory since version 57.</string>
+    <string name="you_can_also_disable_it_like_older_version">You can also disable it like older version.</string>
+    <string name="you_can_view_all_support_games_data_directory_path_by_tips_button_above_chooser_button_in_launcher">You can view all support games data directory path by `Tips` button above `Chooser` button in launcher.</string>
+    <string name="you_can_also_change_it_manually_on_launcher_settings">You can also change it manually on launcher settings.</string>
+    <string name="realrtcw">RealRTCW</string>
+    <string name="realrtcw_base">RealRTCW</string>
 
 </resources>

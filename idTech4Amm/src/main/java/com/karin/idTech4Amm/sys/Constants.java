@@ -12,13 +12,13 @@ import java.util.Date;
  */
 public final class Constants
 {
-    public static final int CONST_UPDATE_RELEASE = 53;
-    public static final String CONST_RELEASE = "2024-07-17";
+    public static final int    CONST_UPDATE_RELEASE = 58;
+    public static final String CONST_RELEASE = "2024-10-18";
     public static final String CONST_EMAIL = "beyondk2000@gmail.com";
     public static final String CONST_DEV = "Karin";
     public static final String CONST_CODE = "Harmattan";
     public static final String CONST_APP_NAME = "idTech4A++"; // "DIII4A++";
-    public static final String CONST_NAME = "DOOM III/Quake 4/Prey(2006)/DOOM3 BFG for Android(Harmattan Edition)";
+    public static final String CONST_NAME = "DOOM III/Quake 4/Prey(2006)/DOOM 3 BFG for Android(Harmattan Edition)";
 	public static final String CONST_MAIN_PAGE = "https://github.com/glKarin/com.n0n3m4.diii4a";
     public static final String CONST_TIEBA = "https://tieba.baidu.com/p/6825594793";
 	public static final String CONST_DEVELOPER = "https://github.com/glKarin";
@@ -30,9 +30,7 @@ public final class Constants
 	public static String[] CONST_CHANGES()
     {
         return new String[] {
-            "Fix GZDOOM sound.",
-            "Update screen resolution settings on launcher.",
-            "Add compression textures support with cvar `harm_image_useCompression` for low memory device(e.g. 32bits device, but load slower) on DOOM3-BFG.",
+            "Add `RealRTCW` support, game standalone directory named `realrtcw`, game data directory named `Main`. More view in `" + TextHelper.GenLinkText("https://github.com/wolfetplayer/RealRTCW", "RealRTCW") + "`.",
         };
 	};
 

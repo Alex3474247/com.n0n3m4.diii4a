@@ -52,8 +52,21 @@ void	RB_GLSL_DrawInteraction(const drawInteraction_t *din)
 	GL_Uniform4fv(offsetof(shaderProgram_t, diffuseColor), din->diffuseColor.ToFloatPtr());
 	GL_Uniform4fv(offsetof(shaderProgram_t, specularColor), din->specularColor.ToFloatPtr());
 
-	// material may be NULL for shadow volumes
-	GL_Uniform1fv(offsetof(shaderProgram_t, specularExponent), &r_specularExponent);
+    if ( backEnd.vLight->lightShader->IsAmbientLight() && r_interactionLightingModel != HARM_INTERACTION_SHADER_AMBIENT ) {
+        GL_Uniform1f(offsetof(shaderProgram_t, specularExponent), 1.0f);
+    } else {
+		if(r_interactionLightingModel == HARM_INTERACTION_SHADER_BLINNPHONG)
+			GL_Uniform1f(offsetof(shaderProgram_t, specularExponent), harm_r_specularExponentBlinnPhong.GetFloat());
+		else if(r_interactionLightingModel == HARM_INTERACTION_SHADER_PBR)
+	    {
+	        float se[2] = { harm_r_specularExponentPBR.GetFloat(), harm_r_normalCorrectionPBR.GetFloat() };
+	        GL_Uniform2fv(offsetof(shaderProgram_t, specularExponent), se);
+	    }
+	    else if(r_interactionLightingModel == HARM_INTERACTION_SHADER_AMBIENT)
+	        GL_Uniform1f(offsetof(shaderProgram_t, specularExponent), harm_r_ambientLightingBrightness.GetFloat());
+		else
+			GL_Uniform1f(offsetof(shaderProgram_t, specularExponent), harm_r_specularExponent.GetFloat());
+    }
 
 	// set the textures
 
@@ -75,7 +88,11 @@ void	RB_GLSL_DrawInteraction(const drawInteraction_t *din)
 
 	// texture 4 is the per-surface specular map
 	GL_SelectTextureNoClient(4);
-	din->specularImage->Bind();
+    if ( backEnd.vLight->lightShader->IsAmbientLight() || r_interactionLightingModel == HARM_INTERACTION_SHADER_AMBIENT ) {
+        globalImages->ambientNormalMap->Bind();
+    } else {
+        din->specularImage->Bind();
+    }
 
 #ifdef _SHADOW_MAPPING
 	if(r_shadowMapping)
@@ -126,10 +143,19 @@ void RB_GLSL_CreateDrawInteractions(const drawSurf_t *surf)
 			backEnd.depthFunc);
 
 	// bind the vertex and fragment shader
-	if(r_usePhong)
-		GL_UseProgram(&interactionShader);
-	else
-		GL_UseProgram(&interactionBlinnPhongShader);
+    if(backEnd.vLight->lightShader->IsAmbientLight())
+        GL_UseProgram(&ambientLightingShader);
+    else
+    {
+		if(r_interactionLightingModel == HARM_INTERACTION_SHADER_BLINNPHONG)
+			GL_UseProgram(&interactionBlinnPhongShader);
+		else if(r_interactionLightingModel == HARM_INTERACTION_SHADER_PBR)
+			GL_UseProgram(&interactionPBRShader);
+	    else if (r_interactionLightingModel == HARM_INTERACTION_SHADER_AMBIENT )
+	        GL_UseProgram(&ambientLightingShader);
+		else
+			GL_UseProgram(&interactionShader);
+    }
 
 	// enable the vertex arrays
 	GL_EnableVertexAttribArray(offsetof(shaderProgram_t, attr_TexCoord));

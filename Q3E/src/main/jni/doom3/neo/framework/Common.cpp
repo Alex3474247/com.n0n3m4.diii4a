@@ -41,6 +41,7 @@ extern bool Sys_InRenderThread(void);
 #define _HARM_DEBUG_MULTITHREAD
 #endif
 #endif
+#define HARM_ONLY_DETECT_SYS_MEMORY 1
 
 typedef enum {
 	ERP_NONE,
@@ -101,7 +102,7 @@ idCVar com_videoRam("com_videoRam", "64", CVAR_INTEGER | CVAR_SYSTEM | CVAR_NOCH
 
 idCVar com_product_lang_ext("com_product_lang_ext", "1", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ARCHIVE, "Extension to use when creating language files.");
 
-idCVar harm_com_consoleHistory("harm_com_consoleHistory", "2", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ARCHIVE, "Save/load console history(0: disable; 1: loading in engine initialization, and saving in engine shutdown; 2: loading in engine initialization, and saving in every e executing).");
+idCVar harm_com_consoleHistory("harm_com_consoleHistory", "2", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ARCHIVE, "Save/load console history(0 = disable; 1 = loading in engine initialization, and saving in engine shutdown; 2 = loading in engine initialization, and saving in every e executing).");
 
 // com_speeds times
 int				time_gameFrame;
@@ -1637,6 +1638,7 @@ void Com_ExecMachineSpec_f(const idCmdArgs &args)
 		cvarSystem->SetCVarInteger("r_multiSamples", 0, CVAR_ARCHIVE);
 	}
 
+#if ! HARM_ONLY_DETECT_SYS_MEMORY
 	if (Sys_GetVideoRam() < 128) {
 		cvarSystem->SetCVarBool("image_ignoreHighQuality", true, CVAR_ARCHIVE);
 		cvarSystem->SetCVarInteger("image_downSize", 1, CVAR_ARCHIVE);
@@ -1646,6 +1648,7 @@ void Com_ExecMachineSpec_f(const idCmdArgs &args)
 		cvarSystem->SetCVarInteger("image_downSizeBump", 1, CVAR_ARCHIVE);
 		cvarSystem->SetCVarInteger("image_downSizeBumpLimit", 256, CVAR_ARCHIVE);
 	}
+#endif
 
 	if (Sys_GetSystemRam() < 512) {
 		cvarSystem->SetCVarBool("image_ignoreHighQuality", true, CVAR_ARCHIVE);
@@ -2914,10 +2917,10 @@ idCommonLocal::LoadGameDLL
 #define _DEFAULT_LIBRARY_DIR "<executable application path>"
 #endif
 
-static idCVar	harm_fs_gameLibPath("harm_fs_gameLibPath", "", CVAR_SYSTEM | CVAR_INIT | CVAR_SERVERINFO, "[Harmattan]: Special game dynamic library. e.g. "
+static idCVar	harm_fs_gameLibPath("harm_fs_gameLibPath", "", CVAR_SYSTEM | CVAR_INIT | CVAR_SERVERINFO, "Setup game dynamic library. e.g. "
 		"`<harm_fs_gameLibPath>/lib" _HARM_BASE_GAME_DLL DLL_SUFFIX "`, "
 		"default is empty will load by cvar `fs_game`."); // This cvar priority is higher than `fs_game`.
-static idCVar	harm_fs_gameLibDir("harm_fs_gameLibDir", "", CVAR_SYSTEM | CVAR_INIT | CVAR_SERVERINFO, "[Harmattan]: Special game dynamic library directory path(default is empty, means using `" _DEFAULT_LIBRARY_DIR "`).");
+static idCVar	harm_fs_gameLibDir("harm_fs_gameLibDir", "", CVAR_SYSTEM | CVAR_INIT | CVAR_SERVERINFO, "Setup game dynamic library directory path(default is empty, means using `" _DEFAULT_LIBRARY_DIR "`).");
 void idCommonLocal::LoadGameDLL(void)
 {
 #ifdef __DOOM_DLL__
@@ -2982,7 +2985,11 @@ void idCommonLocal::LoadGameDLL(void)
 				common->Printf("[Harmattan]: Load dynamic library `%s` %s!\n", dllFile.c_str(), LOAD_RESULT(gameDLL));
 			}
 #elif defined(_HUMANHEAD) // prey2006 base game dll
-			if(!fsgame.Icmp("preybase") || fsgame.IsEmpty()) // load Prey game so.
+			if(!fsgame.Icmp("preybase") 
+#if !defined(__ANDROID__)
+					|| !fsgame.Icmp("base")
+#endif
+					|| fsgame.IsEmpty()) // load Prey game so.
 			{
 				common->Printf("[Harmattan]: Load Prey2006 game......\n");
 				idStr dllFile(dir);
@@ -3155,13 +3162,28 @@ idCommonLocal::SetMachineSpec
 */
 void idCommonLocal::SetMachineSpec(void)
 {
-	cpuid_t	cpu = Sys_GetProcessorId();
-	double ghz = Sys_ClockTicksPerSecond() * 0.000000001f;
+	int	cpu = Sys_GetProcessorId();
+	double ghz = Sys_ClockTicksPerSecond() * 0.000000001;
 	int vidRam = Sys_GetVideoRam();
 	int sysRam = Sys_GetSystemRam();
 
 	Printf("Detected\n \t%.2f GHz CPU\n\t%i MB of System memory\n\t%i MB of Video memory\n\n", ghz, sysRam, vidRam);
 
+#if HARM_ONLY_DETECT_SYS_MEMORY
+    if (sysRam >= 1024) {
+        Printf("This system qualifies for Ultra quality!\n");
+        com_machineSpec.SetInteger(3);
+    } else if (sysRam >= 512) {
+        Printf("This system qualifies for High quality!\n");
+        com_machineSpec.SetInteger(2);
+    } else if (sysRam >= 384) {
+        Printf("This system qualifies for Medium quality.\n");
+        com_machineSpec.SetInteger(1);
+    } else {
+        Printf("This system qualifies for Low quality.\n");
+        com_machineSpec.SetInteger(0);
+    }
+#else
 	if (ghz >= 2.75f && vidRam >= 512 && sysRam >= 1024) {
 		Printf("This system qualifies for Ultra quality!\n");
 		com_machineSpec.SetInteger(3);
@@ -3177,6 +3199,7 @@ void idCommonLocal::SetMachineSpec(void)
 	}
 
 	com_videoRam.SetInteger(vidRam);
+#endif
 }
 
 /*
@@ -3251,12 +3274,12 @@ void idCommonLocal::Init(int argc, const char **argv, const char *cmdline)
 #endif
 #ifdef _OPENGLES3
 #if !defined(__ANDROID__) //karin: check OpenGL version from command cvar
-		const char *openglVersion = cvarSystem->GetCVarString("harm_sys_openglVersion");
+		const char *openglVersion = cvarSystem->GetCVarString("harm_r_openglVersion");
 		if(openglVersion && openglVersion[0])
 		{
 			extern int gl_version;
 		    extern bool USING_GLES3;
-			Sys_Printf("[Harmattan]: harm_sys_openglVersion = %s\n", openglVersion);
+			Sys_Printf("[Harmattan]: harm_r_openglVersion = %s\n", openglVersion);
 			if(!idStr::Icmp("GLES2", openglVersion))
 			{
 				gl_version = 0x00020000;
@@ -3317,6 +3340,15 @@ void idCommonLocal::Init(int argc, const char **argv, const char *cmdline)
 
 		if(harm_com_consoleHistory.GetInteger() != 0)
 			console->LoadHistory();
+#ifdef __ANDROID__ //karin: for in smooth joystick on Android.
+		extern bool smooth_joystick;
+		idCVar *in_smoothJoystick = cvarSystem->Find("harm_in_smoothJoystick");
+		if(in_smoothJoystick)
+		{
+			in_smoothJoystick->SetBool(smooth_joystick);
+			in_smoothJoystick->ClearModified();
+		}
+#endif
 
 		com_fullyInitialized = true;
 	}

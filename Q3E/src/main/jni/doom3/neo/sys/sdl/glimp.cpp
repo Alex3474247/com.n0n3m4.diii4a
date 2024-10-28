@@ -112,7 +112,7 @@ const char	*r_openglesArgs[]	= {
         "GLES2",
         "GLES3.0",
         NULL };
-idCVar harm_sys_openglVersion("harm_sys_openglVersion",
+idCVar harm_r_openglVersion("harm_r_openglVersion",
                               r_openglesArgs[1]
         , CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INIT,
                               "OpenGL version", r_openglesArgs, idCmdSystem::ArgCompletion_String<r_openglesArgs>);
@@ -124,6 +124,8 @@ bool USING_GLES3 = false;
 int gl_version = DEFAULT_GLES_VERSION;
 
 static idCVar r_fullscreenDesktop( "r_fullscreenDesktop", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "0: 'real' fullscreen mode 1: keep resolution 'desktop' fullscreen mode" );
+static idCVar win_xpos( "win_xpos", "-1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "horizontal position of window" );
+static idCVar win_ypos( "win_ypos", "-1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "vertical position of window" );
 
 const int GRAB_GRABMOUSE	= (1 << 0);
 const int GRAB_HIDECURSOR	= (1 << 1);
@@ -147,10 +149,19 @@ static void SetSDLIcon()
 	amask = 0xff000000;
 #endif
 
+#ifdef _RAVEN //karin: Quake4 icon
+	#include "quake4_icon.h" // contains the struct q4_icon
+	#define _GAME_ICON q4_icon
+#elif defined(_HUMANHEAD) //karin: Prey icon
+	#include "prey_icon.h" // contains the struct prey_icon
+	#define _GAME_ICON prey_icon
+#else
 	#include "doom_icon.h" // contains the struct d3_icon
+	#define _GAME_ICON d3_icon
+#endif
 
-	SDL_Surface* icon = SDL_CreateRGBSurfaceFrom((void*)d3_icon.pixel_data, d3_icon.width, d3_icon.height,
-			d3_icon.bytes_per_pixel*8, d3_icon.bytes_per_pixel*d3_icon.width,
+	SDL_Surface* icon = SDL_CreateRGBSurfaceFrom((void*)_GAME_ICON.pixel_data, _GAME_ICON.width, _GAME_ICON.height,
+			_GAME_ICON.bytes_per_pixel*8, _GAME_ICON.bytes_per_pixel*_GAME_ICON.width,
 			rmask, gmask, bmask, amask);
 
 #if SDL_VERSION_ATLEAST(2, 0, 0)
@@ -356,9 +367,25 @@ bool GLimp_Init(glimpParms_t parms) {
         }
 #endif
 
+        int win_x;
+        int win_y;
+        if(parms.fullScreen)
+        {
+            win_x = SDL_WINDOWPOS_UNDEFINED_DISPLAY(displayIndex);
+            win_y = SDL_WINDOWPOS_UNDEFINED_DISPLAY(displayIndex);
+        }
+        else
+        {
+            win_x = win_xpos.GetInteger();
+            win_y = win_ypos.GetInteger();
+            if(win_x < 0)
+                win_x = SDL_WINDOWPOS_UNDEFINED_DISPLAY(displayIndex);
+            if(win_y < 0)
+                win_y = SDL_WINDOWPOS_UNDEFINED_DISPLAY(displayIndex);
+        }
         window = SDL_CreateWindow(ENGINE_VERSION,
-                                    SDL_WINDOWPOS_UNDEFINED_DISPLAY(displayIndex),
-                                    SDL_WINDOWPOS_UNDEFINED_DISPLAY(displayIndex),
+                                    win_x,
+                                    win_y,
                                     parms.width, parms.height, flags);
 
         if (!window) {
@@ -678,6 +705,7 @@ void GLimp_Shutdown() {
         window = NULL;
     }
 #endif
+    common->Printf("------------------------------\n");
 }
 
 /*

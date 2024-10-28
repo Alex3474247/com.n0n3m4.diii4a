@@ -2231,6 +2231,13 @@ idFileSystemLocal::SetupGameDirectories
 ================
 */
 void idFileSystemLocal::SetupGameDirectories( const char *gameName ) {
+#ifdef __ANDROID__ //karin: add /Android/data/<package>/files/diii4a/<game_if_enable standalone_directory>/<mod>: priority is lowest
+    extern const char * Sys_ApplicationHomePath(void);
+    const char *app_path = Sys_ApplicationHomePath();
+    if(app_path && app_path[0]) {
+        AddGameDirectory(app_path, gameName, FDOM_UNKNOWN);
+    }
+#endif
 	// setup basepath
 	if ( fs_basepath.GetString()[0] ) {
 		AddGameDirectory( fs_basepath.GetString(), gameName, FDOM_UNKNOWN );
@@ -2294,6 +2301,13 @@ void idFileSystemLocal::Startup( void ) {
 		common->Printf( "restarting filesystem with %d addon pak file(s) to include\n", addonChecksums.Num() );
 	}
 
+#ifdef __ANDROID__ //karin: add /Android/data/<package>/files/diii4a/<game_if_enable standalone_directory>/<mod>: priority is lowest
+    extern const char * Sys_ApplicationHomePath(void);
+    const char *app_path = Sys_ApplicationHomePath();
+    if(app_path && app_path[0]) {
+        AddGameDirectory(app_path, "", FDOM_CORE);
+    }
+#endif
     AddGameDirectory( fs_basepath.GetString(), "", FDOM_CORE ); // always add the basepath
 
     // fs_mod override
