@@ -31,6 +31,8 @@ import java.util.function.Predicate;
 
 public final class ChooseGameModFunc extends GameLauncherFunc
 {
+    public static final String FILE_SEP = " /// ";
+
     private final int m_code;
     private String m_path;
     private String m_mod;
@@ -57,7 +59,7 @@ public final class ChooseGameModFunc extends GameLauncherFunc
 
         int res = ContextUtility.CheckFilePermission(m_gameLauncher, m_code);
         if(res == ContextUtility.CHECK_PERMISSION_RESULT_REJECT)
-            Toast_long(Q3ELang.tr(m_gameLauncher, R.string.can_t_s_read_write_external_storage_permission_is_not_granted, Q3ELang.tr(m_gameLauncher, R.string.load_game_mod_list)));
+            Toast_long(Tr(R.string.can_t_s_read_write_external_storage_permission_is_not_granted, Tr(R.string.load_game_mod_list)));
         if(res != ContextUtility.CHECK_PERMISSION_RESULT_GRANTED)
             return;
 
@@ -370,11 +372,11 @@ public final class ChooseGameModFunc extends GameLauncherFunc
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(m_gameLauncher);
-        builder.setTitle(Q3EUtils.q3ei.game_name + " " + Q3ELang.tr(m_gameLauncher, R.string.mod));
+        builder.setTitle(Q3EUtils.q3ei.game_name + " " + Tr(R.string.mod));
         builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), selected, new DialogInterface.OnClickListener(){
             public void onClick(DialogInterface dialog, int p)
             {
-                String lib = values.get(p);
+                String lib = KStr.CmdStr(values.get(p));
                 Callback(lib);
                 dialog.dismiss();
                 if(AllowExtraFiles)
@@ -460,7 +462,7 @@ public final class ChooseGameModFunc extends GameLauncherFunc
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(m_gameLauncher);
-        builder.setTitle(Q3EUtils.q3ei.game_name + " " + Q3ELang.tr(m_gameLauncher, R.string.mod) + ": " + Q3ELang.tr(m_gameLauncher, R.string._files));
+        builder.setTitle(Q3EUtils.q3ei.game_name + " " + Tr(R.string.mod) + ": " + Tr(R.string._files));
         builder.setMultiChoiceItems(items.toArray(new CharSequence[0]), selected, new DialogInterface.OnMultiChoiceClickListener(){
             @Override
             public void onClick(DialogInterface dialog, int which, boolean isChecked)
@@ -478,7 +480,10 @@ public final class ChooseGameModFunc extends GameLauncherFunc
         builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int p)
             {
-                String join = KStr.Join(files, " ");
+                List<String> norFiles = new ArrayList<>(files.size());
+                for(String file : files)
+                    norFiles.add(KStr.CmdStr(file));
+                String join = KStr.Join(norFiles, FILE_SEP);
                 Callback(":" + join);
                 dialog.dismiss();
             }

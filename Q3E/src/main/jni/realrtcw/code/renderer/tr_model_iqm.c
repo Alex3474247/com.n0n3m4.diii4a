@@ -1137,11 +1137,21 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 		// we will add shadows even if the main object isn't visible in the view
 
 		// stencil shadows can't do personal models unless I polyhedron clip
-		if ( !personalModel
-			&& r_shadows->integer == 2 
+		if (
+#ifdef USE_OPENGLES //karin: allow player model shadow
+			 (!personalModel || harm_r_stencilShadowPersonal->integer)
+#else
+			 !personalModel
+#endif
+			&& r_shadows->integer == 2
 			&& fogNum == 0
 			&& !(ent->e.renderfx & ( RF_NOSHADOW | RF_DEPTHHACK ) ) 
-			&& shader->sort == SS_OPAQUE ) {
+			&& shader->sort == SS_OPAQUE 
+#ifdef USE_OPENGLES //karin: ignore alpha test shader pass and special model type exclude player model
+			&& (STENCIL_SHADOW_MODEL(16) || (personalModel && harm_r_stencilShadowPersonal->integer == 1))
+			&& !R_HasAlphaTest(shader)
+#endif
+			) {
 			R_AddDrawSurf( (void *)surface, tr.shadowShader, 0, 0, ATI_TESS_TRUFORM );
 		}
 
@@ -1254,8 +1264,13 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 	srfIQModel_t	*surf = (srfIQModel_t *)surface;
 	iqmData_t	*data = surf->data;
 	float		poseMats[IQM_MAX_JOINTS * 12];
+#ifdef __ANDROID__ //karin: too large for Android stack memory, so use heap memory
+	float		*influenceVtxMat = (float *)malloc(sizeof(float) * SHADER_MAX_VERTEXES * 12);
+	float		*influenceNrmMat = (float *)malloc(sizeof(float) * SHADER_MAX_VERTEXES * 9);
+#else
 	float		influenceVtxMat[SHADER_MAX_VERTEXES * 12];
 	float		influenceNrmMat[SHADER_MAX_VERTEXES * 9];
+#endif
 	int		i;
 
 	float		*xyz;
@@ -1455,6 +1470,10 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 
 	tess.numIndexes += 3 * surf->num_triangles;
 	tess.numVertexes += surf->num_vertexes;
+#ifdef __ANDROID__ //karin: use heap memory on Android
+	free(influenceVtxMat);
+	free(influenceNrmMat);
+#endif
 }
 
 int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,

@@ -2098,4 +2098,23 @@ extern int drawskyboxportal;
 void *R_Hunk_Begin( void );
 void R_Hunk_End( void );
 
+#ifdef USE_OPENGLES //karin: stencil shadow
+#define USE_SHADOW_XYZ //karin: over SHRT_MAX, so use int instead of short for stencil shadow
+#define USE_SHADOW_INF //karin: use 4-components, far.w = 0.0
+
+#if !defined(GL_INCR_WRAP)
+#define GL_INCR_WRAP                      0x8507
+#endif
+#if !defined(GL_DECR_WRAP)
+#define GL_DECR_WRAP                      0x8508
+#endif
+
+extern cvar_t *harm_r_stencilShadowModel;
+extern cvar_t *harm_r_stencilShadowPersonal;
+
+#define STENCIL_SHADOW_MODEL(x) (harm_r_stencilShadowModel->integer == 0 || (harm_r_stencilShadowModel->integer & x))
+
+qboolean R_HasAlphaTest(const shader_t *shader);
+#endif
+
 #endif //TR_LOCAL_H (THIS MUST BE LAST!!)
