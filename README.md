@@ -6,9 +6,9 @@
 ##### 毁灭战士3 BFG/The Dark Mod/雷神之锤1 2 3/重返德军总部/GZDOOM/深入敌后: 德军总部/真·重返德军总部 安卓OpenGLES移植版  
 ##### Original named DIII4A++, based on com.n0n3m4.diii4a's OpenGLES version.
 **Latest version:**
-1.1.0harmattan58(natasha)  
+1.1.0harmattan60(verena)  
 **Latest update:**
-2024-10-29  
+2025-01-16  
 **Arch:**
 arm64 armv7-a  
 **Platform:**
@@ -20,13 +20,13 @@ GPLv3
 > **idTech4's feature**  
 * Linux/Windows(MinGW/MSVC(without editor)) build
 * multi-threading renderer
-* png/dds texture image, jpeg/png/bmp/dds format of screenshot
-* obj/dae format static model
 * pure soft shadow with shadow-mapping
 * soft shadow with stencil-shadow and translucent stencil shadow
-* lighting model: Phong/Blinn-phong/PBR/Ambient(no-lighting)
+* lighting model: Phong/Blinn-phong/PBR/Ambient/No-lighting
 * debug render tools support with programming render pipeline
 * OpenGLES2.0/OpenGLES3.0
+* png/dds texture image, jpeg/png/bmp/dds format of screenshot
+* obj/dae format static model
 * OpenAL(soft) and EFX Reverb
 * DOOM3(with full body awareness mod)
 * Quake4(with bot mod, full body awareness mod) and Raven's idTech4 engine
@@ -56,7 +56,7 @@ GPLv3
 
 | Game | Engine | Version | OpenGL ES version | Mods |
 |:-----|:-----:|:-----:|:-----:|:-----:|
-| DOOM III | n0n3m4's dante | - | 2.0/3.0 | [Resurrection of Evil]()<br/>[The Lost Mission](https://www.moddb.com/mods/the-lost-mission)<br/>[Classic DOOM3](https://www.moddb.com/mods/classic-doom-3)<br/>[Rivensin](https://www.moddb.com/mods/ruiner)<br/>[HardCorps](https://www.moddb.com/mods/hardcorps)<br/>[Overthinked Doom^3](https://www.moddb.com/mods/overthinked-doom3)<br/>[Sabot(a7x)](https://www.moddb.com/games/doom-3-resurrection-of-evil/downloads/sabot-alpha-7x)<br/>[HeXen:Edge of Chaos](https://www.moddb.com/mods/hexen-edge-of-chaos)<br/>[Fragging Free](https://www.moddb.com/mods/fragging-free)<br/>[LibreCoop](https://www.moddb.com/mods/librecoop-dhewm3-coop)<br/>[LibreCoop D3XP](https://www.moddb.com/mods/librecoop-dhewm3-coop)<br/>[Perfected Doom 3](https://www.moddb.com/mods/perfected-doom-3-version-500)<br/>[Perfected Doom 3:RoE](https://www.moddb.com/mods/perfected-doom-3-version-500) |
+| DOOM III | n0n3m4's dante | - | 2.0/3.0 | [Resurrection of Evil]()<br/>[The Lost Mission](https://www.moddb.com/mods/the-lost-mission)<br/>[Classic DOOM3](https://www.moddb.com/mods/classic-doom-3)<br/>[Rivensin](https://www.moddb.com/mods/ruiner)<br/>[HardCorps](https://www.moddb.com/mods/hardcorps)<br/>[Overthinked Doom^3](https://www.moddb.com/mods/overthinked-doom3)<br/>[Sabot(a7x)](https://www.moddb.com/games/doom-3-resurrection-of-evil/downloads/sabot-alpha-7x)<br/>[HeXen:Edge of Chaos](https://www.moddb.com/mods/hexen-edge-of-chaos)<br/>[Fragging Free](https://www.moddb.com/mods/fragging-free)<br/>[LibreCoop](https://www.moddb.com/mods/librecoop-dhewm3-coop)<br/>[LibreCoop D3XP](https://www.moddb.com/mods/librecoop-dhewm3-coop)<br/>[Perfected Doom 3](https://www.moddb.com/mods/perfected-doom-3-version-500)<br/>[Perfected Doom 3:RoE](https://www.moddb.com/mods/perfected-doom-3-version-500)<br/>[Doom 3: Phobos](https://www.moddb.com/mods/phobos)([Dhewm3 compatibility patch](https://www.moddb.com/games/doom-iii/addons/doom-3-phobos-dhewm3-compatibility-patch)) |
 | Quake IV | n0n3m4's dante | - | 2.0/3.0 | [Hardqore](https://www.moddb.com/mods/quake-4-hardqore) |
 | Prey(2006) | n0n3m4's dante | - | 2.0/3.0 |  |
 | DOOM 3 BFG(Classic DOOM 1&2) | [RBDOOM-3-BFG](https://github.com/RobertBeckebans/RBDOOM-3-BFG) | 1.4.0<br/>(The last OpenGL renderer version) | 3.0 |  |
@@ -65,8 +65,8 @@ GPLv3
 | Quake III Arena | [ioquake3](https://github.com/ioquake/ioq3) | - | 1.1 | Quake III Team Arena |
 | Quake II | [Yamagi Quake II](https://github.com/yquake2/yquake2) | - | 1.1/3.2 | ctf<br/>rogue<br/>xatrix<br/>zaero |
 | Quake I | [Darkplaces](https://github.com/DarkPlacesEngine/darkplaces) | - | 2.0 |  |
-| GZDOOM | [GZDOOM](https://github.com/ZDoom/gzdoom) 64bits | - | 3.2 |  |
-| Wolfenstein: Enemy Territory | [ET: Legacy](https://www.etlegacy.com) | 2.8.1 | 1.1 |  |
+| GZDOOM | [GZDOOM](https://github.com/ZDoom/gzdoom) 64bits | 4.14.0 | 2.0/3.2/Vulkan |  |
+| Wolfenstein: Enemy Territory | [ET: Legacy](https://www.etlegacy.com) Omni-Bot support | 2.83.1 | 1.1 |  |
 | RealRTCW | [RealRTCW](https://github.com/wolfetplayer/RealRTCW) | 5.0 | 1.1 |  |
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
@@ -88,19 +88,23 @@ Tag with `-free` only for F-Droid update.
 ----------------------------------------------------------------------------------
 ### Update
 
-* Add `RealRTCW`(ver 5.0) support, game standalone directory named `realrtcw`, game data directory named `Main`. More view in [RealRTCW](https://github.com/wolfetplayer/RealRTCW).
-* Fix light bar indicator of player's HUD by `darkness257` on The Dark Mod, now setup `tdm_lg_weak` to 1 automatically. More view in [The Darkmod light bar indicator bug](https://github.com/glKarin/com.n0n3m4.diii4a/issues/244).
-* Support create desktop shortcut for games or current command on `Option` menu of launcher.
-* Fix stencil shadow with `cg_shadows` = 2 on Quake 3.
-* Improve stencil shadow with `cg_shadows` = 2 on RealRTCW.
+* Support setup max game console height percentage(0 or 100 means not limit) on launcher `General` tab.
+* Update GZDOOM version to 4.14.0.
+* GZDOOM add Vulkan and OpenGL renderer backend.
+* Update Wolfenstein: Enemy Territory(ET: Legacy) version to 2.83.1.
+* Update Quake 1(Darkplaces) version.
+* Update Quake 2(yquake2) version.
+* Add use multisamples config in game.
 
 ----------------------------------------------------------------------------------
 
-* 新增`真·重返德军总部`(ver 5.0)支持, 游戏独立文件夹名为`etw`, 游戏数据文件夹为`Main`. 更多详情[RealRTCW](https://github.com/wolfetplayer/RealRTCW).
-* The Dark Mod修复玩家HUD上的亮度指示条 by `darkness257`, 当前自动设置`tdm_lg_weak`为1. 更多详情[The Darkmod light bar indicator bug](https://github.com/glKarin/com.n0n3m4.diii4a/issues/244).
-* 启动器`Option`菜单增加以游戏或当前命令行来创建桌面快捷方式.
-* 修复雷神之锤3的模板阴影当`cg_shadows` = 2.
-* 改进真·重返德军总部的模板阴影当`cg_shadows` = 2.
+* 支持设置最大游戏控制台高度百分比(0或100为不限制)在启动器`通用`选项卡.
+* GZDOOM更新到4.14.0版本.
+* GZDOOM新增Vulkan和OpenGL渲染器后端支持.
+* 德军总部: 深入敌后(ET: Legacy)更新到2.83.1版本.
+* 雷神之锤1(Darkplaces)更新到新版本.
+* 雷神之锤2(yquake2)更新到新版本.
+* 支持游戏中设置的多重采样设置.
 
 ----------------------------------------------------------------------------------
 ### Standalone game directory
@@ -138,10 +142,10 @@ Tag with `-free` only for F-Droid update.
 
 | CVar | Type | Default | Description | Flag | Range | Scope | Remark | Platform |
 |:---|:---:|:--:|:---|:---:|:---:|:---|:---|:---:|
-| harm_r_openglVersion | String | GLES3.0 | OpenGL version | INIT | GLES2, GLES3.0 | Engine/Renderer | setup with launcher on Android | Windows, Linux |
+| harm_r_openglVersion | String | GLES3.0 | OpenGL version | INIT | GLES2, GLES3.0, OpenGL_core, OpenGL_compatibility | Engine/Renderer | OpenGL_core, OpenGL_compatibility will use OpenGL desktop version, setup with launcher on Android | Windows, Linux |
 | harm_r_multithread | Bool | 1 | Multithread backend | INIT |  | Engine/Renderer | setup with launcher on Android | Windows, Linux |
 | harm_r_clearVertexBuffer | Integer | 2 | Clear vertex buffer on every frame | ARCHIVE, FIXED | 0, 1, 2 | Engine/Renderer | 0 = not clear(original);<br/> 1 = only free VBO memory;<br/> 2 = free VBO memory and delete VBO handle(only without multi-threading, else same as 1) | All |
-| harm_r_maxAllocStackMemory | Integer | 524288 | Control allocate temporary memory when load model data | ARCHIVE |  | Engine/Renderer | For load large model, because stack memory is limited on OS.<br/> 0 = Always heap;<br/> Negative = Always stack;<br/> Positive = Max stack memory limit(If less than this `byte` value, call `alloca` in stack memory, else call `malloc`/`calloc` in heap memory) | All |
+| harm_r_maxAllocStackMemory | Integer | 262144 | Control allocate temporary memory when load model data | ARCHIVE |  | Engine/Renderer | For load large model, because stack memory is limited on OS.<br/> 0 = Always heap;<br/> Negative = Always stack;<br/> Positive = Max stack memory limit(If less than this `byte` value, call `alloca` in stack memory, else call `malloc`/`calloc` in heap memory) | All |
 | harm_r_shaderProgramDir | String |  | Setup external OpenGLES2 GLSL shader program directory path | ARCHIVE |  | Engine/Renderer | empty is glslprogs(default) | All |
 | harm_r_shaderProgramES3Dir | String |  | Setup external OpenGLES3 GLSL shader program directory path | ARCHIVE |  | Engine/Renderer | empty is glsl3progs(default) | All |
 | harm_r_shadowCarmackInverse | Bool | 0 | Stencil shadow using Carmack-Inverse | ARCHIVE |  | Engine/Renderer |  | All |
@@ -170,12 +174,13 @@ Tag with `-free` only for F-Droid update.
 | harm_r_stencilShadowSoftBias | Float | -1 | soft stencil shadow sampler BIAS | ARCHIVE |  | Engine/Renderer | -1 to automatic; 0 = disable; positive = value | All |
 | harm_r_stencilShadowSoftCopyStencilBuffer | Bool | 0 | copy stencil buffer directly for soft stencil shadow | ARCHIVE | 0 = copy depth buffer and bind and renderer stencil buffer to texture directly<br/>1 = copy stencil buffer to texture directly | Engine/Renderer |  | All |
 | harm_r_autoAspectRatio | Integer | 1 | automatic setup aspect ratio of view | ARCHIVE | 0, 1, 2 | Engine/Renderer | 0 = manual<br/>1 = force setup r_aspectRatio to -1<br/>2 = automatic setup r_aspectRatio to 0,1,2 by screen size | Android |
-| harm_r_renderToolsMultithread | Bool | 0 | Enable render tools debug with GLES in multi-threading |  |  | Engine/Renderer |  | All |
+| harm_r_renderToolsMultithread | Bool | 0 | Enable render tools debug with GLES in multi-threading | ARCHIVE |  | Engine/Renderer |  | All |
 | r_useETC1 | Bool | 0 | use ETC1 compression | INIT |  | Engine/Renderer |  | All |
 | r_useETC1cache | Bool | 0 | use ETC1 compression | INIT |  | Engine/Renderer |  | All |
 | r_useDXT | Bool | 0 | use DXT compression if possible | INIT |  | Engine/Renderer |  | All |
 | r_useETC2 | Bool | 0 | use ETC2 compression instead of RGBA4444 | INIT |  | Engine/Renderer | Only for OpenGLES3.0+ | All |
 | r_noLight | Bool | 0 | lighting disable hack | INIT |  | Engine/Renderer | 1 = disable lighting(not allow switch, must setup on command line) | All |
+| harm_r_useHighPrecision | Bool | Android = 0; Other = 1 | Use high precision float on GLSL shade | INIT |  | Engine/Renderer |  | All |
 | harm_fs_gameLibPath | String |  | Setup game dynamic library | ARCHIVE |  | Engine/Framework |  | Android |
 | harm_fs_gameLibDir | String |  | Setup game dynamic library directory path | ARCHIVE |  | Engine/Framework |  | Android |
 | harm_com_consoleHistory | Integer | 2 | Save/load console history | ARCHIVE | 0, 1, 2 | Engine/Framework | 0 = disable;<br/> 1 = loading in engine initialization, and saving in engine shutdown;<br/> 2 = loading in engine initialization, and saving in every e executing | All |
@@ -184,32 +189,26 @@ Tag with `-free` only for F-Droid update.
 | harm_s_OpenSLESBufferCount | Integer | 3 | Audio buffer count for OpenSLES | ARCHIVE | &gt;= 3 | Engine/Sound | min is 3, only for if without OpenAL and use OpenSLES on Android | Android |
 | harm_s_useAmplitudeDataOpenAL | Bool | 0 | Use amplitude data on OpenAL | DISABLE, ISSUE |  | Engine/Sound | It cause large shake | All |
 | harm_in_smoothJoystick | Bool | 0 | Enable smooth joystick |  |  | Engine/Input | Automatic setup initial value by Android layer | Android |
-| harm_g_normalizeMovementDirection | Integer | -1 | Re-normalize player/walker movement direction | ARCHIVE | -1, 0, &gt; 0 | Game/DOOM3 | 0 = disable; -1 = automcatic; &gt;0 = max degree | Android |
 | harm_pm_fullBodyAwareness | Bool | 0 | Enables full-body awareness | ARCHIVE |  | Game/DOOM3 |  | All |
 | harm_pm_fullBodyAwarenessOffset | Vector3 String | 0 0 0 | Full-body awareness offset(&lt;forward-offset&gt; &lt;side-offset&gt; &lt;up-offset&gt;) | ARCHIVE |  | Game/DOOM3 |  | All |
 | harm_pm_fullBodyAwarenessHeadJoint | String | Head | Set head joint when without head model in full-body awareness | ARCHIVE |  | Game/DOOM3 |  | All |
 | harm_pm_fullBodyAwarenessFixed | Bool | 0 | Do not attach view position to head in full-body awareness | ARCHIVE |  | Game/DOOM3 |  | All |
 | harm_pm_fullBodyAwarenessHeadVisible | Bool | 0 | Do not suppress head in full-body awareness | ARCHIVE |  | Game/DOOM3 |  | All |
 | harm_ui_showViewBody | Bool | 0 | Show view body | ARCHIVE |  | Game/DOOM3 |  | All |
-| harm_pm_fullBodyAwarenessFirstPerson | Bool | 0 | Enable first person view in full-body awareness | ARCHIVE |  | Game/DOOM3 |  | All |
 | harm_pm_doubleJump | Bool | 0 | Enable double-jump | ARCHIVE |  | Game/DOOM3/Rivensin |  | All |
 | harm_pm_autoForceThirdPerson | Bool | 1 | Force set third person view after game level load end | ARCHIVE |  | Game/DOOM3/Rivensin |  | All |
 | harm_pm_preferCrouchViewHeight | Float | 32 | Set prefer crouch view height in Third-Person | ARCHIVE | &gt;= 0 | Game/DOOM3/Rivensin | suggest 32 - 39, less or equals 0 to disable | All |
-| harm_g_normalizeMovementDirection | Integer | -1 | Re-normalize player/walker movement direction | ARCHIVE | -1, 0, &gt; 0 | Game/Quake4 | 0 = disable; -1 = automcatic; &gt;0 = max degree | Android |
 | harm_pm_fullBodyAwareness | Bool | 0 | Enables full-body awareness | ARCHIVE |  | Game/Quake4 |  | All |
 | harm_pm_fullBodyAwarenessOffset | Vector3 String | 0 0 0 | Full-body awareness offset(&lt;forward-offset&gt; &lt;side-offset&gt; &lt;up-offset&gt;) | ARCHIVE |  | Game/Quake4 |  | All |
 | harm_pm_fullBodyAwarenessHeadJoint | String | head_channel | Set head joint when without head model in full-body awareness | ARCHIVE |  | Game/Quake4 |  | All |
 | harm_pm_fullBodyAwarenessFixed | Bool | 0 | Do not attach view position to head in full-body awareness | ARCHIVE |  | Game/Quake4 |  | All |
 | harm_pm_fullBodyAwarenessHeadVisible | Bool | 0 | Do not suppress head in full-body awareness | ARCHIVE |  | Game/Quake4 |  | All |
-| harm_pm_fullBodyAwarenessFirstPerson | Bool | 0 | Enable first person view in full-body awareness | ARCHIVE |  | Game/Quake4 |  | All |
 | harm_ui_showViewBody | Bool | 0 | Show view body | ARCHIVE |  | Game/Quake4 |  | All |
 | harm_g_autoGenAASFileInMPGame | Bool | 1 | For bot in Multiplayer-Game, if AAS file load fail and not exists, server can generate AAS file for Multiplayer-Game map automatic | ARCHIVE |  | Game/Quake4 |  | All |
-| harm_g_vehicleWalkerMoveNormalize | Bool | 1 | Re-normalize vehicle walker movement | ARCHIVE |  | Game/Quake4 | Only for smooth jotstick on DIII4A | Android |
 | harm_gui_defaultFont | String | chain | Default font name | ARCHIVE | chain, lowpixel, marine, profont, r_strogg, strogg | Engine/Quake4/GUI | It will be available in next running | All |
 | harm_si_autoFillBots | Bool | 1 | Automatic fill bots after map loaded in multiplayer game | ARCHIVE | &gt;=0 | Game/Quake4 | 0 = disable; other number = bot num | All |
 | harm_si_botLevel | Integer | 0 | Bot level | ARCHIVE | [0 - 8] | Game/Quake4 | 0 = auto; 1 - 8 = difficult level | All |
 | harm_g_mutePlayerFootStep | Bool | 0 | Mute player's footstep sound | ARCHIVE |  | Game/Quake4 |  | All |
-| harm_g_normalizeMovementDirection | Integer | -1 | Re-normalize player/walker movement direction | ARCHIVE | -1, 0, &gt; 0 | Game/Prey | 0 = disable; -1 = automcatic; &gt;0 = max degree | Android |
 | harm_pm_fullBodyAwareness | Bool | 0 | Enables full-body awareness | ARCHIVE |  | Game/Prey |  | All |
 | harm_pm_fullBodyAwarenessOffset | Vector3 String | 0 0 0 | Full-body awareness offset(&lt;forward-offset&gt; &lt;side-offset&gt; &lt;up-offset&gt;) | ARCHIVE |  | Game/Prey |  | All |
 | harm_pm_fullBodyAwarenessHeadJoint | String | neck | Set head joint when without head model in full-body awareness | ARCHIVE |  | Game/Prey |  | All |
@@ -519,6 +518,7 @@ model player_model_torso_and_lower_body {
 * mp3lame
 * mpg123
 * oboe
+* Omni-Bot
 * openal-soft
 * openssl
 * opus

@@ -6,6 +6,9 @@ import com.karin.idTech4Amm.R;
 import com.n0n3m4.q3e.Q3EGlobals;
 import com.n0n3m4.q3e.Q3ELang;
 
+import java.util.ArrayList;
+import java.util.List;
+
 // game config
 /*
  * config this can change launcher's game mod list.
@@ -29,6 +32,7 @@ public enum Game
     DOOM3_LIBRECOOPXP(Q3EGlobals.GAME_DOOM3, "librecoopxp", "librecoopxp", "librecoopxp", "d3xp", true, R.string.librecoop_roe),
     DOOM3_PERFECTED(Q3EGlobals.GAME_DOOM3, "perfected", "perfected", "perfected",  "", true, R.string.perfected_doom_3),
     DOOM3_PERFECTEDROE(Q3EGlobals.GAME_DOOM3, "perfected_roe", "perfected_roe", "perfected_roe",  "d3xp", true, R.string.perfected_doom_3_resurrection_of_evil),
+    DOOM3_PHOBOS(Q3EGlobals.GAME_DOOM3, "tfphobos", "tfphobos", "tfphobos", "d3xp", true, R.string.phobos),
 
     // Quake 4
     QUAKE4_BASE(Q3EGlobals.GAME_QUAKE4, "q4base", "", "q4game", "", false, R.string.quake_iv_q4base),
@@ -72,6 +76,12 @@ public enum Game
 
     // RealRTCW
     REALRTCW_BASE(Q3EGlobals.GAME_REALRTCW, "Main", "", "realrtcwgame", "", false, R.string.realrtcw_base),
+
+    // FTEQW
+    FTEQW_Q1(Q3EGlobals.GAME_FTEQW, "quake1", "quake1", "fteqw", "", true, R.string.quake_1_base),
+    FTEQW_Q2(Q3EGlobals.GAME_FTEQW, "quake2", "quake2", "fteqw", "", true, R.string.quake_2_base),
+    FTEQW_Q3(Q3EGlobals.GAME_FTEQW, "quake3", "quake3", "fteqw", "", true, R.string.quake_3_base),
+    FTEQW_H2(Q3EGlobals.GAME_FTEQW, "hexen2", "hexen2", "fteqw", "data1", true, R.string.hexen_2_base),
     ;
 
     public final String  type; // game type: doom3/quake4/prey2006/......
@@ -101,5 +111,18 @@ public enum Game
             return (String)name;
         else
             return "";
+    }
+
+    public static Game GetGameMod(String game, String mod)
+    {
+        for (Game value : values())
+        {
+            if(!value.type.equals(game))
+                continue;
+            if(!value.game.equals(mod))
+                continue;
+            return value;
+        }
+        return null;
     }
 }

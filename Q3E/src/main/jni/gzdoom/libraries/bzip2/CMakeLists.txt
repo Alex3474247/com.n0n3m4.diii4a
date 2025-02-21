@@ -5,7 +5,7 @@ if (MSVC)
 endif()
 
 add_definitions( -DBZ_NO_STDIO )
-add_library( bz2 STATIC
+add_library( gzdoom_bz2 STATIC
     blocksort.c
     bzlib.c
     compress.c
@@ -13,4 +13,5 @@ add_library( bz2 STATIC
     decompress.c
     huffman.c
     randtable.c )
-target_link_libraries( bz2 )
+link_libraries("-static")
+target_link_libraries( gzdoom_bz2 )

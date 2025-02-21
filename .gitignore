@@ -16,6 +16,8 @@ gradle assembleRelease.bat
 idTech4Amm/src/main/assets/source/DIII4A.source.tgz
 idTech4Amm/src/main/assets/source/LICENSE
 
+Q3E/src/main/assets/pak/gzdoom/4.7.1/
+
 # VSMC
 CMakeFiles
 *.vcxproj*
@@ -24,3 +26,6 @@ CMakeCache.txt
 *.sln
 x64
 x86
+build
+Release
+Debug

@@ -170,6 +170,21 @@ cvar_t *r_gfxInfo;
 
 cvar_t *r_scalesvg;
 
+#ifdef STENCIL_SHADOW_IMPROVE //karin: stencil shadow
+cvar_t  *harm_r_stencilShadowPersonal; // render personal stencil shadow
+
+cvar_t  *harm_r_stencilShadowDebug; // debug stencil shadow
+cvar_t  *harm_r_stencilShadowModel; // control render animation/static model stencil shadow
+cvar_t  *harm_r_stencilShadowMask; // stencil shadow mask rendering
+cvar_t  *harm_r_stencilShadowOp; // stencil shadow use Z-Pass or Z-Fail
+cvar_t  *harm_r_stencilShadowCap; // render near and far caps
+cvar_t  *harm_r_stencilShadowMaxAngle; // stencil shadow light direction and Z-Up dot product
+
+cvar_t  *harm_r_shadowPolygonOffset; // stencil shadow volume polygon offset units
+cvar_t  *harm_r_shadowPolygonFactor; // stencil shadow volume polygon offset factor
+cvar_t  *harm_r_stencilShadowInfinite; // use 4-components(xyzw, far.w = 0.0) or 3-components(xyz)
+#endif
+
 /**
  * @brief This function is responsible for initializing a valid OpenGL subsystem
  *
@@ -195,22 +210,22 @@ static void InitOpenGL(void)
 
 		Com_Memset(&glConfig, 0, sizeof(glConfig));
 
-		windowContext_t context;
-		Com_Memset(&context, 0, sizeof(windowContext_t));
+		char glConfigString[1024] = { 0 };
+		Info_SetValueForKey(glConfigString, "type", "opengl");
+		Info_SetValueForKey(glConfigString, "major", "1");
+		Info_SetValueForKey(glConfigString, "minor", "1");
 
-		// These should be the same as the old ifdeffin on sdl_glimp..
-		context.samples      = r_ext_multisample->integer;
-		context.versionMajor = 1;
-		context.versionMinor = 1;
+		// If we are using FBO's then disable multisampling on the main screen buffer
+		Info_SetValueForKey(glConfigString, "samples", va("%d", r_ext_multisample->integer));
 
 		// FIXME: check if both Rpi and Android can use the "EGL" one.
 #ifdef __ANDROID__
-		context.context = GL_CONTEXT_EGL;
+		Info_SetValueForKey(glConfigString, "context", va("%i", GL_CONTEXT_EGL));
 #else
-		context.context = GL_CONTEXT_ES;
+		Info_SetValueForKey(glConfigString, "context", va("%i", GL_CONTEXT_ES));
 #endif
 
-		ri.GLimp_Init(&glConfig, &context);
+		ri.GLimp_Init(&glConfig, glConfigString);
 
 		Q_strncpyz(renderer_buffer, glConfig.renderer_string, sizeof(renderer_buffer));
 		Q_strlwr(renderer_buffer);
@@ -1099,7 +1114,7 @@ void R_Register(void)
 	r_skipBackEnd = ri.Cvar_Get("r_skipBackEnd", "0", CVAR_CHEAT);
 
 	r_measureOverdraw = ri.Cvar_Get("r_measureOverdraw", "0", CVAR_CHEAT);
-	r_lodScale        = ri.Cvar_Get("r_lodscale", "5", CVAR_CHEAT);
+	r_lodScale        = ri.Cvar_Get("r_lodscale", "5", CVAR_ARCHIVE_ND | CVAR_LATCH);
 	r_noreFresh       = ri.Cvar_Get("r_norefresh", "0", CVAR_CHEAT);
 	r_drawEntities    = ri.Cvar_Get("r_drawentities", "1", CVAR_CHEAT);
 	r_ignore          = ri.Cvar_Get("r_ignore", "1", CVAR_CHEAT);
@@ -1142,6 +1157,25 @@ void R_Register(void)
 
 	r_scalesvg = ri.Cvar_Get("r_scalesvg", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	ri.Cvar_CheckRange(r_scalesvg, 0, 2, qtrue);
+#ifdef STENCIL_SHADOW_IMPROVE //karin: stencil shadow
+#if 1
+#define STENCIL_SHADOW_CVAR_FLAG 0
+#else
+#define STENCIL_SHADOW_CVAR_FLAG CVAR_ARCHIVE
+#endif
+    harm_r_stencilShadowPersonal = ri.Cvar_Get("harm_r_stencilShadowPersonal", "1", CVAR_ARCHIVE); // 1=always render player model shadow; 2=render player model shadow(by harm_r_stencilShadowModel); 0=
+    harm_r_stencilShadowMaxAngle = ri.Cvar_Get("harm_r_stencilShadowMaxAngle", "-1", CVAR_ARCHIVE); // if( dot( lightDir, vec3(0, 0, 1) ) > cos(DEG2RAD(harm_r_stencilShadowMaxAngle)) ) render stencil shadow. e.g. <0=allow all angle; 0=disable all; 180=allow all; 90=only when light direction is down
+    harm_r_stencilShadowModel = ri.Cvar_Get("harm_r_stencilShadowModel", "3", CVAR_ARCHIVE); // model type mask=1 2 4 8; 0=all model
+    harm_r_stencilShadowOp = ri.Cvar_Get("harm_r_stencilShadowOp", "0", CVAR_ARCHIVE); // 1=z-pass; 2=z-fail; 0=auto(personal: z-fail)
+
+    harm_r_stencilShadowMask = ri.Cvar_Get("harm_r_stencilShadowMask", "0", STENCIL_SHADOW_CVAR_FLAG); // 1=render mask every render shadow volume; 0=render mask after all surfaces render
+    harm_r_stencilShadowDebug = ri.Cvar_Get("harm_r_stencilShadowDebug", "0", 0);  // debug stencil shadow: 1=render edges; 2=render front cap; 4=render far cap
+    harm_r_stencilShadowCap = ri.Cvar_Get("harm_r_stencilShadowCap", "1", STENCIL_SHADOW_CVAR_FLAG); // 1=render shadow volume's caps(near cap: back facing light source; far cap: back facing light source); 2=render shadow volume's caps(near cap: facing light source; far cap: back facing light source); 3=render shadow volume's caps(near cap: facing light source; far cap: facing light source); 0=don't render shadow volume's caps exclude personal(personal is same as 1)
+    harm_r_stencilShadowInfinite = ri.Cvar_Get("harm_r_stencilShadowInfinite", "0", STENCIL_SHADOW_CVAR_FLAG); // <0=edge's far.w = 0.0 and use 4-components(xyzw); >=0=use 3-components(xyz). 0: 512, |length|
+
+    harm_r_shadowPolygonOffset = ri.Cvar_Get("harm_r_shadowPolygonOffset", "0", STENCIL_SHADOW_CVAR_FLAG); // render shadow volume's polygon offset units: DOOM3 default is -1
+    harm_r_shadowPolygonFactor = ri.Cvar_Get("harm_r_shadowPolygonFactor", "0", STENCIL_SHADOW_CVAR_FLAG); // render shadow volume's polygon offset factor
+#endif
 
 	// make sure all the commands added here are also
 	// removed in R_Shutdown

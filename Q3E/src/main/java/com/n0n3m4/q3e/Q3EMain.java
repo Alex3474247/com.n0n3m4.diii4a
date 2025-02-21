@@ -39,6 +39,7 @@ import android.widget.Toast;
 import com.n0n3m4.q3e.device.Q3EOuya;
 import com.n0n3m4.q3e.gl.Q3EGL;
 import com.n0n3m4.q3e.karin.KDebugTextView;
+import com.n0n3m4.q3e.karin.KLog;
 import com.n0n3m4.q3e.karin.KStr;
 import com.n0n3m4.q3e.karin.KUncaughtExceptionHandler;
 import com.n0n3m4.q3e.karin.KidTechCommand;
@@ -47,6 +48,7 @@ public class Q3EMain extends Activity
 {
     private       Q3ECallbackObj mAudio;
     private       Q3EView        mGLSurfaceView;
+    private       RelativeLayout mainLayout;
     // k
     private       boolean        m_hideNav         = true;
     private       int            m_runBackground   = 1;
@@ -155,12 +157,14 @@ public class Q3EMain extends Activity
     @Override
     protected void onDestroy()
     {
+        KLog.I("Q3EMain::onDestroy -> %b", Q3E.running);
         Q3E.activity = null;
         Q3E.gameView = null;
         Q3E.controlView = null;
+        Q3E.Stop();
 
-        if (null != mGLSurfaceView)
-            mGLSurfaceView.Shutdown();
+/*        if (null != mGLSurfaceView)
+            mGLSurfaceView.Shutdown();*/
 
         super.onDestroy();
         if (null != mAudio)
@@ -182,10 +186,7 @@ public class Q3EMain extends Activity
                 mAudio.pause();
             }
 
-        if (mGLSurfaceView != null)
-        {
-            mGLSurfaceView.Pause();
-        }
+        Q3E.Pause();
 
         if (mControlGLSurfaceView != null)
         {
@@ -204,10 +205,7 @@ public class Q3EMain extends Activity
             memoryUsageText.Start(m_renderMemStatus * 1000);
 
         //k if(m_runBackground < 1)
-        if (mGLSurfaceView != null)
-        {
-            mGLSurfaceView.Resume();
-        }
+        Q3E.Resume();
         if (mControlGLSurfaceView != null)
         {
             mControlGLSurfaceView.Resume();
@@ -293,7 +291,7 @@ public class Q3EMain extends Activity
         if (Q3EUtils.q3ei.view_motion_control_gyro && (gyroXSens != 0.0f || gyroYSens != 0.0f))
             mControlGLSurfaceView.SetGyroscopeSens(gyroXSens, gyroYSens);
         mControlGLSurfaceView.RenderView(mGLSurfaceView);
-        RelativeLayout mainLayout = new RelativeLayout(this);
+        mainLayout = new RelativeLayout(this);
         RelativeLayout.LayoutParams params;
 
         params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);

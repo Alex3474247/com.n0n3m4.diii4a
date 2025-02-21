@@ -41,6 +41,9 @@
 #include "../qcommon/qcommon.h"
 #include "sys_local.h"
 
+#if !defined(__ANDROID__) //karin: not support glibc on Android
+#include <execinfo.h>
+#endif
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1202,6 +1205,11 @@ void Sys_PlatformInit(void)
 {
 	const char *term = getenv("TERM");
 
+#ifdef _DIII4A //karin: no handle signals
+    extern qboolean no_handle_signals;
+    if(!no_handle_signals)
+    {
+#endif
 // don't set signal handlers for anything that will generate coredump (in DEBUG builds)
 #if !defined(ETLEGACY_DEBUG)
 	signal(SIGTRAP, Sys_SigHandler);
@@ -1210,6 +1218,9 @@ void Sys_PlatformInit(void)
 	signal(SIGHUP, Sys_SigHandler);
 	signal(SIGABRT, Sys_SigHandler);
 	signal(SIGQUIT, Sys_SigHandler);
+#ifdef _DIII4A //karin: no handle signals
+    }
+#endif
 
 	stdinIsATTY = isatty(STDIN_FILENO) &&
 	              !(term && (!strcmp(term, "raw") || !strcmp(term, "dumb")));
@@ -1294,4 +1305,29 @@ qboolean Sys_DllExtension(const char *name)
 	}
 
 	return qfalse;
+}
+
+void Sys_Backtrace(int sig)
+{
+	void   *syms[32];
+	size_t size;
+
+	// Get the backtrace and write it to stderr
+#if !defined(__ANDROID__) //karin: not support glibc on Android
+	size = backtrace(syms, 32);
+#endif
+	fprintf(stderr, "--- Report this to the project - START ---\n");
+	fprintf(stderr, "ERROR: Caught SIGSEGV(%d)\n", sig);
+	fprintf(stderr, "VERSION: %s (%s)\n", ETLEGACY_VERSION, ETLEGACY_VERSION_SHORT);
+	fprintf(stderr, "BTIME: %s\n", PRODUCT_BUILD_TIME);
+	fprintf(stderr, "BACKTRACE:\n");
+#if !defined(__ANDROID__) //karin: not support glibc on Android
+	backtrace_symbols_fd(syms, size, STDERR_FILENO);
+#else
+	fprintf(stderr, "NOT SUPPORT ON Android!\n");
+#endif
+	fprintf(stderr, "--- Report this to the project -  END  ---\n");
+
+	signal(sig, SIG_DFL);
+	kill(getpid(), sig);
 }

@@ -46,15 +46,13 @@ FModule SndFileModule{"SndFile"};
 #define SNDFILELIB "libsndfile-1.dll"
 #elif defined(__APPLE__)
 #define SNDFILELIB "libsndfile.1.dylib"
-#else
-#ifdef __ANDROID__ //karin: libsndfile on Android
+#elif defined(__ANDROID__) //karin: libsndfile on Android
 #define SNDFILELIB "libsndfile.so"
 #else
 #define SNDFILELIB "libsndfile.so.1"
 #endif
-#endif
 
-bool IsSndFilePresent()
+extern "C" int IsSndFilePresent()
 {
 #if !defined DYN_SNDFILE
 	return true;
@@ -66,9 +64,13 @@ bool IsSndFilePresent()
 	{
 		done = true;
 #ifdef __ANDROID__ //karin: libsndfile on Android
-        extern std::string DLL_Path;
-		auto abspath = DLL_Path + "/" SNDFILELIB;
-		cached_result = SndFileModule.Load({abspath.c_str()});
+        /* extern std::string DLL_Path;
+		std::string abspath = DLL_Path;
+		if(!abspath.empty())
+			abspath.append("/");
+		abspath.append(SNDFILELIB);
+		printf("ZMusic load %s\n", abspath.c_str()); */
+		cached_result = SndFileModule.Load({SNDFILELIB});
 #else
 		auto abspath = FModule_GetProgDir() + "/" SNDFILELIB;
 		cached_result = SndFileModule.Load({abspath.c_str(), SNDFILELIB});
@@ -77,7 +79,6 @@ bool IsSndFilePresent()
 	return cached_result;
 #endif
 }
-
 
 sf_count_t SndFileDecoder::file_get_filelen(void *user_data)
 {
@@ -216,4 +217,60 @@ size_t SndFileDecoder::getSampleLength()
     return (size_t)((SndInfo.frames > 0) ? SndInfo.frames : 0);
 }
 
+// band-aid for FluidSynth, which is C, not C++ and cannot use the module interface.
+#ifdef DYN_SNDFILE
+
+#undef sf_open_virtual
+extern "C" SNDFILE * sf_open_virtual(SF_VIRTUAL_IO * sfvirtual, int mode, SF_INFO * sfinfo, void* user_data)
+{
+    return p_sf_open_virtual(sfvirtual, mode, sfinfo, user_data);
+}
+
+extern "C" const char* sf_strerror(SNDFILE * sndfile)
+{
+    return p_sf_strerror(sndfile);
+}
+
+extern "C" sf_count_t sf_readf_short(SNDFILE * sndfile, short* ptr, sf_count_t frames)
+{
+    return p_sf_readf_short(sndfile, ptr, frames);
+}
+
+#undef sf_close
+extern "C" int sf_close(SNDFILE * sndfile)
+{
+    return p_sf_close(sndfile);
+}
+
 #endif
+
+
+#else // in case someone decided to build without sndfile support
+
+extern "C" int IsSndFilePresent()
+{
+    return false;
+}
+
+extern "C" SNDFILE * sf_open_virtual(SF_VIRTUAL_IO * sfvirtual, int mode, SF_INFO * sfinfo, void* user_data)
+{
+    return nullptr;
+}
+
+extern "C" const char* sf_strerror(SNDFILE * sndfile)
+{
+    return "no sndfile support";
+}
+
+extern "C" sf_count_t sf_readf_short(SNDFILE * sndfile, short* ptr, sf_count_t frames)
+{
+    return 0;
+}
+
+extern "C" int sf_close(SNDFILE * sndfile)
+{
+    return 0;
+}
+
+#endif
+

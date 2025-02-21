@@ -148,12 +148,11 @@ static void SetExecutablePath(char* exePath)
 const char *Sys_GetBinaryDir(void)
 {
 	static char exeDir[PATH_MAX] = {0};
-#ifdef __ANDROID__
+#ifdef __ANDROID__ //karin: dll path on Android
 	if(exeDir[0] != '\0') {
 		return exeDir;
 	}
-	extern const char * Sys_DLLDefaultPath(void);
-	snprintf(exeDir, sizeof(exeDir), "%s/", Sys_DLLDefaultPath());
+	snprintf(exeDir, sizeof(exeDir), "./");
 	return exeDir;
 #else
 

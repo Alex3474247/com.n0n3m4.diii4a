@@ -10,9 +10,14 @@ android {
         applicationId "com.karin.idTech4Amm"
         minSdkVersion project.properties.minSdkVersion.toInteger()
         targetSdkVersion project.properties.targetSdkVersion.toInteger()
-        versionCode 11058
-        versionName '1.1.0harmattan58'
-        versionNameSuffix 'natasha'
+        versionCode 11060
+        versionName '1.1.0harmattan60'
+         /*
+            natasha: A CSOL CT character, for my Quake II for MeeGo Harmattan port version 5 at 2018
+            verena: GC singer, for my first YouKu 3rd client for MeeGo Harmattan at 2015
+            caitlyn: the Sheriff of Piltover on LOL, for  at 2017
+         */
+        versionNameSuffix 'caitlyn'
         buildConfigField "long", "BUILD_TIMESTAMP", System.currentTimeMillis() + "L"
         buildConfigField "int", "BUILD_SDK_VERSION", 30 + ""
     }
@@ -53,12 +58,15 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     packagingOptions {
+		// only pick arm xunwind library
+        pickFirst "lib/arm**/libxunwind.so"
         // remove unused ffmpeg libraries
         // remove all x86/x86-64 libraries
         exclude "lib/x86/**"
         exclude "lib/x86_64/**"
         // remove all mobileffmpeg libraries
         exclude "lib/*/libmobileffmpeg*.so"
+        exclude "lib/*/libffmpegkit*.so"
         // remove all armv7 neon libraries
         exclude "lib/armeabi-v7a/*_neon.so"
 
@@ -71,8 +79,9 @@ android {
         // remove arm64 libraries if testing arm32
         // exclude "lib/arm64-v8a/**"
 
-//        doNotStrip "*/armeabi-v7a/*.so"
-//        doNotStrip "*/arm64-v8a/*.so"
+		// keep debug info
+        // doNotStrip "*/armeabi-v7a/*.so"
+        // doNotStrip "*/arm64-v8a/*.so"
     }
 }
 

@@ -254,7 +254,7 @@ if( ${TARGET_ARCHITECTURE} MATCHES "x86_64" )
 	set( HAVE_VM_JIT ON )
 endif()
 
-option (HAVE_VULKAN "Enable Vulkan support" OFF) #k ON
+option (HAVE_VULKAN "Enable Vulkan support" ON) #k ON
 option (HAVE_GLES2 "Enable GLES2 support" ON)
 
 # no, we're not using external asmjit for now, we made too many modifications to our's.
@@ -309,6 +309,9 @@ else()
 
 	if ( HAVE_VULKAN )
 		set( ALL_C_FLAGS "${ALL_C_FLAGS} -DHAVE_VULKAN" )
+		if(ANDROID) #k: globals define
+			add_definitions(-DVK_USE_PLATFORM_ANDROID_KHR)
+		endif()
 	endif()
 
 	if ( HAVE_GLES2 )
@@ -411,8 +414,8 @@ else()
 	message( STATUS "Using internal bzip2 library" )
 	add_subdirectory( libraries/bzip2 )
 	set( BZIP2_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libraries/bzip2" )
-	set( BZIP2_LIBRARIES bz2 )
-	set( BZIP2_LIBRARY bz2 )
+	set( BZIP2_LIBRARIES gzdoom_bz2 )
+	set( BZIP2_LIBRARY gzdoom_bz2 )
 endif()
 
 set( LZMA_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libraries/lzma/C" )

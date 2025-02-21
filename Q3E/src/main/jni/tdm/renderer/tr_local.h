@@ -1130,6 +1130,11 @@ extern idCVar r_glCoreProfile;
 extern idCVar r_volumetricSamples;
 extern idCVar r_volumetricDither;
 
+#ifdef _GLES //karin: force use medium precision in GLSL shader: Mali GPU must use high precision, Adreno GPU can use medium precision
+extern idCVar harm_r_useMediumPrecision;
+extern idCVar harm_r_outputGLSLSource;
+#endif
+
 /*
 ====================================================================
 
@@ -1827,7 +1832,7 @@ idScreenRect R_CalcIntersectionScissor( const idRenderLightLocal *lightDef,
 #include "renderer/VertexCache.h"
 
 #ifdef __ANDROID__ // Check GL context initialized, only for Android
-extern void GLimp_CheckGLInitialized(void);
+extern bool GLimp_CheckGLInitialized(void);
 #endif
 #if 0
 void RB_DumpFramebuffer( const char *fileName );

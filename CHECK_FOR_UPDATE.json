@@ -1,7 +1,7 @@
 {
-    "release":58,
-    "update":"2024-10-29",
-    "version":"1.1.0harmattan58",
-    "apk_url":"https://github.com/glKarin/com.n0n3m4.diii4a/releases/download/v1.1.0harmattan58/idTech4A++_1.1.0harmattan58.apk",
-    "changes":"  * Add `RealRTCW`(ver 5.0) support, game standalone directory named `realrtcw`, game data directory named `Main`.\n  * Fix light bar indicator of player's HUD by `darkness257` on The Dark Mod, now setup `tdm_lg_weak` to 1 automatically. More view in `The Darkmod light bar indicator bug` on Github issue.\n  * Support create desktop shortcut for games or current command on `Option` menu of launcher.\n  * Fix stencil shadow with `cg_shadows` = 2 on Quake 3.\n  * Improve stencil shadow with `cg_shadows` = 2 on RealRTCW."
+    "release":60,
+    "update":"2025-01-16",
+    "version":"1.1.0harmattan60",
+    "apk_url":"https://github.com/glKarin/com.n0n3m4.diii4a/releases/download/v1.1.0harmattan60/idTech4A++_1.1.0harmattan60-3.apk",
+    "changes":"  * Support setup max game console height percentage(0 or 100 means not limit) on launcher `General` tab.\n  * Update GZDOOM version to 4.14.0.\n  * GZDOOM add Vulkan and OpenGL renderer backend.\n  * Update Wolfenstein: Enemy Territory(ET: Legacy) version to 2.83.1.\n  * Update Quake 1(Darkplaces) version.\n  * Update Quake 2(yquake2) version.\n  * Add use multisamples config in game."
 }

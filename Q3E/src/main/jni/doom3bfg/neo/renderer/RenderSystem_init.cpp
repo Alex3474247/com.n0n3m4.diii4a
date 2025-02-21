@@ -326,6 +326,10 @@ idCVar r_useLightGrid( "r_useLightGrid", "1", CVAR_RENDERER | CVAR_BOOL, "" );
 idCVar r_exposure( "r_exposure", "0.5", CVAR_ARCHIVE | CVAR_RENDERER | CVAR_FLOAT, "HDR exposure or LDR brightness [0.0 .. 1.0]", 0.0f, 1.0f );
 // RB end
 
+#ifdef _GLES //karin: force use medium precision in GLSL shader: Mali GPU must use high precision, Adreno GPU can use medium precision
+idCVar harm_r_useMediumPrecision( "harm_r_useMediumPrecision", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_INIT, "Use medium precision float instead of high precision in GLSL shader" );
+#endif
+
 const char* fileExten[4] = { "tga", "png", "jpg", "exr" };
 const char* envDirection[6] = { "_px", "_nx", "_py", "_ny", "_pz", "_nz" };
 const char* skyDirection[6] = { "_forward", "_back", "_left", "_right", "_up", "_down" };
@@ -451,7 +455,7 @@ void R_SetNewMode( const bool fullInit )
 		{
 			// create the context as well as setting up the window
 // SRS - Generalized Vulkan SDL platform
-#if defined(VULKAN_USE_PLATFORM_SDL)
+#if defined(VULKAN_USE_PLATFORM_SDL) || defined(VK_USE_PLATFORM_ANDROID_KHR) //karin: Android Vulkan
 			if( VKimp_Init( parms ) )
 #else
 			if( GLimp_Init( parms ) )
@@ -469,7 +473,7 @@ void R_SetNewMode( const bool fullInit )
 		{
 			// just rebuild the window
 // SRS - Generalized Vulkan SDL platform
-#if defined(VULKAN_USE_PLATFORM_SDL)
+#if defined(VULKAN_USE_PLATFORM_SDL) || defined(VK_USE_PLATFORM_ANDROID_KHR) //karin: Android Vulkan
 			if( VKimp_SetScreenParms( parms ) )
 #else
 			if( GLimp_SetScreenParms( parms ) )
@@ -1491,7 +1495,7 @@ void R_SetColorMappings()
 		tr.gammaTable[i] = idMath::ClampInt( 0, 0xFFFF, inf );
 	}
 // SRS - Generalized Vulkan SDL platform
-#if defined(VULKAN_USE_PLATFORM_SDL)
+#if defined(VULKAN_USE_PLATFORM_SDL) || defined(VK_USE_PLATFORM_ANDROID_KHR) //karin: Android Vulkan
 	VKimp_SetGamma( tr.gammaTable, tr.gammaTable, tr.gammaTable );
 #else
 	GLimp_SetGamma( tr.gammaTable, tr.gammaTable, tr.gammaTable );

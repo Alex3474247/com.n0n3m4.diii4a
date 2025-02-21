@@ -2,14 +2,25 @@ package com.n0n3m4.DIII4A.launcher;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.widget.Toast;
 
 import com.karin.idTech4Amm.R;
 import com.karin.idTech4Amm.lib.ContextUtility;
 import com.karin.idTech4Amm.lib.FileUtility;
+import com.karin.idTech4Amm.sys.GameResourceUrl;
+import com.karin.idTech4Amm.sys.Game;
+import com.karin.idTech4Amm.sys.GameManager;
 import com.n0n3m4.DIII4A.GameLauncher;
+import com.n0n3m4.q3e.Q3EInterface;
 import com.n0n3m4.q3e.Q3ELang;
+import com.n0n3m4.q3e.Q3EPatchResource;
+import com.n0n3m4.q3e.Q3EPatchResourceManager;
+import com.n0n3m4.q3e.Q3EPreference;
+import com.n0n3m4.q3e.Q3EUtils;
+import com.n0n3m4.q3e.karin.KStr;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -18,14 +29,14 @@ import java.util.List;
 
 public final class ExtractPatchResourceFunc extends GameLauncherFunc
 {
-    private final String[] m_patchResources = {
-            // "glslprogs.pk4",
-            "q4base/sabot_a9.pk4",
-            "rivensin/play_original_doom3_level.pk4",
-    };
-    private String m_path;
-    private List<String> m_files;
-    private final int m_code;
+    private static final int RESOURCE_TYPE_PATCH = 1;
+    private static final int RESOURCE_TYPE_URL = 2;
+
+    private       String       m_path;
+    private final int          m_code;
+    private       boolean      m_all;
+    private       String       m_game;
+    private       String       m_mod;
 
     public ExtractPatchResourceFunc(GameLauncher gameLauncher, int code)
     {
@@ -35,10 +46,6 @@ public final class ExtractPatchResourceFunc extends GameLauncherFunc
 
     public void Reset()
     {
-        if(null != m_files)
-            m_files.clear();
-        else
-            m_files = new ArrayList<>();
     }
 
     public void Start(Bundle data)
@@ -47,66 +54,130 @@ public final class ExtractPatchResourceFunc extends GameLauncherFunc
         Reset();
 
         m_path = data.getString("path");
-        // D3-format fonts don't need on longer
-        final String[] Names = {
-                // Tr(R.string.opengles_shader),
-                Tr(R.string.bot_q3_bot_support_in_mp_game),
-                Tr(R.string.rivensin_play_original_doom3_level),
-        };
+        m_all = data.getBoolean("all");
+        m_game = data.getString("game");
+        m_mod = data.getString("mod");
+        run();
+    }
+
+    private static class ResourceObject
+    {
+        public int type;
+        public Object data;
+
+        public ResourceObject(Q3EPatchResource data)
+        {
+            type = RESOURCE_TYPE_PATCH;
+            this.data = data;
+        }
+
+        public ResourceObject(GameResourceUrl data)
+        {
+            type = RESOURCE_TYPE_URL;
+            this.data = data;
+        }
+    }
+
+    public void run()
+    {
+        Q3EPatchResourceManager manager = new Q3EPatchResourceManager(m_gameLauncher);
+        List<Q3EPatchResource> resources = manager.ResourceList();
+        List<CharSequence> nameList = new ArrayList<>();
+        List<ResourceObject> rscList = new ArrayList<>();
+
+        for(Q3EPatchResource resource : resources)
+        {
+            if(!m_all)
+            {
+                if(!resource.game.equals(m_game))
+                    continue;
+                if(null != resource.mod && !resource.mod.equals(m_mod))
+                    continue;
+            }
+            nameList.add(m_all ? resource.name : GetResourcePatchName(resource));
+            rscList.add(new ResourceObject(resource));
+        }
+
+        if(!m_all)
+        {
+            List<GameResourceUrl> gameResourceUrls = GameResourceUrl.GetResourceUrlList(m_game, m_mod);
+            for(GameResourceUrl resource : gameResourceUrls)
+            {
+                nameList.add(GetResourceUrlName(resource));
+                rscList.add(new ResourceObject(resource));
+            }
+        }
+
         AlertDialog.Builder builder = new AlertDialog.Builder(m_gameLauncher);
-        builder.setTitle(R.string.game_patch_resource)
-                .setItems(Names, new DialogInterface.OnClickListener() {
+        builder.setTitle(m_all ? R.string.game_patch_resource : R.string.game_data_resource)
+                .setItems(nameList.toArray(new CharSequence[0]), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int p)
                     {
-                        m_files.add(m_patchResources[p]);
-                        ExtractPatchResource();
+                        ResourceObject resourceObject = rscList.get(p);
+                        if(resourceObject.type == RESOURCE_TYPE_PATCH)
+                            ExtractPatchResource((Q3EPatchResource) resourceObject.data);
+                        else
+                            OpenResourceUrl((GameResourceUrl) resourceObject.data);
                     }
                 })
                 .setNegativeButton(R.string.cancel, null)
-                .setPositiveButton(R.string.extract_all, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int p)
-                    {
-                        m_files.addAll(Arrays.asList(m_patchResources));
-                        ExtractPatchResource();
-                    }
-                })
                 .create()
                 .show()
         ;
     }
 
-    private int ExtractPatchResource()
+    private void OpenResourceUrl(GameResourceUrl resource)
     {
-        if(null == m_files || m_files.isEmpty())
-            return -1;
+        ContextUtility.OpenUrlExternally(m_gameLauncher, resource.url);
+    }
 
+    private boolean ExtractPatchResource(Q3EPatchResource resource)
+    {
         int res = ContextUtility.CheckFilePermission(m_gameLauncher, m_code);
         if(res == ContextUtility.CHECK_PERMISSION_RESULT_REJECT)
             Toast_long(Tr(R.string.can_t_s_read_write_external_storage_permission_is_not_granted, Tr(R.string.access_file)));
         if(res != ContextUtility.CHECK_PERMISSION_RESULT_GRANTED)
-            return -1;
+            return false;
 
-        run();
-        return m_files.size();
+        String toPath = resource.Fetch(m_gameLauncher, true, m_mod);
+
+        if(null != toPath)
+            Toast_short(Tr(R.string.extract_path_resource_) + toPath);
+        else
+            Toast_short(Tr(R.string.extract_path_resource_) + Tr(R.string.fail));
+        //run();
+        return null != toPath;
     }
 
-    public void run()
+    private String GetResourceUrlName(GameResourceUrl resource)
     {
-        int r = 0;
-        String gamePath = m_path;
-        final String BasePath = gamePath + File.separator;
-        for (String str : m_files)
+        Game game = Game.GetGameMod(resource.type, resource.game);
+        String name;
+        if(null != game)
+            name = game.GetName(m_gameLauncher);
+        else
         {
-            File f = new File(str);
-            String path = f.getParent();
-            if(null == path)
-                path = "";
-            String name = f.getName();
-            String newFileName = "z_" + FileUtility.GetFileBaseName(name) + "_idTech4Amm." + FileUtility.GetFileExtension(name);
-            boolean ok = ContextUtility.ExtractAsset(m_gameLauncher, "pak/" + str, BasePath + path + File.separator + newFileName);
-            if(ok)
-                r++;
+            int resId = GameManager.GetGameNameTs(resource.type);
+            name = Q3ELang.tr(m_gameLauncher, resId);
         }
-        Toast_short(Tr(R.string.extract_path_resource_) + r);
+        if(KStr.NotEmpty(resource.name))
+            name += " " + resource.name;
+        switch(resource.source)
+        {
+            case GameResourceUrl.SOURCE_HOMEPAGE:
+                return "[" + Q3ELang.tr(m_gameLauncher, R.string.homepage) + "]" + " " + name;
+            case GameResourceUrl.SOURCE_STEAM:
+                return "[" + Q3ELang.tr(m_gameLauncher, R.string.steam) + "]" + " " + name;
+            case GameResourceUrl.SOURCE_MODDB:
+                return "[" + Q3ELang.tr(m_gameLauncher, R.string.moddb) + "]" + " " + name;
+            case GameResourceUrl.SOURCE_OTHER:
+            default:
+                return "[" + Q3ELang.tr(m_gameLauncher, R.string.url) + "]" + " " + name;
+        }
+    }
+
+    private String GetResourcePatchName(Q3EPatchResource resource)
+    {
+        return "[" + Q3ELang.tr(m_gameLauncher, R.string.patch) + "]" + " " + resource.name;
     }
 }

@@ -33,6 +33,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.Process;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -53,6 +54,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -62,8 +64,14 @@ import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class Q3EUtils
 {
@@ -331,10 +339,26 @@ public class Q3EUtils
         if(null != externalFilesDir)
             path = externalFilesDir.getAbsolutePath();
         else
-            path = Environment.getExternalStorageDirectory() + "/Android/data/" + Q3EGlobals.CONST_PACKAGE_NAME + "/files";
+            path = Environment.getExternalStorageDirectory() + "/" + Q3EGlobals.CONST_PACKAGE_NAME + "/files";
         if(null != filename && !filename.isEmpty())
             path += filename;
         return path;
+    }
+
+    public static String GetDefaultGameDirectory(Context context)
+    {
+        String path = null;
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P)
+        {
+            File externalFilesDir = context.getExternalFilesDir(null);
+            if(null != externalFilesDir)
+                path = externalFilesDir.getAbsolutePath();
+            else
+                path = Environment.getExternalStorageDirectory() + "/" + context.getApplicationContext().getPackageName() + "/files";
+        }
+        if(KStr.IsEmpty(path))
+            path = Environment.getExternalStorageDirectory().getAbsolutePath();
+        return path + "/diii4a";
     }
 
     public static String GetAppInternalPath(Context context, String filename)
@@ -867,5 +891,262 @@ public class Q3EUtils
         if(null == path)
             path = "";
         return Q3EUtils.GetAppStoragePath(context, "/diii4a" + path);
+    }
+
+    public static String date_format(String format, Date...date)
+    {
+        Date d = null != date && date.length > 0 && null != date[0] ? date[0] : new Date();
+        return new SimpleDateFormat(format).format(d);
+    }
+
+    public static long Write(String filePath, InputStream in, int...bufferSizeArg) throws RuntimeException
+    {
+        FileOutputStream fileoutputstream = null;
+
+        try
+        {
+            fileoutputstream = new FileOutputStream(filePath);
+            return Q3EUtils.Copy(fileoutputstream, in, bufferSizeArg);
+        }
+        catch(FileNotFoundException e)
+        {
+            throw new RuntimeException(e);
+        }
+        finally
+        {
+            Q3EUtils.Close(fileoutputstream);
+        }
+    }
+
+    public static boolean ExtractCopyFile(Context context, String assetFilePath, String systemFilePath, boolean overwrite)
+    {
+        InputStream bis = null;
+
+        try
+        {
+            File srcFile = new File(assetFilePath);
+            String systemFolderPath;
+            String toFilePath;
+            if(systemFilePath.endsWith("/"))
+            {
+                systemFolderPath = systemFilePath.substring(0, systemFilePath.length() - 1);
+                toFilePath = systemFilePath + srcFile.getName();
+            }
+            else
+            {
+                File f = new File(systemFilePath);
+                systemFolderPath = f.getParent();
+                toFilePath = systemFilePath;
+            }
+
+            Q3EUtils.mkdir(systemFolderPath, true);
+
+            bis = context.getAssets().open(assetFilePath);
+
+            File file = new File(toFilePath);
+            if(!overwrite && file.exists())
+                return false;
+
+            Q3EUtils.mkdir(file.getParent(), true);
+
+            Log.i(Q3EGlobals.CONST_Q3E_LOG_TAG, "Copying " + assetFilePath + " to " + toFilePath);
+            Q3EUtils.Write(toFilePath, bis, 4096);
+            bis.close();
+            bis = null;
+            return true;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return false;
+        }
+        finally
+        {
+            Q3EUtils.Close(bis);
+        }
+    }
+
+    public static boolean ExtractCopyDirFiles(Context context, String assetFolderPath, String systemFolderPath, boolean overwrite, String...assetPaths)
+    {
+        InputStream bis = null;
+
+        try
+        {
+            Q3EUtils.mkdir(systemFolderPath, true);
+
+            List<String> fileList;
+            if(null == assetPaths)
+            {
+                String[] list = context.getAssets().list(assetFolderPath);
+                if(null == list)
+                    fileList = new ArrayList<>();
+                else
+                    fileList = Arrays.asList(list);
+            }
+            else
+                fileList = Arrays.asList(assetPaths);
+
+            for (String assetPath : fileList)
+            {
+                String sourcePath = assetFolderPath + "/" + assetPath;
+                String entryName = systemFolderPath + "/" + assetPath;
+                ExtractCopyFile(context, sourcePath, entryName, overwrite);
+            }
+            return true;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return false;
+        }
+        finally
+        {
+            Q3EUtils.Close(bis);
+        }
+    }
+
+    public static boolean ExtractZip(Context context, String assetPath, String systemFolderPath, boolean overwrite)
+    {
+        InputStream bis = null;
+        ZipInputStream zipinputstream = null;
+
+        try
+        {
+            bis = context.getAssets().open(assetPath);
+            zipinputstream = new ZipInputStream(bis);
+
+            ZipEntry zipentry;
+            Q3EUtils.mkdir(systemFolderPath, true);
+            while ((zipentry = zipinputstream.getNextEntry()) != null)
+            {
+                String tmpname = zipentry.getName();
+
+                String toFilePath = systemFolderPath + "/" + tmpname;
+                toFilePath = toFilePath.replace('/', File.separatorChar);
+                toFilePath = toFilePath.replace('\\', File.separatorChar);
+                File file = new File(toFilePath);
+
+                if (zipentry.isDirectory())
+                {
+                    if(!file.exists())
+                        Q3EUtils.mkdir(toFilePath, true);
+                    continue;
+                }
+
+                if(!overwrite && file.exists())
+                    continue;
+
+                Log.i(Q3EGlobals.CONST_Q3E_LOG_TAG, "Extracting " + tmpname + " to " + systemFolderPath);
+                Q3EUtils.Write(toFilePath, zipinputstream, 4096);
+                zipinputstream.closeEntry();
+            }
+            return true;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return false;
+        }
+        finally
+        {
+            Q3EUtils.Close(zipinputstream);
+            Q3EUtils.Close(bis);
+        }
+    }
+
+    public static boolean ExtractCopyDir(Context context, String assetFolderPath, String systemFolderPath, boolean overwrite)
+    {
+        InputStream bis = null;
+
+        try
+        {
+            List<String> fileList = LsAssets(context, assetFolderPath);
+            if(null == fileList)
+                return false;
+
+            Q3EUtils.mkdir(systemFolderPath, true);
+
+            for (String assetPath : fileList)
+            {
+                String sourcePath = assetFolderPath + "/" + assetPath;
+                String entryName = systemFolderPath + "/" + assetPath;
+                ExtractCopyFile(context, sourcePath, entryName, overwrite);
+            }
+            return true;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return false;
+        }
+        finally
+        {
+            Q3EUtils.Close(bis);
+        }
+    }
+
+    public static boolean InMainThread(Context context)
+    {
+        return context.getMainLooper().getThread() == Thread.currentThread();
+    }
+
+    public static void RunOnUiThread(Context context, Runnable runnable)
+    {
+        if(context instanceof Activity)
+        {
+            ((Activity)context).runOnUiThread(runnable);
+        }
+        else
+        {
+            if(InMainThread(context))
+                runnable.run();
+            else
+                Post(context, runnable);
+        }
+    }
+
+    public static void Post(Context context, Runnable runnable)
+    {
+        new Handler(context.getMainLooper()).post(runnable);
+    }
+
+    public static List<String> LsAssets(Context context, String assetFolderPath)
+    {
+        List<String> subList = new ArrayList<>();
+        if(LsAssets_r(context, assetFolderPath, "", subList))
+            return subList;
+        else
+            return null;
+    }
+
+    private static boolean LsAssets_r(Context context, String assetFolderPath, String prefix, List<String> res)
+    {
+        try
+        {
+            String[] list = context.getAssets().list(assetFolderPath);
+            if(null == list || list.length == 0)
+            {
+                return false;
+            }
+            for(String str : list)
+            {
+                String path = KStr.AppendPath(assetFolderPath, str);
+                String subPrefix = KStr.IsBlank(prefix) ? str : KStr.AppendPath(prefix, str);
+                List<String> subList = new ArrayList<>();
+                if(LsAssets_r(context, path, subPrefix, subList))
+                {
+                    res.addAll(subList);
+                }
+                else
+                {
+                    res.add(subPrefix);
+                }
+            }
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
     }
 }

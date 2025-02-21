@@ -98,6 +98,18 @@ static const char* g_validationLayers[ g_numValidationLayers ] =
 
 #define ID_VK_ERROR_STRING( x ) case static_cast< int >( x ): return #x
 
+#ifdef VK_USE_PLATFORM_ANDROID_KHR //karin: Vulkan extras functions
+void VK_CreateSurface( void )
+{
+	VkAndroidSurfaceCreateInfoKHR createInfo = {};
+	createInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
+	createInfo.pNext = nullptr;
+	createInfo.flags = 0;
+	createInfo.window = (ANativeWindow *)vkcontext.sdlWindow; // pointer of ANativeWindow
+	
+	ID_VK_CHECK(vkCreateAndroidSurfaceKHR(vkcontext.instance, &createInfo, nullptr, &vkcontext.surface));
+}
+#endif
 /*
 =============
 VK_ErrorToString
@@ -266,7 +278,18 @@ static void CreateVulkanInstance()
 	appInfo.applicationVersion = 1;
 	appInfo.pEngineName = "idTech 4.5x";
 	appInfo.engineVersion = 1;
+#ifdef __ANDROID__ //karin: test apiVersion
+    uint32_t apiVersion;
+    uint32_t minorVersion = 0;
+    if(vkEnumerateInstanceVersion(&apiVersion) == VK_SUCCESS)
+    {
+        if(VK_VERSION_MINOR(apiVersion) >= 1)
+            minorVersion = 1;
+    }
+	appInfo.apiVersion = VK_MAKE_VERSION( 1, minorVersion, VK_HEADER_VERSION );
+#else
 	appInfo.apiVersion = VK_MAKE_VERSION( 1, 0, VK_HEADER_VERSION );
+#endif
 
 	VkInstanceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -283,6 +306,13 @@ static void CreateVulkanInstance()
 		vkcontext.instanceExtensions.Append( g_instanceExtensions[ i ] );
 	}
 #elif defined(VULKAN_USE_PLATFORM_SDL)  // SDL2
+	auto sdl_instanceExtensions = get_required_extensions();
+	// SRS - Populate vkcontext with required SDL instance extensions
+	for( auto instanceExtension : sdl_instanceExtensions )
+	{
+		vkcontext.instanceExtensions.Append( instanceExtension );
+	}
+#elif defined(VK_USE_PLATFORM_ANDROID_KHR)  //karin: Android Vulkan requires extensions
 	auto sdl_instanceExtensions = get_required_extensions();
 	// SRS - Populate vkcontext with required SDL instance extensions
 	for( auto instanceExtension : sdl_instanceExtensions )
@@ -465,6 +495,10 @@ static void EnumeratePhysicalDevices()
 				idLib::Printf( "Found device[%i] Vendor: Apple\n", i );
 				break;
 
+			case 0x5143: //karin: Adreno GPU
+				idLib::Printf( "Found device[%i] Vendor: Adreno\n", i );
+				break;
+
 			default:
 				idLib::Printf( "Found device[%i] Vendor: Unknown (0x%x)\n", i, gpu.props.vendorID );
 		}
@@ -497,6 +531,8 @@ static void CreateSurface()
 	{
 		idLib::FatalError( "Error while creating Vulkan surface: %s", SDL_GetError() );
 	}
+#elif defined(VK_USE_PLATFORM_ANDROID_KHR) //karin: create Android surface
+	VK_CreateSurface();
 #endif
 
 }
@@ -627,6 +663,149 @@ static void EnableDeviceExtensionFeatures( const idList< const char* >& extensio
 SelectPhysicalDevice
 =============
 */
+#ifdef __ANDROID__ //karin: check if present family not supported
+static void SelectPhysicalDeviceWithoutPresentFamily()
+{
+	//idLib::Printf( "Selecting physical device:\n" );
+
+	for( int i = 0; i < vkcontext.gpus.Num(); ++i )
+	{
+		gpuInfo_t& gpu = vkcontext.gpus[ i ];
+
+		idList< const char* > extensions;
+		PopulateDeviceExtensions( gpu.extensionProps, extensions );
+
+		if( !CheckDeviceExtensionSupport( gpu.extensionProps, extensions ) )
+		{
+			continue;
+		}
+
+		if( gpu.surfaceFormats.Num() == 0 )
+		{
+			continue;
+		}
+
+		if( gpu.presentModes.Num() == 0 )
+		{
+			continue;
+		}
+
+		int graphicsIdx = -1;
+		int presentIdx = -1;
+
+		// Find graphics queue family
+		for( int j = 0; j < gpu.queueFamilyProps.Num(); ++j )
+		{
+			VkQueueFamilyProperties& props = gpu.queueFamilyProps[ j ];
+
+			if( props.queueCount == 0 )
+			{
+				continue;
+			}
+
+			if( props.queueFlags & VK_QUEUE_GRAPHICS_BIT )
+			{
+				graphicsIdx = j;
+				break;
+			}
+		}
+
+		// Did we find a device supporting both graphics and present.
+		if( graphicsIdx >= 0 )
+		{
+			presentIdx = graphicsIdx;
+#ifdef __ANDROID__ //karin: present family available
+			vkcontext.presentFamilyAvailable = false;
+#endif
+
+			vkcontext.graphicsFamilyIdx = graphicsIdx;
+			vkcontext.presentFamilyIdx = presentIdx;
+			vkcontext.physicalDevice = gpu.device;
+			vkcontext.gpu = &gpu;
+			vkcontext.deviceExtensions = extensions;
+
+			EnableDeviceExtensionFeatures( vkcontext.deviceExtensions );
+
+			vkGetPhysicalDeviceFeatures( vkcontext.physicalDevice, &vkcontext.physicalDeviceFeatures );
+
+			idLib::Printf( "Selected device '%s'\n", gpu.props.deviceName );
+
+			// RB: found vendor IDs in nvQuake
+			switch( gpu.props.vendorID )
+			{
+				case 0x8086:
+					idLib::Printf( "Device[%i] : Vendor: Intel\n", i );
+					glConfig.vendor = VENDOR_INTEL;
+					glConfig.vendor_string = "Intel Inc.";
+					break;
+
+				case 0x10DE:
+					idLib::Printf( "Device[%i] : Vendor: NVIDIA\n", i );
+					glConfig.vendor = VENDOR_NVIDIA;
+					glConfig.vendor_string = "NVIDIA Corporation";
+					break;
+
+				case 0x1002:
+					idLib::Printf( "Device[%i] : Vendor: AMD\n", i );
+					glConfig.vendor = VENDOR_AMD;
+					glConfig.vendor_string = "ATI Technologies Inc.";
+					break;
+
+				// SRS - Added support for Apple GPUs
+				case 0x106B:
+					idLib::Printf( "Found device[%i] Vendor: Apple\n", i );
+					glConfig.vendor = VENDOR_APPLE;
+					glConfig.vendor_string = "Apple";
+					break;
+
+				case 0x5143:
+					idLib::Printf( "Device[%i] : Vendor: Adreno\n", i );
+					break;
+
+				default:
+					idLib::Printf( "Device[%i] : Vendor: Unknown (0x%x)\n", i, gpu.props.vendorID );
+			}
+
+			glConfig.renderer_string = gpu.props.deviceName;
+
+			static idStr version_string;
+			version_string.Clear();
+			version_string.Append( va( "Vulkan API %i.%i.%i", VK_API_VERSION_MAJOR( gpu.props.apiVersion ), VK_API_VERSION_MINOR( gpu.props.apiVersion ), VK_API_VERSION_PATCH( gpu.props.apiVersion ) ) );
+
+			static idStr extensions_string;
+			extensions_string.Clear();
+			bool driverPropertiesAvailable = false;
+			for( int i = 0; i < gpu.extensionProps.Num(); i++ )
+			{
+				extensions_string.Append( va( "%s ", gpu.extensionProps[ i ].extensionName ) );
+
+				if( idStr::Icmp( gpu.extensionProps[ i ].extensionName, VK_KHR_DRIVER_PROPERTIES_EXTENSION_NAME ) == 0 )
+				{
+					driverPropertiesAvailable = true;
+				}
+			}
+			glConfig.extensions_string = extensions_string.c_str();
+
+			if( vkcontext.deviceProperties2Available && driverPropertiesAvailable )
+			{
+				VkPhysicalDeviceProperties2 pProperties = {};
+				VkPhysicalDeviceDriverProperties pDriverProperties = {};
+				pProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+				pProperties.pNext = &pDriverProperties;
+				pDriverProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES;
+				vkGetPhysicalDeviceProperties2( vkcontext.physicalDevice, &pProperties );
+				version_string.Append( va( " (%s %s)", pDriverProperties.driverName, pDriverProperties.driverInfo ) );
+			}
+			glConfig.version_string = version_string.c_str();
+
+			return;
+		}
+	}
+
+	// If we can't render or present, just bail.
+	idLib::FatalError( "Could not find a physical device which fits our desired profile" );
+}
+#endif
 static void SelectPhysicalDevice()
 {
 	//idLib::Printf( "Selecting physical device:\n" );
@@ -695,6 +874,9 @@ static void SelectPhysicalDevice()
 		// Did we find a device supporting both graphics and present.
 		if( graphicsIdx >= 0 && presentIdx >= 0 )
 		{
+#ifdef __ANDROID__ //karin: present family available
+			vkcontext.presentFamilyAvailable = true;
+#endif
 			vkcontext.graphicsFamilyIdx = graphicsIdx;
 			vkcontext.presentFamilyIdx = presentIdx;
 			vkcontext.physicalDevice = gpu.device;
@@ -733,6 +915,10 @@ static void SelectPhysicalDevice()
 					idLib::Printf( "Found device[%i] Vendor: Apple\n", i );
 					glConfig.vendor = VENDOR_APPLE;
 					glConfig.vendor_string = "Apple";
+					break;
+
+				case 0x5143: //karin: Adreno GPU
+					idLib::Printf( "Device[%i] : Vendor: Adreno\n", i );
 					break;
 
 				default:
@@ -775,6 +961,9 @@ static void SelectPhysicalDevice()
 		}
 	}
 
+#ifdef __ANDROID__ //karin: check if present family not supported
+	SelectPhysicalDeviceWithoutPresentFamily();
+#endif
 	// If we can't render or present, just bail.
 	idLib::FatalError( "Could not find a physical device which fits our desired profile" );
 }
@@ -788,6 +977,10 @@ static void CreateLogicalDeviceAndQueues()
 {
 	idList< int > uniqueIdx;
 	uniqueIdx.AddUnique( vkcontext.graphicsFamilyIdx );
+#ifdef __ANDROID__ //karin: check if present family not supported
+    idLib::Printf( "Vulkan support present family queue: %d\n", vkcontext.presentFamilyAvailable );
+	if(vkcontext.presentFamilyAvailable)
+#endif
 	uniqueIdx.AddUnique( vkcontext.presentFamilyIdx );
 
 	idList< VkDeviceQueueCreateInfo > devqInfo;
@@ -873,7 +1066,14 @@ static void CreateLogicalDeviceAndQueues()
 	ID_VK_CHECK( vkCreateDevice( vkcontext.physicalDevice, &info, NULL, &vkcontext.device ) );
 
 	vkGetDeviceQueue( vkcontext.device, vkcontext.graphicsFamilyIdx, 0, &vkcontext.graphicsQueue );
+#ifdef __ANDROID__ //karin: check if present family not supported
+	if(vkcontext.presentFamilyAvailable)
+#endif
 	vkGetDeviceQueue( vkcontext.device, vkcontext.presentFamilyIdx, 0, &vkcontext.presentQueue );
+#ifdef __ANDROID__ //karin: check if present family not supported
+	else
+		vkcontext.presentQueue = vkcontext.graphicsQueue;
+#endif
 
 	if( vkcontext.debugMarkerSupportAvailable )
 	{
@@ -983,6 +1183,11 @@ static VkExtent2D ChooseSurfaceExtent( VkSurfaceCapabilitiesKHR& caps )
 	width = idMath::ClampInt( caps.minImageExtent.width, caps.maxImageExtent.width, width );
 	height = idMath::ClampInt( caps.minImageExtent.height, caps.maxImageExtent.height, height );
 #endif
+#ifdef __ANDROID__ //karin: TODO: -1, cause flush if width == tr.GetWidth() && height == tr.GetHeight()
+    //extern void SDL_Vulkan_GetDrawableSize( void *sdlWindow, int *width, int *height );
+    width = idMath::ClampInt( caps.minImageExtent.width, caps.maxImageExtent.width, width );
+    height = idMath::ClampInt( caps.minImageExtent.height, caps.maxImageExtent.height, height );
+#endif
 
 	if( caps.currentExtent.width == -1 )
 	{
@@ -991,7 +1196,12 @@ static VkExtent2D ChooseSurfaceExtent( VkSurfaceCapabilitiesKHR& caps )
 	}
 	else
 	{
+#ifdef __ANDROID__ //karin: using config screen size
+		extent.width = width;
+		extent.height = height;
+#else
 		extent = caps.currentExtent;
+#endif
 	}
 
 	return extent;
@@ -1013,17 +1223,21 @@ static void CreateSwapChain()
 	VkSwapchainCreateInfoKHR info = {};
 	info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	info.surface = vkcontext.surface;
+#ifdef __ANDROID__xxx //karin: test minImageCount
+    int maxImageCount = gpu.surfaceCaps.maxImageCount > 0 ? gpu.surfaceCaps.maxImageCount : gpu.surfaceCaps.minImageCount;
+	info.minImageCount = idMath::ClampInt( gpu.surfaceCaps.minImageCount, maxImageCount, NUM_FRAME_DATA );
+#else
 	info.minImageCount = NUM_FRAME_DATA;
+#endif
 	info.imageFormat = surfaceFormat.format;
 	info.imageColorSpace = surfaceFormat.colorSpace;
 	info.imageExtent = extent;
 	info.imageArrayLayers = 1;
 	info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
+	uint32 indices[] = { ( uint32 )vkcontext.graphicsFamilyIdx, ( uint32 )vkcontext.presentFamilyIdx };
 	if( vkcontext.graphicsFamilyIdx != vkcontext.presentFamilyIdx )
 	{
-		uint32 indices[] = { ( uint32 )vkcontext.graphicsFamilyIdx, ( uint32 )vkcontext.presentFamilyIdx };
-
 		info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 		info.queueFamilyIndexCount = 2;
 		info.pQueueFamilyIndices = indices;
@@ -1031,10 +1245,21 @@ static void CreateSwapChain()
 	else
 	{
 		info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+#ifdef __ANDROID__ //karin: if only support graphics family
+		info.queueFamilyIndexCount = 0;
+		info.pQueueFamilyIndices = nullptr;
+#endif
 	}
 
 	info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+#ifdef __ANDROID__ //karin: test compositeAlpha
+	if(gpu.surfaceCaps.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR)
+	    info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	else
+	    info.compositeAlpha = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
+#else
 	info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+#endif
 	info.presentMode = presentMode;
 	info.clipped = VK_TRUE;
 
@@ -1048,11 +1273,23 @@ static void CreateSwapChain()
 	uint32 numImages = 0;
 	ID_VK_CHECK( vkGetSwapchainImagesKHR( vkcontext.device, vkcontext.swapchain, &numImages, NULL ) );
 	ID_VK_VALIDATE( numImages > 0, "vkGetSwapchainImagesKHR returned a zero image count." );
+#ifdef __ANDROID__ //karin: dynamic size
+	printf("Vulkan get swapchain images: %d\n", numImages);
+	vkcontext.numSwapImages = numImages;
+#endif
 
+#ifdef __ANDROID__ //karin: dynamic size
+	vkcontext.swapchainImages.Resize(numImages);
+#endif
 	ID_VK_CHECK( vkGetSwapchainImagesKHR( vkcontext.device, vkcontext.swapchain, &numImages, vkcontext.swapchainImages.Ptr() ) );
 	ID_VK_VALIDATE( numImages > 0, "vkGetSwapchainImagesKHR returned a zero image count." );
 
+#ifdef __ANDROID__ //karin: dynamic size
+	vkcontext.swapchainViews.Resize(numImages);
+	for( uint32 i = 0; i < vkcontext.numSwapImages; ++i )
+#else
 	for( uint32 i = 0; i < NUM_FRAME_DATA; ++i )
+#endif
 	{
 		VkImageViewCreateInfo imageViewCreateInfo = {};
 		imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -1082,12 +1319,21 @@ DestroySwapChain
 static void DestroySwapChain()
 {
 
+#ifdef __ANDROID__ //karin: dynamic size
+	for( uint32 i = 0; i < vkcontext.swapchainViews.Num(); ++i )
+#else
 	for( uint32 i = 0; i < NUM_FRAME_DATA; ++i )
+#endif
 	{
 		vkDestroyImageView( vkcontext.device, vkcontext.swapchainViews[ i ], NULL );
 	}
+#ifdef __ANDROID__ //karin: dynamic size
+	vkcontext.swapchainImages.Resize(0);
+	vkcontext.swapchainViews.Resize(0);
+#else
 	vkcontext.swapchainImages.Zero();
 	vkcontext.swapchainViews.Zero();
+#endif
 
 	vkDestroySwapchainKHR( vkcontext.device, vkcontext.swapchain, NULL );
 }
@@ -1484,7 +1730,12 @@ static void CreateFrameBuffers()
 	frameBufferCreateInfo.height = renderSystem->GetHeight();
 	frameBufferCreateInfo.layers = 1;
 
+#ifdef __ANDROID__ //karin: dynamic size
+	vkcontext.frameBuffers.Resize(vkcontext.numSwapImages);
+	for( int i = 0; i < vkcontext.numSwapImages; ++i )
+#else
 	for( int i = 0; i < NUM_FRAME_DATA; ++i )
+#endif
 	{
 		attachments[ 0 ] = vkcontext.swapchainViews[ i ];
 		ID_VK_CHECK( vkCreateFramebuffer( vkcontext.device, &frameBufferCreateInfo, NULL, &vkcontext.frameBuffers[ i ] ) );
@@ -1498,11 +1749,19 @@ DestroyFrameBuffers
 */
 static void DestroyFrameBuffers()
 {
+#ifdef __ANDROID__ //karin: dynamic size
+	for( int i = 0; i < vkcontext.frameBuffers.Num(); ++i )
+#else
 	for( int i = 0; i < NUM_FRAME_DATA; ++i )
+#endif
 	{
 		vkDestroyFramebuffer( vkcontext.device, vkcontext.frameBuffers[ i ], NULL );
 	}
+#ifdef __ANDROID__ //karin: dynamic size
+	vkcontext.frameBuffers.Resize(0);
+#else
 	vkcontext.frameBuffers.Zero();
+#endif
 }
 
 /*
@@ -1513,6 +1772,8 @@ ClearContext
 static void ClearContext()
 {
 #if defined(VULKAN_USE_PLATFORM_SDL)
+	vkcontext.sdlWindow = nullptr;
+#elif defined(VK_USE_PLATFORM_ANDROID_KHR) //karin: ANativeWindow on Android
 	vkcontext.sdlWindow = nullptr;
 #endif
 	vkcontext.frameCounter = 0;
@@ -1558,9 +1819,15 @@ static void ClearContext()
 #else
 	vkcontext.msaaAllocation = vulkanAllocation_t();
 #endif
+#ifdef __ANDROID__ //karin: dynamic size
+	vkcontext.swapchainImages.Resize(0);
+	vkcontext.swapchainViews.Resize(0);
+	vkcontext.frameBuffers.Resize(0);
+#else
 	vkcontext.swapchainImages.Zero();
 	vkcontext.swapchainViews.Zero();
 	vkcontext.frameBuffers.Zero();
+#endif
 	vkcontext.acquireSemaphores.Zero();
 	vkcontext.renderCompleteSemaphores.Zero();
 
@@ -1574,6 +1841,10 @@ static void ClearContext()
 		vkcontext.queryResults[ i ].Zero();
 	}
 	vkcontext.queryPools.Zero();
+#ifdef __ANDROID__ //karin: check if present family not supported
+	vkcontext.presentFamilyAvailable = false;
+	vkcontext.numSwapImages = NUM_FRAME_DATA;
+#endif
 }
 
 /*
@@ -1611,7 +1882,7 @@ void idRenderBackend::Init()
 
 	// DG: make sure SDL has setup video so getting supported modes in R_SetNewMode() works
 // SRS - Generalized Vulkan SDL platform
-#if defined(VULKAN_USE_PLATFORM_SDL)
+#if defined(VULKAN_USE_PLATFORM_SDL) || defined(VK_USE_PLATFORM_ANDROID_KHR) //karin: Android Vulkan
 	VKimp_PreInit();
 #else
 	GLimp_PreInit();
@@ -1798,7 +2069,7 @@ void idRenderBackend::Shutdown()
 
 	// destroy main window
 // SRS - Generalized Vulkan SDL platform
-#if defined(VULKAN_USE_PLATFORM_SDL)
+#if defined(VULKAN_USE_PLATFORM_SDL) || defined(VK_USE_PLATFORM_ANDROID_KHR) //karin: Android Vulkan
 	VKimp_Shutdown();
 #else
 	GLimp_Shutdown();
@@ -1855,6 +2126,7 @@ void idRenderBackend::ResizeImages()
 	// Refresh Surface Capabilities
 	ID_VK_CHECK( vkGetPhysicalDeviceSurfaceCapabilitiesKHR( vkcontext.physicalDevice, vkcontext.surface, &vkcontext.gpu->surfaceCaps ) );
 
+#if 0 //karin: not check this
 	// Recheck presentation support
 	VkBool32 supportsPresent = VK_FALSE;
 	ID_VK_CHECK( vkGetPhysicalDeviceSurfaceSupportKHR( vkcontext.physicalDevice, vkcontext.presentFamilyIdx, vkcontext.surface, &supportsPresent ) );
@@ -1862,6 +2134,7 @@ void idRenderBackend::ResizeImages()
 	{
 		idLib::FatalError( "idRenderBackend::ResizeImages: New surface does not support present?" );
 	}
+#endif
 
 	// Create New Swap Chain
 	CreateSwapChain();
@@ -2072,8 +2345,16 @@ void idRenderBackend::GL_StartFrame()
 		case VK_SUBOPTIMAL_KHR:
 			break;
 		case VK_ERROR_OUT_OF_DATE_KHR:
+#ifdef __ANDROID__ //karin: recreate framebuffers when recreate swapchain
+			printf("Vulkan swapchain out of date on GL_StartFrame.\n");
+			vkDeviceWaitIdle( vkcontext.device );
+			DestroyFrameBuffers();
+#endif
 			DestroySwapChain();
 			CreateSwapChain();
+#ifdef __ANDROID__ //karin: recreate framebuffers when recreate swapchain
+			CreateFrameBuffers();
+#endif
 			return;
 			// return on_window_size_changed();
 			break;
@@ -2302,11 +2583,25 @@ void idRenderBackend::GL_BlockingSwapBuffers()
 	{
 		case VK_SUCCESS:
 			break;
-		case VK_ERROR_OUT_OF_DATE_KHR:
+#ifdef __ANDROID__ //karin: VK_SUBOPTIMAL_KHR as success
 		case VK_SUBOPTIMAL_KHR:
+			break;
+#endif
+		case VK_ERROR_OUT_OF_DATE_KHR:
+#if !defined(__ANDROID__) //karin: VK_SUBOPTIMAL_KHR as success
+		case VK_SUBOPTIMAL_KHR:
+#endif
 			// return on_window_size_changed(); Eric: Handle resizing the window.
+#ifdef __ANDROID__ //karin: recreate framebuffers when recreate swapchain
+			printf("Vulkan swapchain out of date on GL_BlockingSwapBuffers.\n");
+			vkDeviceWaitIdle( vkcontext.device );
+			DestroyFrameBuffers();
+#endif
 			DestroySwapChain();
 			CreateSwapChain();
+#ifdef __ANDROID__ //karin: recreate framebuffers when recreate swapchain
+			CreateFrameBuffers();
+#endif
 			return;
 			break;
 		default:
@@ -2994,3 +3289,21 @@ void idRenderBackend::ImGui_RenderDrawLists( ImDrawData* draw_data )
 {
 	tr.guiModel->EmitImGui( draw_data );
 }
+
+#ifdef __ANDROID__ //karin: export create/destory swapchain functions
+void VK_RecreateSwapchain( void )
+{
+	printf("Recreate swapchain......\n");
+	printf(" 1. Wait device idle\n");
+	vkDeviceWaitIdle( vkcontext.device );
+	printf(" 2. Destroy old framebuffers\n");
+	DestroyFrameBuffers();
+	printf(" 3. Destory old Vulkan swapchian\n");
+	DestroySwapChain();
+	printf(" 4. Create new Vulkan swapchian\n");
+	CreateSwapChain();
+	printf(" 5. Ccreate new Vulkan framebuffers.\n");
+	CreateFrameBuffers();
+	printf("Recreate Vulkan swapchian done.\n");
+}
+#endif

@@ -137,6 +137,8 @@ struct vulkanContext_t
 // SRS - Generalized Vulkan SDL platform
 #if defined(VULKAN_USE_PLATFORM_SDL)
 	SDL_Window*						sdlWindow = nullptr;
+#elif defined(__ANDROID__) //karin: ANativeWindow on Android
+	void *sdlWindow;
 #endif
 	uint64							frameCounter;
 	uint32							frameParity;
@@ -198,10 +200,17 @@ struct vulkanContext_t
 #else
 	vulkanAllocation_t				msaaAllocation;
 #endif
+#ifdef __ANDROID__ //karin: dynamic size
+	idList< VkImage >			swapchainImages;
+	idList< VkImageView >		swapchainViews;
+
+	idList< VkFramebuffer >	frameBuffers;
+#else
 	idArray< VkImage, NUM_FRAME_DATA >			swapchainImages;
 	idArray< VkImageView, NUM_FRAME_DATA >		swapchainViews;
 
 	idArray< VkFramebuffer, NUM_FRAME_DATA >	frameBuffers;
+#endif
 	idArray< VkSemaphore, NUM_FRAME_DATA >		acquireSemaphores;
 	idArray< VkSemaphore, NUM_FRAME_DATA >		renderCompleteSemaphores;
 
@@ -215,6 +224,10 @@ struct vulkanContext_t
 	idArray< idArray< uint32, MRB_TOTAL_QUERIES >, NUM_FRAME_DATA >		queryAssignedIndex;
 	idArray< idArray< uint64, NUM_TIMESTAMP_QUERIES >, NUM_FRAME_DATA >	queryResults;
 	idArray< VkQueryPool, NUM_FRAME_DATA >		queryPools;
+#ifdef __ANDROID__ //karin: extras configs on Android
+	bool							presentFamilyAvailable;
+	uint32 numSwapImages;
+#endif
 };
 
 extern vulkanContext_t vkcontext;

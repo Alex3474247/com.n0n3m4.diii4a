@@ -1,0 +1,97 @@
+name: Create new issue
+description: Create new issue(bugs | request)
+title: '* '
+labels: 'issue'
+
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: |
+        Version name or [release name](https://github.com/glKarin/com.n0n3m4.diii4a/releases) or [tag name](https://github.com/glKarin/com.n0n3m4.diii4a/tags).
+      placeholder: "e.g. `1.1.0harmattan50` or `since 1.1.0harmattan50` or `testing version` or `all version`"
+    validations:
+      required: true
+  - type: dropdown
+    id: gameid
+    attributes:
+      label: Which game type?
+      multiple: true
+      options:
+        - DOOM 3
+        - Quake 4
+        - Prey(2006)
+        - Quake II
+        - Quake III
+        - Return to Castle Wolfenstein
+        - Quake I
+        - The Dark Mod
+        - DOOM 3 BFG
+        - GZDOOM
+        - Wolfenstein - Enemy Territory
+        - RealRTCW
+        - Other game/New game
+    validations:
+      required: true
+  - type: dropdown
+    id: OS
+    attributes:
+      label: What platform?
+      multiple: true
+      options:
+        - Android arm-v8
+        - Android arm-v7a
+        - Windows x86-64
+        - Windows x86
+        - Linux x86-64
+        - Linux x86
+        - Linux arm
+    validations:
+      required: true
+  - type: input
+    id: mod
+    attributes:
+      label: What game mod?
+      placeholder: "e.g. "
+    validations:
+      required: false
+  - type: dropdown
+    id: gpu
+    attributes:
+      label: What GPU brand?
+      multiple: false
+      options:
+        - Snapdragon Adreno
+        - Mali
+        - Other(Enter below)
+    validations:
+      required: false
+  - type: input
+    id: gpu_model
+    attributes:
+      label: CPU/GPU model
+      placeholder: "e.g. Snapdragon 845 or Adreno 720"
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: Description or screenshot
+      placeholder: "Description or screenshot files"
+    validations:
+      required: true
+  - type: textarea
+    id: stdout_log
+    attributes:
+      label: stdout.txt
+      placeholder: "Copy and paste / upload `stdout.txt` file contents"
+    validations:
+      required: false
+  - type: textarea
+    id: stderr_log
+    attributes:
+      label: stderr.txt
+      placeholder: "Copy and paste / upload `stderr.txt` file contents"
+    validations:
+      required: false

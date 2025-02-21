@@ -273,7 +273,18 @@ HINSTANCE Omnibot_LL(const char *file)
 #ifdef WIN32
 	HINSTANCE hndl = LoadLibrary(g_OmnibotLibPath.c_str());
 #else
+#ifdef _DIII4A //karin: only use filename on Android: remove directory path part and add `lib` prefix
+    std::string str(g_OmnibotLibPath);
+    int pos = str.find_last_of('/');
+    if(pos > 0)
+    {
+        str = str.substr(pos + 1);
+        str.insert(0, "lib");
+    }
+    void *hndl = dlopen(str.c_str(), RTLD_NOW);
+#else
 	void *hndl = dlopen(g_OmnibotLibPath.c_str(), RTLD_NOW);
+#endif
 #endif
 	if (!hndl)
 	{
@@ -290,6 +301,7 @@ HINSTANCE Omnibot_LL(const char *file)
  * @param[in] path
  * @return
  */
+#include <unistd.h> //karin: for getcwd
 eomnibot_error Omnibot_LoadLibrary(int version, const char *lib, const char *path)
 {
 	eomnibot_error r = BOT_ERROR_NONE;
@@ -308,6 +320,17 @@ eomnibot_error Omnibot_LoadLibrary(int version, const char *lib, const char *pat
 	{
 		g_BotLibrary = Omnibot_LL(OB_VA("%s" SUFFIX ".dll", lib));
 	}
+#elif defined(_DIII4A) //karin: omnibot library path
+    char cwd[1024];
+    std::string str;
+    if(getcwd(cwd, sizeof(cwd) - 1))
+        str += cwd;
+    if(path && path[0])
+    {
+        str += "/";
+        str += path;
+    }
+    g_BotLibrary = Omnibot_LL(OB_VA("%s/%s.so", str.empty() ? "." : str.c_str(), lib));
 #else
 
 #ifdef __APPLE__
@@ -317,6 +340,8 @@ eomnibot_error Omnibot_LoadLibrary(int version, const char *lib, const char *pat
 #define POSTFIX ".so"
 #ifdef __x86_64__
 #define SUFFIX ".x86_64"
+#elif defined __aarch64__
+#define SUFFIX ".aarch64"
 #else
 #define SUFFIX
 #endif
@@ -416,7 +441,7 @@ void KeyVals::Reset()
 {
 	memset(m_Key, 0, sizeof(m_Key));
 	memset(m_String, 0, sizeof(m_String));
-	memset(m_Value, 0, sizeof(m_Value));
+	(*m_Value) = {};
 }
 
 /**

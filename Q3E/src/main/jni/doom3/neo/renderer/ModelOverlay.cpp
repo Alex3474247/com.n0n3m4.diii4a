@@ -136,8 +136,13 @@ void idRenderModelOverlay::CreateOverlay(const idRenderModel *model, const idPla
 	}
 
 	// make temporary buffers for the building process
+#ifdef _DYNAMIC_ALLOC_STACK_OR_HEAP
+	_DROID_ALLOC_DEF(overlayVertex_t, overlayVerts, (maxVerts * sizeof(*overlayVerts)));
+	_DROID_ALLOC16_DEF(glIndex_t, overlayIndexes, (maxIndexes * sizeof(*overlayIndexes)));
+#else
 	overlayVertex_t	*overlayVerts = (overlayVertex_t *)_alloca(maxVerts * sizeof(*overlayVerts));
 	glIndex_t *overlayIndexes = (glIndex_t *)_alloca16(maxIndexes * sizeof(*overlayIndexes));
+#endif
 
 	// pull out the triangles we need from the base surfaces
 	for (surfNum = 0; surfNum < model->NumBaseSurfaces(); surfNum++) {
@@ -173,12 +178,21 @@ void idRenderModelOverlay::CreateOverlay(const idRenderModel *model, const idPla
 			continue;
 		}
 
+#ifdef _DYNAMIC_ALLOC_STACK_OR_HEAP //karin: for Fracture Strogg mod
+		_DROID_ALLOC16_DEF(byte, cullBits, (stri->numVerts * sizeof(cullBits[0])));
+		_DROID_ALLOC16_DEF(idVec2, texCoords, (stri->numVerts * sizeof(texCoords[0])));
+#else
 		byte *cullBits = (byte *)_alloca16(stri->numVerts * sizeof(cullBits[0]));
 		idVec2 *texCoords = (idVec2 *)_alloca16(stri->numVerts * sizeof(texCoords[0]));
+#endif
 
 		SIMDProcessor->OverlayPointCull(cullBits, texCoords, localTextureAxis, stri->verts, stri->numVerts);
 
+#ifdef _DYNAMIC_ALLOC_STACK_OR_HEAP //karin: for Fracture Strogg mod
+		_DROID_ALLOC16_DEF(glIndex_t, vertexRemap, (sizeof(vertexRemap[0]) * stri->numVerts));
+#else
 		glIndex_t *vertexRemap = (glIndex_t *)_alloca16(sizeof(vertexRemap[0]) * stri->numVerts);
+#endif
 		SIMDProcessor->Memset(vertexRemap, -1,  sizeof(vertexRemap[0]) * stri->numVerts);
 
 		// find triangles that need the overlay
@@ -253,6 +267,13 @@ void idRenderModelOverlay::CreateOverlay(const idRenderModel *model, const idPla
 			materials[i]->surfaces.RemoveIndex(0);
 		}
 	}
+#ifdef _DYNAMIC_ALLOC_STACK_OR_HEAP
+	_DROID_FREE(overlayVerts);
+	_DROID_FREE(overlayIndexes);
+	_DROID_FREE(cullBits);
+	_DROID_FREE(texCoords);
+	_DROID_FREE(vertexRemap);
+#endif
 }
 
 /*

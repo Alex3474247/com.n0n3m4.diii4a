@@ -27,10 +27,10 @@ import android.opengl.GLSurfaceView;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.MotionEvent;
-import android.widget.Toast;
+import android.view.ViewGroup;
 
+import com.n0n3m4.q3e.gl.KGLBitmapTexture;
 import com.n0n3m4.q3e.gl.Q3EGL;
 import com.n0n3m4.q3e.onscreen.Button;
 import com.n0n3m4.q3e.onscreen.Disc;
@@ -41,8 +41,10 @@ import com.n0n3m4.q3e.onscreen.Paintable;
 import com.n0n3m4.q3e.onscreen.Q3EControls;
 import com.n0n3m4.q3e.onscreen.Slider;
 import com.n0n3m4.q3e.onscreen.TouchListener;
+import com.n0n3m4.q3e.onscreen.MenuOverlayView;
 import com.n0n3m4.q3e.onscreen.UiElement;
 import com.n0n3m4.q3e.onscreen.UiLoader;
+import com.n0n3m4.q3e.onscreen.UiViewOverlay;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -55,13 +57,14 @@ import javax.microedition.khronos.opengles.GL11;
 
 public class Q3EUiView extends GLSurfaceView implements GLSurfaceView.Renderer
 {
-    private int m_unit = 0;
-    public final int step = Q3EUtils.dip2px(getContext(), 5);
-    private FloatBuffer m_gridBuffer = null;
-    private int m_numGridLineVertex = 0;
-    private Toast m_info;
-    private final Object m_gridLock = new Object();
-    private boolean m_edited = false;
+    private       int          m_unit              = 0;
+    public final  int          step                = Q3EUtils.dip2px(getContext(), 5);
+    private       FloatBuffer  m_gridBuffer        = null;
+    private       int          m_numGridLineVertex = 0;
+    private final Object       m_gridLock          = new Object();
+    private       boolean      m_edited            = false;
+    private final int[]        drawerTextureId     = {0, 0};
+    private       ViewGroup    layout;
 
     public Q3EUiView(Context context)
     {
@@ -89,6 +92,7 @@ public class Q3EUiView extends GLSurfaceView implements GLSurfaceView.Renderer
         gl.glMatrixMode(gl.GL_PROJECTION);
         gl.glLoadIdentity();
         gl.glOrthof(0, width, yoffset + height, yoffset, -1, 1);
+        gl.glMatrixMode(gl.GL_MODELVIEW);
 
         ((GL11) gl).glTexEnvi(gl.GL_TEXTURE_ENV, gl.GL_TEXTURE_ENV_MODE, gl.GL_MODULATE);
 
@@ -113,26 +117,29 @@ public class Q3EUiView extends GLSurfaceView implements GLSurfaceView.Renderer
         gl.glVertexPointer(2, gl.GL_FLOAT, 0, linebuffer);
         gl.glDrawArrays(gl.GL_LINES, 0, 2);
 
-        gl.glColor4f(1, 1, 1, 0.2f);
+        gl.glColor4f(1, 1, 1, 1); // 0.2f
         gl.glVertexPointer(2, gl.GL_FLOAT, 0, notifybuffer);
+        gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+        gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, notifyTexCoordBuffer);
         gl.glPushMatrix();
         {
             if (yoffset == 0)
             {
+                gl.glBindTexture(gl.GL_TEXTURE_2D, drawerTextureId[0]);
                 gl.glTranslatef(0, height - height / 8, 0);
                 gl.glDrawArrays(gl.GL_TRIANGLE_STRIP, 0, 4);
                 //gl.glTranslatef(0, -(height-height/8), 0);
             }
             else
             {
+                gl.glBindTexture(gl.GL_TEXTURE_2D, drawerTextureId[1]);
                 gl.glTranslatef(0, yoffset, 0);
                 gl.glDrawArrays(gl.GL_TRIANGLE_STRIP, 0, 4);
                 //gl.glTranslatef(0, -yoffset, 0);
             }
         }
         gl.glPopMatrix();
-
-        gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+        gl.glBindTexture(gl.GL_TEXTURE_2D, 0);
 
         synchronized (paint_elements) {
             for (Paintable p : paint_elements)
@@ -166,7 +173,8 @@ public class Q3EUiView extends GLSurfaceView implements GLSurfaceView.Renderer
 
     public void RefreshTgt(FingerUi fn)
     {
-        if (fn.target instanceof Button)
+        SetModified();
+        /*if (fn.target instanceof Button)
         {
             final Button tmp = (Button) fn.target;
             final Button newb = Button.Move(tmp, uildr.gl);
@@ -202,9 +210,9 @@ public class Q3EUiView extends GLSurfaceView implements GLSurfaceView.Renderer
             touch_elements.set(touch_elements.indexOf(tmp), newd);
             paint_elements.set(paint_elements.indexOf(tmp), newd);
             m_edited = true;
-        }
+        }*/
 
-        PrintInfo(fn);
+        //PrintInfo(fn);
     }
 
     private boolean NormalizeTgtPosition(FingerUi fn)
@@ -318,7 +326,6 @@ public class Q3EUiView extends GLSurfaceView implements GLSurfaceView.Renderer
         if ((act == -1) && (!fn.movd))
         {
             mover.show(x, y, fn);
-            PrintInfo(fn);
         }
 
         //k: renormalize position
@@ -361,12 +368,13 @@ public class Q3EUiView extends GLSurfaceView implements GLSurfaceView.Renderer
         m_edited = false;
     }
 
-    UiLoader uildr;
-    MenuOverlay mover;
+    UiLoader      uildr;
+    UiViewOverlay mover;
 
     public int yoffset = 0;
     FloatBuffer linebuffer = ByteBuffer.allocateDirect(4 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
     FloatBuffer notifybuffer = ByteBuffer.allocateDirect(4 * 8).order(ByteOrder.nativeOrder()).asFloatBuffer();
+    private FloatBuffer notifyTexCoordBuffer = ByteBuffer.allocateDirect(4 * 8).order(ByteOrder.nativeOrder()).asFloatBuffer();
 
     @Override
     public void onSurfaceChanged(GL10 gl, int w, int h)
@@ -396,9 +404,18 @@ public class Q3EUiView extends GLSurfaceView implements GLSurfaceView.Renderer
             notifybuffer.put(notifyquad);
             notifybuffer.position(0);
 
+            float[] notifyquadTexCoord = {0, 0, 1, 0, 0, 1, 1, 1};
+            notifyTexCoordBuffer.put(notifyquadTexCoord);
+            notifyTexCoordBuffer.position(0);
+
             uildr = new UiLoader(this, gl, width, height);
 
-            mover = new MenuOverlay(0, 0, width / 4, width / 6, this);
+            final int moverWidth = Math.min(width / 4, 360);
+            final int moverHeight = Math.min(width / 6, 320);
+            if(true)
+                mover = new MenuOverlayView(moverWidth, layout, this);
+            else
+                mover = new MenuOverlay(0, 0, moverWidth, moverHeight, this);
             mover.loadtex(gl);
 
             for (int i = 0; i < Q3EUtils.q3ei.UI_SIZE; i++)
@@ -413,9 +430,17 @@ public class Q3EUiView extends GLSurfaceView implements GLSurfaceView.Renderer
             for (int i = 0; i < fingers.length; i++)
                 fingers[i] = new FingerUi(null, i);
 
+
+            int[] notifyColor = { 102, 255, 255, 255 };
+            int[] notifyOpenTextColor = { 204, 0, 255, 0 };
+            int[] notifyCloseTextColor = { 204, 255, 0, 0 };
+            drawerTextureId[0] = KGLBitmapTexture.GenRectTexture(gl, width, height / 8, notifyColor, "↑↑↑ " + Q3ELang.tr(getContext(), R.string.open) + " ↑↑↑", height / 16, notifyOpenTextColor);
+            drawerTextureId[1] = KGLBitmapTexture.GenRectTexture(gl, width, height / 8, notifyColor, "↓↓↓ " + Q3ELang.tr(getContext(), R.string.close) + " ↓↓↓", height / 16, notifyCloseTextColor);
+
             if(m_unit <= 0)
                 m_unit = GetPerfectGridSize();
             MakeGrid();
+
             mInit = true;
         }
     }
@@ -440,12 +465,16 @@ public class Q3EUiView extends GLSurfaceView implements GLSurfaceView.Renderer
                 fingers[pid].target = mover;
             }
             else
+            {
                 for (TouchListener tl : touch_elements)
+                {
                     if (tl.isInside(x, y))
                     {
                         fingers[pid].target = tl;
                         break;
                     }
+                }
+            }
 
             if (fingers[pid].target == null)
             {
@@ -545,97 +574,6 @@ public class Q3EUiView extends GLSurfaceView implements GLSurfaceView.Renderer
             mHandler.post(runnable);
     }
 
-    public void PrintInfo(FingerUi fn)
-    {
-        if (null != m_info)
-        {
-            m_info.cancel();
-            m_info = null;
-        }
-
-        Context context = getContext();
-        StringBuilder sb = new StringBuilder();
-        if (fn.target instanceof Slider)
-        {
-            Slider tmp = (Slider) fn.target;
-            sb.append(Q3ELang.tr(context, R.string.position_))
-                    .append(tmp.cx)
-                    .append(", ")
-                    .append(tmp.cy)
-            ;
-            sb.append("\n");
-            sb.append(Q3ELang.tr(context, R.string.size_))
-                    .append(tmp.width)
-                    .append("x")
-                    .append(tmp.height)
-            ;
-            sb.append("\n");
-            sb.append(Q3ELang.tr(context, R.string.opacity_))
-                    .append(String.format("%.1f", tmp.alpha))
-            ;
-        }
-        else if (fn.target instanceof Button)
-        {
-            Button tmp = (Button) fn.target;
-            sb.append(Q3ELang.tr(context, R.string.position_))
-                    .append(tmp.cx)
-                    .append(", ")
-                    .append(tmp.cy)
-            ;
-            sb.append("\n");
-            sb.append(Q3ELang.tr(context, R.string.size_))
-                    .append(tmp.width)
-                    .append("x")
-                    .append(tmp.height)
-            ;
-            sb.append("\n");
-            sb.append(Q3ELang.tr(context, R.string.opacity_))
-                    .append(String.format("%.1f", tmp.alpha))
-            ;
-        }
-        else if (fn.target instanceof Joystick)
-        {
-            Joystick tmp = (Joystick) fn.target;
-            sb.append(Q3ELang.tr(context, R.string.position_))
-                    .append(tmp.cx)
-                    .append(", ")
-                    .append(tmp.cy)
-            ;
-            sb.append("\n");
-            sb.append(Q3ELang.tr(context, R.string.radius_))
-                    .append(tmp.size)
-            ;
-            sb.append("\n");
-            sb.append(Q3ELang.tr(context, R.string.opacity_))
-                    .append(String.format("%.1f", tmp.alpha))
-            ;
-        }
-        //k
-        else if (fn.target instanceof Disc)
-        {
-            Disc tmp = (Disc) fn.target;
-            sb.append(Q3ELang.tr(context, R.string.position_))
-                    .append(tmp.cx)
-                    .append(", ")
-                    .append(tmp.cy)
-            ;
-            sb.append("\n");
-            sb.append(Q3ELang.tr(context, R.string.center_radius_))
-                    .append(tmp.size)
-            ;
-            sb.append("\n");
-            sb.append(Q3ELang.tr(context, R.string.opacity_))
-                    .append(String.format("%.1f", tmp.alpha))
-            ;
-        }
-        if (sb.length() > 0)
-        {
-            m_info = Toast.makeText(getContext(), sb.toString(), Toast.LENGTH_SHORT);
-            m_info.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 0);
-            m_info.show();
-        }
-    }
-
     public void UpdateOnScreenButtonsOpacity(float alpha)
     {
         if (!mInit)
@@ -660,58 +598,94 @@ public class Q3EUiView extends GLSurfaceView implements GLSurfaceView.Renderer
 
         synchronized (paint_elements)
         {
-            Context context = getContext();
-            int[] defSizes = Q3EControls.GetDefaultSize((Activity) context, true);
+            int[] defSizes = Q3EControls.GetDefaultSize((Activity) getContext(), true);
             for (int i = 0; i < paint_elements.size(); i++)
             {
                 Paintable p = paint_elements.get(i);
-                TouchListener touchListener = touch_elements.get(i);
-                TouchListener newTL = null;
-                Paintable newP = null;
                 float size = defSizes[i];
+
                 if (p instanceof Slider)
                 {
                     Slider tmp = (Slider) p;
-                    float aspect = (float) tmp.height / tmp.width;
-                    tmp.width = (int) (size * scale);
-                    tmp.height = (int) (aspect * tmp.width + 0.5f);
-                    final Slider news = Slider.Move(tmp, uildr.gl);
-                    newTL = news;
-                    newP = news;
+                    float aspect = Slider.CalcAspect(tmp.Style());
+                    int width = (int) (size * scale);
+                    int height = (int) (aspect * width + 0.5f);
+                    tmp.Resize(width, height);
                 }
                 else if (p instanceof Button)
                 {
                     Button tmp = (Button) p;
-                    float aspect = (float) tmp.height / tmp.width;
-                    tmp.width = (int) (size * scale);
-                    tmp.height = (int) (aspect * tmp.width + 0.5f);
-                    final Button newb = Button.Move(tmp, uildr.gl);
-                    newTL = newb;
-                    newP = newb;
+                    float aspect = Button.CalcAspect(tmp.Style());
+                    int width = (int) (size * scale);
+                    int height = (int) (aspect * width + 0.5f);
+                    tmp.Resize(width, height);
                 }
                 else if (p instanceof Joystick)
                 {
                     Joystick tmp = (Joystick) p;
-                    tmp.size = (int) (size * scale) * 2;
-                    final Joystick newj = Joystick.Move(tmp, uildr.gl, Q3EUtils.q3ei.joystick_release_range, Q3EUtils.q3ei.joystick_inner_dead_zone);
-                    newTL = newj;
-                    newP = newj;
+                    int radius = (int) (size * scale) * 2;
+                    tmp.Resize(radius / 2);
                 }
                 else if (p instanceof Disc)
                 {
                     Disc tmp = (Disc) p;
-                    tmp.size = (int) (size * scale) * 2;
-                    final Disc newd = Disc.Move(tmp, uildr.gl);
-                    newTL = newd;
-                    newP = newd;
+                    int radius = (int) (size * scale) * 2;
+                    tmp.Resize(radius / 2);
                 }
-                touch_elements.set(i, newTL);
-                paint_elements.set(i, newP);
-                for (FingerUi finger : fingers)
+
+                m_edited = true;
+            }
+        }
+
+        //requestRender();
+    }
+
+    public void ResetOnScreenButtonSize(TouchListener tgt)
+    {
+        if (!mInit || null == tgt)
+            return;
+
+        synchronized (paint_elements)
+        {
+            for (int i = 0; i < paint_elements.size(); i++)
+            {
+                TouchListener tl = touch_elements.get(i);
+                if(tl != tgt)
+                    continue;
+
+                int[] defSizes = Q3EControls.GetDefaultSize((Activity) getContext(), true);
+                Paintable p = paint_elements.get(i);
+                int size = defSizes[i];
+
+                if (p instanceof Slider)
                 {
-                    if (null != finger && finger.target == touchListener)
-                        finger.target = newTL;
+                    Slider tmp = (Slider) p;
+                    float aspect = Slider.CalcAspect(tmp.Style());
+                    int width = size;
+                    int height = (int) (aspect * width + 0.5f);
+                    tmp.Resize(width, height);
                 }
+                else if (p instanceof Button)
+                {
+                    Button tmp = (Button) p;
+                    float aspect = Button.CalcAspect(tmp.Style());
+                    int width = size;
+                    int height = (int) (aspect * width + 0.5f);
+                    tmp.Resize(width, height);
+                }
+                else if (p instanceof Joystick)
+                {
+                    Joystick tmp = (Joystick) p;
+                    int radius = size * 2;
+                    tmp.Resize(radius / 2);
+                }
+                else if (p instanceof Disc)
+                {
+                    Disc tmp = (Disc) p;
+                    int radius = size * 2;
+                    tmp.Resize(radius / 2);
+                }
+
                 m_edited = true;
             }
         }
@@ -759,6 +733,54 @@ public class Q3EUiView extends GLSurfaceView implements GLSurfaceView.Renderer
                     Disc tmp = (Disc) p;
                     tmp.SetPosition(x, y);
                 }
+            }
+        }
+
+        //requestRender();
+    }
+
+    public void ResetOnScreenButtonPosition(TouchListener tgt)
+    {
+        if (!mInit || null == tgt)
+            return;
+
+        synchronized (paint_elements)
+        {
+            Q3EUiConfig uiConfig = (Q3EUiConfig) getContext();
+            Point[] points = Q3EControls.GetDefaultPosition(uiConfig, uiConfig.FriendlyEdge(), -1.0f, true);
+
+            for (int i = 0; i < paint_elements.size(); i++)
+            {
+                TouchListener tl = touch_elements.get(i);
+                if(tl != tgt)
+                    continue;
+
+                Paintable p = paint_elements.get(i);
+                Point point = points[i];
+                int x = point.x;
+                int y = point.y;
+                if (p instanceof Slider)
+                {
+                    Slider tmp = (Slider) p;
+                    tmp.SetPosition(x, y);
+                }
+                else if (p instanceof Button)
+                {
+                    Button tmp = (Button) p;
+                    tmp.SetPosition(x, y);
+                }
+                else if (p instanceof Joystick)
+                {
+                    Joystick tmp = (Joystick) p;
+                    tmp.SetPosition(x, y);
+                }
+                else if (p instanceof Disc)
+                {
+                    Disc tmp = (Disc) p;
+                    tmp.SetPosition(x, y);
+                }
+
+                m_edited = true;
             }
         }
 
@@ -846,5 +868,10 @@ public class Q3EUiView extends GLSurfaceView implements GLSurfaceView.Renderer
     public boolean IsModified()
     {
         return m_edited;
+    }
+
+    public void SetLayout(ViewGroup layout)
+    {
+        this.layout = layout;
     }
 }
