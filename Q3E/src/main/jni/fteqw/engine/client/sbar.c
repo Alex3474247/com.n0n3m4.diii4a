@@ -1448,7 +1448,15 @@ void Sbar_DrawNum (float x, float y, int num, int digits, int color)
 		return;
 	}
 	if (l < digits)
-		x += (digits-l)*24;
+		//x += (digits-l)*24;
+        if (digits <= 3)
+		{
+			x += (digits - l) * 24;
+		}
+		else
+		{
+			x += (digits - l) * (24 - (digits - 3) * 4);
+		}
 
 	while (*ptr)
 	{
@@ -1458,7 +1466,15 @@ void Sbar_DrawNum (float x, float y, int num, int digits, int color)
 			frame = *ptr -'0';
 
 		Sbar_DrawPic (x, y, 24, 24, sb_nums[color][frame]);
-		x += 24;
+		//x += 24;
+        if (digits <= 3)
+		{
+			x += 24;
+		}
+		else
+		{
+			x += (24 - (digits - 3) * 4);
+		}
 		ptr++;
 	}
 }
@@ -2305,7 +2321,7 @@ void Sbar_DrawNormal (playerview_t *pv)
 	{
 		if (sbar_rogue)
 		{
-			Sbar_DrawNum (24, 0, pv->stats[STAT_ARMOR], 3,
+			Sbar_DrawNum (24, 0, pv->stats[STAT_ARMOR], 4,
 				pv->stats[STAT_ARMOR] <= 25);
 			if (pv->stats[STAT_ITEMS] & RIT_ARMOR3)
 				Sbar_DrawPic (0, 0, 24, 24, sb_armor[2]);
@@ -2316,7 +2332,7 @@ void Sbar_DrawNormal (playerview_t *pv)
 		}
 		else
 		{
-			Sbar_DrawNum (24, 0, pv->stats[STAT_ARMOR], 3,
+			Sbar_DrawNum (24, 0, pv->stats[STAT_ARMOR], 4,
 				pv->stats[STAT_ARMOR] <= 25);
 			if (pv->stats[STAT_ITEMS] & IT_ARMOR3)
 				Sbar_DrawPic (0, 0, 24, 24, sb_armor[2]);
@@ -2331,7 +2347,7 @@ void Sbar_DrawNormal (playerview_t *pv)
 	Sbar_DrawFace (pv);
 
 // health
-	Sbar_DrawNum (136, 0, pv->stats[STAT_HEALTH], 3
+	Sbar_DrawNum (136, 0, pv->stats[STAT_HEALTH], 4
 	, pv->stats[STAT_HEALTH] <= 25);
 
 // ammo icon
@@ -2364,7 +2380,7 @@ void Sbar_DrawNormal (playerview_t *pv)
 			Sbar_DrawPic (224, 0, 24, 24, sb_ammo[3]);
 	}
 
-	Sbar_DrawNum (248, 0, pv->stats[STAT_AMMO], 3
+	Sbar_DrawNum (248, 0, pv->stats[STAT_AMMO], 4
 	, pv->stats[STAT_AMMO] <= 10);
 }
 
@@ -2773,7 +2789,7 @@ static void Sbar_Hexen2DrawBasic(playerview_t *pv)
 	maxval = pv->stats[STAT_H2_MAXMANA];
 	val = pv->stats[STAT_H2_BLUEMANA];
 	val = bound(0, val, maxval);
-	Sbar_DrawTinyStringf(201, 22, "%03d", val);
+	Sbar_DrawTinyStringf(201, 22, "%04d", val);
 	if(val)
 	{
 		Sbar_DrawMPic(190, 26-(int)((val*18.0)/(float)maxval+0.5), 3, 19, R2D_SafeCachePic("gfx/bmana.lmp"));
@@ -2784,7 +2800,7 @@ static void Sbar_Hexen2DrawBasic(playerview_t *pv)
 	maxval = pv->stats[STAT_H2_MAXMANA];
 	val = pv->stats[STAT_H2_GREENMANA];
 	val = bound(0, val, maxval);
-	Sbar_DrawTinyStringf(243, 22, "%03d", val);
+	Sbar_DrawTinyStringf(243, 22, "%04d", val);
 	if(val)
 	{
 		Sbar_DrawMPic(232, 26-(int)((val*18.0)/(float)maxval+0.5), 3, 19, R2D_SafeCachePic("gfx/gmana.lmp"));
@@ -2796,11 +2812,11 @@ static void Sbar_Hexen2DrawBasic(playerview_t *pv)
 	val = pv->stats[STAT_HEALTH];
 	if (val < -99)
 		val = -99;
-	Sbar_Hexen2DrawNum(58, 14, val, 3);
+	Sbar_Hexen2DrawNum(58, 14, val, 4);
 
 	//armour
 	val = Sbar_Hexen2ArmourValue(pv);
-	Sbar_Hexen2DrawNum(105, 14, val, 2);
+	Sbar_Hexen2DrawNum(105, 14, val, 3);
 
 //	SetChainPosition(cl.v.health, cl.v.max_health);
 	chainpos = (195.0f*pv->stats[STAT_HEALTH]) / pv->stats[STAT_H2_MAXHEALTH];
@@ -2822,10 +2838,10 @@ static void Sbar_Hexen2DrawMinimal(playerview_t *pv)
 	Sbar_DrawMPic(3, y, 31, 17, R2D_SafeCachePic("gfx/bmmana.lmp"));
 	Sbar_DrawMPic(3, y+18, 31, 17, R2D_SafeCachePic("gfx/gmmana.lmp"));
 
-	Sbar_DrawTinyStringf(10, y+6, "%03d", pv->stats[STAT_H2_BLUEMANA]);
-	Sbar_DrawTinyStringf(10, y+18+6, "%03d", pv->stats[STAT_H2_GREENMANA]);
+	Sbar_DrawTinyStringf(10, y+6, "%04d", pv->stats[STAT_H2_BLUEMANA]);
+	Sbar_DrawTinyStringf(10, y+18+6, "%04d", pv->stats[STAT_H2_GREENMANA]);
 
-	Sbar_Hexen2DrawNum(38, y+18, pv->stats[STAT_HEALTH], 3);
+	Sbar_Hexen2DrawNum(38, y+18, pv->stats[STAT_HEALTH], 4);
 
 	if (pv->stats[STAT_H2_CNT_FIRST+pv->sb_hexen2_cur_item])
 		Sbar_Hexen2DrawItem(pv, 320-32, y+10, pv->sb_hexen2_cur_item);
