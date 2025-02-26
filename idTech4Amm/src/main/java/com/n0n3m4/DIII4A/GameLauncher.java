@@ -2194,6 +2194,12 @@ public class GameLauncher extends Activity
         String game = GetGameModFromCommand();
         if (game == null || game.isEmpty())
             game = Q3EUtils.q3ei.game_base;
+		else
+		{
+			String str = m_gameManager.GetGameFileOfMod(game);
+			if(null != str)
+				game = str;
+		}
 		String path = KStr.AppendPath(V.edt_path.getText().toString(), Q3EUtils.q3ei.subdatadir);
 		if(findInHome)
 			path = KStr.AppendPath(path, Q3EUtils.q3ei.GetGameHomeDirectoryPath());
@@ -3402,6 +3408,7 @@ public class GameLauncher extends Activity
 			fetqwVisible = true;
 			openglVisible = false;
 			quickloadVisible = false;
+			skipintroVisible = false;
 		}
         else
         {
@@ -3864,7 +3871,7 @@ public class GameLauncher extends Activity
 				SetGameModToCommand(prop.fs_game);
 			else
 				RemoveGameModFromCommand();
-			RemoveProp("fs_game_base");
+			RemoveSecondaryGameModFromCommand();
 			RemoveProp("harm_fs_gameLibPath");
 		}
 		else
@@ -3874,9 +3881,9 @@ public class GameLauncher extends Activity
 			else
 				SetGameModToCommand(prop.fs_game);
 			if(null == prop.fs_game_base || prop.fs_game_base.isEmpty() || !prop.IsValid())
-				RemoveProp("fs_game_base");
-			else if(Q3EUtils.q3ei.IsIdTech4() || Q3EUtils.q3ei.isD3BFG || Q3EUtils.q3ei.isTDM)
-				SetProp("fs_game_base", prop.fs_game_base);
+				RemoveSecondaryGameModFromCommand();
+			else if(Q3EUtils.q3ei.IsIdTech4() || Q3EUtils.q3ei.isD3BFG || Q3EUtils.q3ei.isTDM || Q3EUtils.q3ei.isFTEQW)
+				SetSecondaryGameModToCommand(prop.fs_game_base);
 			RemoveProp("harm_fs_gameLibPath");
 		}
 		m_commandTextWatcher.Install(b);
@@ -4018,6 +4025,26 @@ public class GameLauncher extends Activity
 			RemoveParamPrefix(KidTechCommand.ARG_PREFIX_ALL, arg);
 		else if(Q3EUtils.q3ei.isFTEQW)
 			RemoveAllParamsPrefix(KidTechCommand.ARG_PREFIX_QUAKETECH);
+		else
+			RemoveProp(arg);
+	}
+
+	private void SetSecondaryGameModToCommand(String mod)
+	{
+		String arg = Q3EUtils.q3ei.GetSecondaryGameCommandParm();
+		if(Q3EUtils.q3ei.isFTEQW)
+		{
+			SetParamPrefix(KidTechCommand.ARG_PREFIX_QUAKETECH, arg, mod);
+		}
+		else
+			SetProp(arg, mod);
+	}
+
+	private void RemoveSecondaryGameModFromCommand()
+	{
+		String arg = Q3EUtils.q3ei.GetSecondaryGameCommandParm();
+		if(Q3EUtils.q3ei.isFTEQW)
+			RemoveParamPrefix(KidTechCommand.ARG_PREFIX_QUAKETECH, arg);
 		else
 			RemoveProp(arg);
 	}

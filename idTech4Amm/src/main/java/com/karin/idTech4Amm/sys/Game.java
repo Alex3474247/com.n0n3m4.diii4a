@@ -66,10 +66,10 @@ public enum Game
 
     // GZDOOM
     //GZDOOM_BASE(Q3EGlobals.GAME_GZDOOM, "", "", "", false, R.string.doom_base),
-    GZDOOM_DOOM1(Q3EGlobals.GAME_GZDOOM, "doom", "DOOM.WAD", "gzdoom", "", "DOOM.WAD", true, R.string.doom1_base),
-    GZDOOM_DOOM2(Q3EGlobals.GAME_GZDOOM, "doom2", "DOOM2.WAD", "gzdoom", "", "DOOM2.WAD", true, R.string.doom2_base),
-    GZDOOM_FREEDOOM1(Q3EGlobals.GAME_GZDOOM, "freedoom1", "freedoom1.wad", "gzdoom", "", "freedoom1.wad", true, R.string.freedoom1_base),
-    GZDOOM_FREEDOOM2(Q3EGlobals.GAME_GZDOOM, "freedoom2", "freedoom2.wad", "gzdoom", "", "freedoom2.wad", true, R.string.freedoom2_base),
+    GZDOOM_DOOM1(Q3EGlobals.GAME_GZDOOM, "DOOM.WAD", "DOOM.WAD", "gzdoom", "", "DOOM.WAD", true, R.string.doom1_base),
+    GZDOOM_DOOM2(Q3EGlobals.GAME_GZDOOM, "DOOM2.WAD", "DOOM2.WAD", "gzdoom", "", "DOOM2.WAD", true, R.string.doom2_base),
+    GZDOOM_FREEDOOM1(Q3EGlobals.GAME_GZDOOM, "freedoom1.wad", "freedoom1.wad", "gzdoom", "", "freedoom1.wad", true, R.string.freedoom1_base),
+    GZDOOM_FREEDOOM2(Q3EGlobals.GAME_GZDOOM, "freedoom2.wad", "freedoom2.wad", "gzdoom", "", "freedoom2.wad", true, R.string.freedoom2_base),
 
     // Wolfenstein: Enemy Territory
     ETW_BASE(Q3EGlobals.GAME_ETW, "etmain", "", "etwgame", "", "etmain", false, R.string.etw_base),
@@ -78,11 +78,12 @@ public enum Game
     REALRTCW_BASE(Q3EGlobals.GAME_REALRTCW, "Main", "", "realrtcwgame", "", "Main", false, R.string.realrtcw_base),
 
     // FTEQW
-    FTEQW_Q1(Q3EGlobals.GAME_FTEQW, "quake1", "quake1", "fteqw", "", "quake1", true, R.string.quake_1_base),
-    FTEQW_Q2(Q3EGlobals.GAME_FTEQW, "quake2", "quake2", "fteqw", "", "quake2", true, R.string.quake_2_base),
-    FTEQW_Q3(Q3EGlobals.GAME_FTEQW, "quake3", "quake3", "fteqw", "", "quake3", true, R.string.quake_3_base),
+    FTEQW_Q1(Q3EGlobals.GAME_FTEQW, "quake1", "quake1", "fteqw", "", "id1", true, R.string.quake_1_base),
+    FTEQW_Q2(Q3EGlobals.GAME_FTEQW, "quake2", "quake2", "fteqw", "", "baseq2", true, R.string.quake_2_base),
+    FTEQW_Q3(Q3EGlobals.GAME_FTEQW, "quake3", "quake3", "fteqw", "", "baseq3", true, R.string.quake_3_base),
     FTEQW_H2(Q3EGlobals.GAME_FTEQW, "hexen2", "hexen2", "fteqw", "", "data1", true, R.string.hexen_2_base),
     FTEQW_HL(Q3EGlobals.GAME_FTEQW, "halflife", "halflife", "fteqw", "", "valve", true, R.string.halflife_base),
+    FTEQW_CS1_5(Q3EGlobals.GAME_FTEQW, "cstrike_1_5", "halflife", "fteqw", "cstrike", "cstrike", true, R.string.cs_1_5_base),
     ;
 
     public final String  type; // game type: doom3/quake4/prey2006/......
