@@ -11429,6 +11429,7 @@ idPlayer::Event_SetHealth
 =============
 */
 void idPlayer::Event_SetHealth( float newHealth ) {
+    if (health < newHealth)
 	health = idMath::ClampInt( 1 , inventory.maxHealth, newHealth );
 }
 /*
@@ -11437,6 +11438,7 @@ idPlayer::Event_SetArmor
 =============
 */
 void idPlayer::Event_SetArmor( float newArmor ) {
+    if(inventory.armor < newArmor)
 	inventory.armor = idMath::ClampInt( 0 , inventory.maxarmor, newArmor );
 }
 
@@ -13102,9 +13104,9 @@ idPlayer::RemoveWeapon
 ===============
 */
 void idPlayer::RemoveWeapon( const char *weap ) {
-	if ( weap && *weap ) {
+	/*if ( weap && *weap ) {
 		inventory.Drop( spawnArgs, spawnArgs.GetString( weap ), -1 );
-	}
+	}*/
 }
 
 /*
