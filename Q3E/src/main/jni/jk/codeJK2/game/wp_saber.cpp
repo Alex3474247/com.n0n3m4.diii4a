@@ -5505,10 +5505,10 @@ void WP_ForceKnockdown( gentity_t *self, gentity_t *pusher, qboolean pull, qbool
 			&& !PM_InKnockDown( &self->client->ps ) )
 		{
 			int knockAnim = BOTH_KNOCKDOWN1;//default knockdown
-			if ( pusher->client->NPC_class == CLASS_DESANN && self->client->NPC_class != CLASS_LUKE )
+			/*if ( pusher->client->NPC_class == CLASS_DESANN && self->client->NPC_class != CLASS_LUKE )
 			{//desann always knocks down, unless you're Luke
 				strongKnockdown = qtrue;
-			}
+			}*/
 			if ( !self->s.number
 				&& !strongKnockdown
 				&& ( (!pull&&(self->client->ps.forcePowerLevel[FP_PUSH]>FORCE_LEVEL_1||!g_spskill->integer)) || (pull&&(self->client->ps.forcePowerLevel[FP_PULL]>FORCE_LEVEL_1||!g_spskill->integer)) )	)
@@ -6995,8 +6995,8 @@ void ForceGrip( gentity_t *self )
 			return;
 			break;
 		case CLASS_DESANN://Desann cannot be gripped, he just pushes you back instantly
-			Jedi_PlayDeflectSound( traceEnt );
-			ForceThrow( traceEnt, qfalse );
+			//Jedi_PlayDeflectSound( traceEnt );
+			//ForceThrow( traceEnt, qfalse );
 			return;
 			break;
 		case CLASS_REBORN:
@@ -8415,22 +8415,23 @@ void WP_InitForcePowers( gentity_t *ent )
 		ent->client->NPC_class == CLASS_JEDI ||
 		ent->client->NPC_class == CLASS_LUKE )
 	{//an NPC jedi
-		ent->client->ps.forcePower = ent->client->ps.forcePowerMax = FORCE_POWER_MAX;
+	//	ent->client->ps.forcePower = ent->client->ps.forcePowerMax = FORCE_POWER_MAX;
+        ent->client->ps.forcePower = ent->client->ps.forcePowerMax = 100;
 		ent->client->ps.forcePowerRegenDebounceTime = 0;
 		ent->client->ps.forceGripEntityNum = ENTITYNUM_NONE;
 
 		if ( ent->client->NPC_class == CLASS_DESANN )
 		{
 			ent->client->ps.forcePowersKnown = ( 1 << FP_LEVITATION )|( 1 << FP_PUSH )|( 1 << FP_PULL )|( 1 << FP_GRIP )|( 1 << FP_LIGHTNING)|( 1 << FP_SABERTHROW)|( 1 << FP_SPEED)|( 1 << FP_SABER_DEFENSE )|( 1 << FP_SABER_OFFENSE );
-			ent->client->ps.forcePowerLevel[FP_LEVITATION] = FORCE_LEVEL_3;
-			ent->client->ps.forcePowerLevel[FP_PUSH] = FORCE_LEVEL_3;
-			ent->client->ps.forcePowerLevel[FP_PULL] = FORCE_LEVEL_3;
-			ent->client->ps.forcePowerLevel[FP_SABERTHROW] = FORCE_LEVEL_3;
-			ent->client->ps.forcePowerLevel[FP_GRIP] = FORCE_LEVEL_3;
-			ent->client->ps.forcePowerLevel[FP_LIGHTNING] = FORCE_LEVEL_3;
-			ent->client->ps.forcePowerLevel[FP_SPEED] = FORCE_LEVEL_3;
-			ent->client->ps.forcePowerLevel[FP_SABER_DEFENSE] = FORCE_LEVEL_3;
-			ent->client->ps.forcePowerLevel[FP_SABER_OFFENSE] = FORCE_LEVEL_3;
+			ent->client->ps.forcePowerLevel[FP_LEVITATION] = FORCE_LEVEL_1;
+			ent->client->ps.forcePowerLevel[FP_PUSH] = FORCE_LEVEL_1;
+			ent->client->ps.forcePowerLevel[FP_PULL] = FORCE_LEVEL_1;
+			ent->client->ps.forcePowerLevel[FP_SABERTHROW] = FORCE_LEVEL_1;
+			ent->client->ps.forcePowerLevel[FP_GRIP] = FORCE_LEVEL_0;
+			ent->client->ps.forcePowerLevel[FP_LIGHTNING] = FORCE_LEVEL_1;
+			ent->client->ps.forcePowerLevel[FP_SPEED] = FORCE_LEVEL_1;
+			ent->client->ps.forcePowerLevel[FP_SABER_DEFENSE] = FORCE_LEVEL_1;
+			ent->client->ps.forcePowerLevel[FP_SABER_OFFENSE] = FORCE_LEVEL_1;
 		}
 		else if ( ent->client->NPC_class == CLASS_LUKE )
 		{

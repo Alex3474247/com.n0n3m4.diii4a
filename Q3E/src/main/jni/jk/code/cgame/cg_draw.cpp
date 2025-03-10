@@ -242,7 +242,7 @@ static void CG_DrawForcePower(const centity_t *cent,const int xPos,const int yPo
 	CG_DrawNumField (
 		otherHUDBits[OHB_FORCEAMOUNT].xPos,
 		otherHUDBits[OHB_FORCEAMOUNT].yPos,
-		3,
+		5,
 		cent->gent->client->ps.forcePower,
 		otherHUDBits[OHB_FORCEAMOUNT].width,
 		otherHUDBits[OHB_FORCEAMOUNT].height,
@@ -385,9 +385,9 @@ static void CG_DrawAmmo(const centity_t	*cent,const int xPos,const int yPos)
 	cgi_R_SetColor( calcColor );
 
 	CG_DrawNumField (
-		otherHUDBits[OHB_AMMOAMOUNT].xPos,
+		otherHUDBits[OHB_AMMOAMOUNT].xPos+4,
 		otherHUDBits[OHB_AMMOAMOUNT].yPos,
-		3,
+		5,
 		ps->ammo[weaponData[cent->currentState.weapon].ammoIndex],
 		otherHUDBits[OHB_AMMOAMOUNT].width,
 		otherHUDBits[OHB_AMMOAMOUNT].height,
@@ -476,9 +476,9 @@ static void CG_DrawHealth(const int x,const int y,const int w,const int h)
 	cgi_R_SetColor( otherHUDBits[OHB_HEALTHAMOUNT].color );
 
 	CG_DrawNumField (
-		otherHUDBits[OHB_HEALTHAMOUNT].xPos,
+		otherHUDBits[OHB_HEALTHAMOUNT].xPos-8,
 		otherHUDBits[OHB_HEALTHAMOUNT].yPos,
-		3,
+		5,
 		ps->stats[STAT_HEALTH],
 		otherHUDBits[OHB_HEALTHAMOUNT].width,
 		otherHUDBits[OHB_HEALTHAMOUNT].height,
@@ -558,13 +558,23 @@ static void CG_DrawArmor(const int x,const int y,const int w,const int h)
 	CG_DrawNumField (
 		otherHUDBits[OHB_ARMORAMOUNT].xPos,
 		otherHUDBits[OHB_ARMORAMOUNT].yPos,
-		3,
+		5,
 		ps->stats[STAT_ARMOR],
 		otherHUDBits[OHB_ARMORAMOUNT].width,
 		otherHUDBits[OHB_ARMORAMOUNT].height,
 		NUM_FONT_SMALL,
 		qfalse);
-
+	//begin Alex, draw battery charge
+	CG_DrawNumField(
+		otherHUDBits[OHB_ARMORAMOUNT].xPos+16,
+		otherHUDBits[OHB_ARMORAMOUNT].yPos-16,
+		5,
+		ps->batteryCharge,
+		otherHUDBits[OHB_ARMORAMOUNT].width,
+		otherHUDBits[OHB_ARMORAMOUNT].height,
+		NUM_FONT_SMALL,
+		qfalse);
+	//end Alex
 
 	// If armor is low, flash a graphic to warn the player
 	if (ps->stats[STAT_ARMOR])	// Is there armor? Draw the HUD Armor TIC

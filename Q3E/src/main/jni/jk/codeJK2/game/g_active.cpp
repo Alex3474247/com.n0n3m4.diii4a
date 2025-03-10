@@ -2278,15 +2278,15 @@ extern cvar_t	*g_skippingcin;
 				}
 				//FIXME: need impact sound event
 				GEntity_PainFunc( groundEnt, ent, ent, groundEnt->currentOrigin, 0, MOD_CRUSH );
-				if ( groundEnt->client->NPC_class == CLASS_DESANN && ent->client->NPC_class != CLASS_LUKE )
+				/*if ( groundEnt->client->NPC_class == CLASS_DESANN && ent->client->NPC_class != CLASS_LUKE )
 				{//can't knock down desann unless you're luke
 					//FIXME: should he smack you away like Galak Mech?
 				}
-				else if (
+				else*/ if (
 					( ( (groundEnt->s.number&&(groundEnt->s.weapon!=WP_SABER||!groundEnt->NPC||groundEnt->NPC->rank<Q_irand(RANK_CIVILIAN,RANK_CAPTAIN+1)))  //an NPC who is either not a saber user or passed the rank-based probability test
 							|| ((!ent->s.number||G_ControlledByPlayer(groundEnt)) && !Q_irand( 0, 3 )&&cg.renderingThirdPerson&&!cg.zoomMode) )//or a player in third person, 25% of the time
 						&& groundEnt->client->playerTeam != ent->client->playerTeam ) //and not on the same team
-					|| ent->client->NPC_class == CLASS_DESANN )//desann always knocks people down
+					)//|| ent->client->NPC_class == CLASS_DESANN )//desann always knocks people down
 				{
 					int knockAnim = BOTH_KNOCKDOWN1;
 					if ( PM_CrouchAnim( groundEnt->client->ps.legsAnim ) )

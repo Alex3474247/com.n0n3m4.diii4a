@@ -868,7 +868,7 @@ void WPN_AmmoMax(const char **holdBuf)
 		return;
 	}
 
-	if ((tokenInt < 0) || (tokenInt > 1000 ))
+	if ((tokenInt < 0) || (tokenInt > 19999 ))
 	{
 		gi.Printf(S_COLOR_YELLOW"WARNING: bad Ammo Max in external weapon data '%d'\n", tokenInt);
 		return;

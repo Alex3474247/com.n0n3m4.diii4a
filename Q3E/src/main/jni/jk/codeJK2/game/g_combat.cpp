@@ -4999,7 +4999,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 	}
 
 	// check for godmode, completely getting out of the damage
-	if ( targ->flags & FL_GODMODE && !(dflags&DAMAGE_NO_PROTECTION) )
+	if ( targ->flags & FL_GODMODE)//&& !(dflags&DAMAGE_NO_PROTECTION) )
 	{
 		if ( targ->client
 			&& attacker->client

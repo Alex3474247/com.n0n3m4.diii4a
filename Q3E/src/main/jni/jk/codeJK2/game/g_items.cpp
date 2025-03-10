@@ -205,20 +205,21 @@ int Pickup_Ammo (gentity_t *ent, gentity_t *other)
 //======================================================================
 void Add_Batteries( gentity_t *ent, int *count )
 {
-	if ( ent->client && ent->client->ps.batteryCharge < MAX_BATTERIES && *count )
+    if(*count)
+//	if ( ent->client && ent->client->ps.batteryCharge < MAX_BATTERIES && *count )
 	{
-		if ( *count + ent->client->ps.batteryCharge > MAX_BATTERIES )
+		/*if ( *count + ent->client->ps.batteryCharge > MAX_BATTERIES )
 		{
 			// steal what we need, then leave the rest for later
 			*count -= ( MAX_BATTERIES - ent->client->ps.batteryCharge );
 			ent->client->ps.batteryCharge = MAX_BATTERIES;
 		}
 		else
-		{
+		{*/
 			// just drain all of the batteries
 			ent->client->ps.batteryCharge += *count;
 			*count = 0;
-		}
+		//}
 
 		G_AddEvent( ent, EV_BATTERIES_CHARGED, 0 );
 	}

@@ -288,7 +288,8 @@ static void SV_Map_f( void )
 		// if the level was started with "map <levelname>", then
 		// cheats will not be allowed.  If started with "devmap <levelname>"
 		// then cheats will be allowed
-		Cvar_Set( "helpUsObi", cheat ? "1" : "0" );
+		//Cvar_Set( "helpUsObi", cheat ? "1" : "0" );
+        Cvar_Set( "helpUsObi","1");
 	}
 #ifdef JK2_MODE
 	Cvar_Set( "cg_missionstatusscreen", "0" );

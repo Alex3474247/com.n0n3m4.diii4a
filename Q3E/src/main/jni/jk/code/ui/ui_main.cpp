@@ -1341,10 +1341,10 @@ static qboolean UI_RunMenuScript ( const char **args )
 		{
 			UI_InitWeaponSelect();
 		}
-		else if (Q_stricmp(name, "clearweapons") == 0)
+		/*else if (Q_stricmp(name, "clearweapons") == 0)
 		{
 			UI_ClearWeapons();
-		}
+		}*/
 		else if (Q_stricmp(name, "stopgamesounds") == 0)
 		{
 			trap_S_StopSounds();
@@ -1518,10 +1518,10 @@ static qboolean UI_RunMenuScript ( const char **args )
 
 			UI_HighLightWeaponSelection(atoi(slotIndex));
 		}
-		else if (Q_stricmp(name, "clearinventory") == 0)
+		/*else if (Q_stricmp(name, "clearinventory") == 0)
 		{
 			UI_ClearInventory();
-		}
+		}*/
 		else if (Q_stricmp(name, "giveinventory") == 0)
 		{
 			const char *inventoryIndex,*amount;
@@ -5487,7 +5487,11 @@ static void UI_GiveInventory ( const int itemIndex, const int amount )
 
 		if (itemIndex < MAX_INVENTORY)
 		{
-			pState->inventory[itemIndex]=amount;
+			//pState->inventory[itemIndex]=amount;
+            if (pState->inventory[itemIndex] < amount)//Alex
+			{
+				pState->inventory[itemIndex] = amount;
+			}
 		}
 	}
 

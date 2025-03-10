@@ -433,7 +433,7 @@ static void CG_DrawAmmo(centity_t	*cent,int x,int y)
 	}
 
 	cgi_R_SetColor( colorTable[numColor_i] );
-	CG_DrawNumField(x + 29, y + 26, 3, value, 6, 12, NUM_FONT_SMALL,qfalse);
+	CG_DrawNumField(x + 21, y + 26, 5, value, 6, 12, NUM_FONT_SMALL,qfalse);
 
 	inc = (float) ammoData[weaponData[cent->currentState.weapon].ammoIndex].max / MAX_TICS;
 	value =ps->ammo[weaponData[cent->currentState.weapon].ammoIndex];
@@ -522,7 +522,7 @@ static void CG_DrawHealth(int x,int y)
 	}
 
 	cgi_R_SetColor( colorTable[CT_HUD_RED] );
-	CG_DrawNumField (x + 16, y + 40, 3, ps->stats[STAT_HEALTH], 6, 12,
+	CG_DrawNumField (x + 8, y + 40, 5, ps->stats[STAT_HEALTH], 6, 12,
 		NUM_FONT_SMALL,qtrue);
 
 }
@@ -606,8 +606,9 @@ static void CG_DrawArmor(int x,int y)
 	}
 */
 	cgi_R_SetColor( colorTable[CT_HUD_GREEN] );
-	CG_DrawNumField (x + 16 + 14, y + 40 + 14, 3, ps->stats[STAT_ARMOR], 6, 12,
+	CG_DrawNumField (x + 16 + 14, y + 40 + 14, 5, ps->stats[STAT_ARMOR], 6, 12,
 		NUM_FONT_SMALL,qfalse);
+    CG_DrawNumField(x + 80 + 14, y + 40 + 14, 5, ps->batteryCharge, 6, 12, NUM_FONT_SMALL, qfalse);
 
 }
 
@@ -905,7 +906,7 @@ static void CG_DrawBinocularNumbers( qboolean power )
 			if (( off > 3.0f && i == -10 ) || i > -10 )
 			{
 				// draw the value, but add 200 just to bump the range up...arbitrary, so change it if you like
-				CG_DrawNumField( 155 + i * 10 + off * 10, 374, 3, val + 200, 24, 14, NUM_FONT_CHUNKY, qtrue );
+				CG_DrawNumField( 155 + i * 10 + off * 10, 374, 4, val + 200, 24, 14, NUM_FONT_CHUNKY, qtrue );
 				CG_DrawPic( 245 + (i-1) * 10 + off * 10, 376, 6, 6, cgs.media.whiteShader );
 			}
 		}

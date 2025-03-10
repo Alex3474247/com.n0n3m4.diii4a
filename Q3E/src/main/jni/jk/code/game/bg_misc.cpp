@@ -445,10 +445,10 @@ qboolean	BG_CanItemBeGrabbed( const entityState_t *ent, const playerState_t *ps 
 		if ( item->giTag >= INV_ELECTROBINOCULARS && item->giTag <= INV_SENTRY )
 		{
 			// hardcoded--can only pick up five of any holdable
-			if ( ps->inventory[item->giTag] >= 5 )
+			/*if ( ps->inventory[item->giTag] >= 5 )
 			{
 				return qfalse;
-			}
+			}*/
 		}
 		return qtrue;
 

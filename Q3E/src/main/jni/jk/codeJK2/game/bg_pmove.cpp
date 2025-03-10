@@ -2864,7 +2864,7 @@ static void PM_GroundTraceMissed( void ) {
 
 
 	//FIXME: if in a contents_falldeath brush, play the falling death anim and sound?
-	if ( pm->ps->clientNum != 0 && pm->gent && pm->gent->NPC && pm->gent->client && pm->gent->client->NPC_class != CLASS_DESANN )//desann never falls to his death
+	if ( pm->ps->clientNum != 0 && pm->gent && pm->gent->NPC && pm->gent->client )//&& pm->gent->client->NPC_class != CLASS_DESANN )//desann never falls to his death
 	{
 		if ( pm->ps->groundEntityNum == ENTITYNUM_NONE )
 		{

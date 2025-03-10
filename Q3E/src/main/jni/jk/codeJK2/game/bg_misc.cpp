@@ -373,10 +373,10 @@ qboolean	BG_CanItemBeGrabbed( const entityState_t *ent, const playerState_t *ps 
 
 	case IT_BATTERY:
 		// don't pick up if already at max
-		if ( ps->batteryCharge >= MAX_BATTERIES )
+		/*if ( ps->batteryCharge >= MAX_BATTERIES )
 		{
 			return qfalse;
-		}
+		}*/
 		return qtrue;
 
 	case IT_HOLOCRON:
@@ -388,10 +388,10 @@ qboolean	BG_CanItemBeGrabbed( const entityState_t *ent, const playerState_t *ps 
 		if ( item->giTag >= INV_ELECTROBINOCULARS && item->giTag <= INV_SENTRY )
 		{
 			// hardcoded--can only pick up five of any holdable
-			if ( ps->inventory[item->giTag] >= 5 )
+			/*if ( ps->inventory[item->giTag] >= 5 )
 			{
 				return qfalse;
-			}
+			}*/
 		}
 		return qtrue;
 

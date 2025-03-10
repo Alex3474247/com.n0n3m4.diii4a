@@ -454,7 +454,7 @@ if desired.
 void ClientUserinfoChanged( int clientNum ) {
 	gentity_t	*ent = g_entities + clientNum;
 	gclient_t	*client = ent->client;
-	int			health=100, maxHealth=100;
+	int			health=100, maxHealth=19999;
 	const char	*s=NULL;
 	char		userinfo[MAX_INFO_STRING]={0},	buf[MAX_INFO_STRING]={0},
 				sound[MAX_STRING_CHARS]={0},	oldname[34]={0};
@@ -472,11 +472,11 @@ void ClientUserinfoChanged( int clientNum ) {
 	ClientCleanName( s, client->pers.netname, sizeof( client->pers.netname ) );
 
 	// set max health
-	maxHealth = 100;
-	health = Com_Clampi( 1, 100, atoi( Info_ValueForKey( userinfo, "handicap" ) ) );
+	maxHealth = 19999;
+	health = Com_Clampi( 1, 19999, atoi( Info_ValueForKey( userinfo, "handicap" ) ) );
 	client->pers.maxHealth = health;
 	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > maxHealth )
-		client->pers.maxHealth = 100;
+		client->pers.maxHealth = 19999;
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
 
 	// sounds
@@ -2282,7 +2282,7 @@ qboolean ClientSpawn(gentity_t *ent, SavedGameJustLoaded_e eSavedGameJustLoaded 
 		{
 			if ( (client->ps.stats[STAT_WEAPONS]&(1<<i)) )
 			{//if starting with this weapon, gimme max ammo for it
-				client->ps.ammo[weaponData[i].ammoIndex] = ammoData[weaponData[i].ammoIndex].max;
+				client->ps.ammo[weaponData[i].ammoIndex] = 50;//ammoData[weaponData[i].ammoIndex].max;
 			}
 		}
 
@@ -2309,7 +2309,7 @@ qboolean ClientSpawn(gentity_t *ent, SavedGameJustLoaded_e eSavedGameJustLoaded 
 		}
 		//
 
-		ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH];
+		ent->health = client->ps.stats[STAT_HEALTH] = 100;// client->ps.stats[STAT_MAX_HEALTH];
 		ent->client->dismemberProbHead = 0;
 		ent->client->dismemberProbArms = 5;
 		ent->client->dismemberProbHands = 20;
@@ -2351,11 +2351,11 @@ qboolean ClientSpawn(gentity_t *ent, SavedGameJustLoaded_e eSavedGameJustLoaded 
 		//FIXME: put this BEFORE the Player_RestoreFromPrevLevel check above?
 		if (eSavedGameJustLoaded == eNO)
 		{//fresh start
-			if (!(spawnPoint->spawnflags&1))		// not KEEP_PREV
+			/*if (!(spawnPoint->spawnflags&1))		// not KEEP_PREV
 			{//then restore health and armor
 				ent->health = client->ps.stats[STAT_ARMOR] = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH];
 				ent->client->ps.forcePower = ent->client->ps.forcePowerMax;
-			}
+			}*/
 			G_InitPlayerFromCvars( ent );
 		}
 		else
@@ -2404,14 +2404,14 @@ qboolean ClientSpawn(gentity_t *ent, SavedGameJustLoaded_e eSavedGameJustLoaded 
 		IIcarusInterface::GetIcarus()->DeleteIcarusID( ent->m_iIcarusID );
 		ent->m_iIcarusID = IIcarusInterface::GetIcarus()->GetIcarusID( ent->s.number );
 
-		if ( spawnPoint->spawnflags & 64 )	//NOWEAPON
+		/*if ( spawnPoint->spawnflags & 64 )	//NOWEAPON
 		{//player starts with absolutely no weapons
 			ent->client->ps.stats[STAT_WEAPONS] = ( 1 << WP_NONE );
 			ent->client->ps.ammo[weaponData[WP_NONE].ammoIndex] = 32000;
 			ent->client->ps.weapon = WP_NONE;
 			ent->client->ps.weaponstate = WEAPON_READY;
 			ent->client->ps.dualSabers = qfalse;
-		}
+		}*/
 
 		if ( ent->client->ps.stats[STAT_WEAPONS] & ( 1 << WP_SABER ) )
 		{//set up so has lightsaber

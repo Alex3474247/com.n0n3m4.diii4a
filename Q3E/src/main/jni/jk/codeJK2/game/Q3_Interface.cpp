@@ -2391,7 +2391,11 @@ static void Q3_SetHealth( int entID, int data )
 		data = 0;
 	}
 
-	ent->health = data;
+//	ent->health = data;
+	if(ent->health <= data)
+	{
+		ent->health = data;
+	}
 
 	// should adjust max if new health is higher than max
 	if ( ent->health > ent->max_health )
@@ -2404,13 +2408,18 @@ static void Q3_SetHealth( int entID, int data )
 		return;
 	}
 
-	ent->client->ps.stats[STAT_HEALTH] = data;
+	if (ent->client->ps.stats[STAT_HEALTH] <= data)
+	{
+		ent->client->ps.stats[STAT_HEALTH] = data;
+	}
+	//ent->client->ps.stats[STAT_HEALTH] = data;
+
 	if ( ent->s.number == 0 )
 	{//clamp health to max
-		if ( ent->client->ps.stats[STAT_HEALTH] > ent->client->ps.stats[STAT_MAX_HEALTH] )
+		/*if ( ent->client->ps.stats[STAT_HEALTH] > ent->client->ps.stats[STAT_MAX_HEALTH] )
 		{
 			ent->health = ent->client->ps.stats[STAT_HEALTH] = ent->client->ps.stats[STAT_MAX_HEALTH];
-		}
+		}*/
 		if ( data == 0 )
 		{//artificially "killing" the player", don't let him respawn right away
 			ent->client->ps.pm_type = PM_DEAD;
@@ -2448,13 +2457,18 @@ static void Q3_SetArmor( int entID, int data )
 		return;
 	}
 
-	ent->client->ps.stats[STAT_ARMOR] = data;
+	//ent->client->ps.stats[STAT_ARMOR] = data;
+    if (ent->client->ps.stats[STAT_ARMOR]<= data)
+	{
+		ent->client->ps.stats[STAT_ARMOR] = data;
+	}
+    
 	if ( ent->s.number == 0 )
 	{//clamp armor to max_health
-		if ( ent->client->ps.stats[STAT_ARMOR] > ent->client->ps.stats[STAT_MAX_HEALTH] )
+		/*if ( ent->client->ps.stats[STAT_ARMOR] > ent->client->ps.stats[STAT_MAX_HEALTH] )
 		{
 			ent->client->ps.stats[STAT_ARMOR] = ent->client->ps.stats[STAT_MAX_HEALTH];
-		}
+		}*/
 	}
 }
 
@@ -3375,7 +3389,7 @@ static void Q3_SetWeapon (int entID, const char *wp_name)
 	else
 	{
 		self->client->ps.stats[STAT_WEAPONS] |= ( 1 << wp );
-		self->client->ps.ammo[weaponData[wp].ammoIndex] = ammoData[weaponData[wp].ammoIndex].max;
+	//	self->client->ps.ammo[weaponData[wp].ammoIndex] = ammoData[weaponData[wp].ammoIndex].max;
 
 		G_AddEvent( self, EV_ITEM_PICKUP, (item - bg_itemlist) );
 		//force it to change

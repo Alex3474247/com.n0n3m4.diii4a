@@ -48,7 +48,7 @@ along with this program; if not, see <http://www.gnu.org/licenses/>.
 #define	SABER_MAX_DIST	400.0f
 #define	SABER_MAX_DIST_SQUARED	(SABER_MAX_DIST*SABER_MAX_DIST)
 
-#define	FORCE_POWER_MAX	100
+#define	FORCE_POWER_MAX	9999
 
 #define	SABER_REFLECT_MISSILE_CONE	0.2f
 

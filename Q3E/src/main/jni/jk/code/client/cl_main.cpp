@@ -1298,11 +1298,11 @@ void CL_Init( void ) {
 	// this is required for savegame compatibility - not ever actually used
 	Cvar_Get ("snaps", "20", CVAR_USERINFO );
 	Cvar_Get ("sex", "male", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("handicap", "100", CVAR_USERINFO | CVAR_SAVEGAME );
+	Cvar_Get ("handicap", "19999", CVAR_USERINFO | CVAR_SAVEGAME );
 #else
 	Cvar_Get ("sex", "f", CVAR_USERINFO | CVAR_ARCHIVE | CVAR_SAVEGAME | CVAR_NORESTART );
 	Cvar_Get ("snd", "jaden_fmle", CVAR_USERINFO | CVAR_ARCHIVE | CVAR_SAVEGAME | CVAR_NORESTART );//UI_SetSexandSoundForModel changes to match sounds.cfg for model
-	Cvar_Get ("handicap", "100", CVAR_USERINFO | CVAR_SAVEGAME | CVAR_NORESTART);
+	Cvar_Get ("handicap", "19999", CVAR_USERINFO | CVAR_SAVEGAME | CVAR_NORESTART);
 #endif
 
 	//

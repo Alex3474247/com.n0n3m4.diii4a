@@ -2855,7 +2855,7 @@ void CG_DrawInventorySelect( void )
 			CG_DrawPic( holdX, y+10, smallIconSize, smallIconSize, inv_icons[i] );
 
 			cgi_R_SetColor(colorTable[CT_ICON_BLUE]);
-			CG_DrawNumField (holdX + addX, y + smallIconSize, 2, cg.snap->ps.inventory[i], 6, 12,
+			CG_DrawNumField (holdX + addX, y + smallIconSize, 3, cg.snap->ps.inventory[i], 6, 12,
 				NUM_FONT_SMALL,qfalse);
 
 			holdX -= (smallIconSize+pad);
@@ -2870,7 +2870,7 @@ void CG_DrawInventorySelect( void )
 		CG_DrawPic( x-(bigIconSize/2), (y-((bigIconSize-smallIconSize)/2))+10, bigIconSize, bigIconSize, inv_icons[cg.inventorySelect] );
 		addX = (float) bigIconSize * .75;
 		cgi_R_SetColor(colorTable[CT_ICON_BLUE]);
-		CG_DrawNumField ((x-(bigIconSize/2)) + addX, y, 2, cg.snap->ps.inventory[cg.inventorySelect], 6, 12,
+		CG_DrawNumField ((x-(bigIconSize/2)) + addX, y, 3, cg.snap->ps.inventory[cg.inventorySelect], 6, 12,
 			NUM_FONT_SMALL,qfalse);
 
 		if (inv_names[cg.inventorySelect])
@@ -2931,7 +2931,7 @@ void CG_DrawInventorySelect( void )
 			CG_DrawPic( holdX, y+10, smallIconSize, smallIconSize, inv_icons[i] );
 
 			cgi_R_SetColor(colorTable[CT_ICON_BLUE]);
-			CG_DrawNumField (holdX + addX, y + smallIconSize, 2, cg.snap->ps.inventory[i], 6, 12,
+			CG_DrawNumField (holdX + addX, y + smallIconSize, 3, cg.snap->ps.inventory[i], 6, 12,
 				NUM_FONT_SMALL,qfalse);
 
 			holdX += (smallIconSize+pad);
@@ -3054,7 +3054,7 @@ void CG_DrawDataPadInventorySelect( void )
 			CG_DrawPic( holdX, y+10, smallIconSize, smallIconSize, inv_icons[i] );
 
 			cgi_R_SetColor(colorTable[CT_ICON_BLUE]);
-			CG_DrawNumField (holdX + addX, y + smallIconSize, 2, cg.snap->ps.inventory[i], 6, 12,
+			CG_DrawNumField (holdX + addX, y + smallIconSize, 3, cg.snap->ps.inventory[i], 6, 12,
 				NUM_FONT_SMALL,qfalse);
 
 			holdX -= (smallIconSize+pad);
@@ -3069,7 +3069,7 @@ void CG_DrawDataPadInventorySelect( void )
 		CG_DrawPic( x-(bigIconSize/2), (y-((bigIconSize-smallIconSize)/2))+10, bigIconSize, bigIconSize, inv_icons[cg.DataPadInventorySelect] );
 		addX = (float) bigIconSize * .75;
 		cgi_R_SetColor(colorTable[CT_ICON_BLUE]);
-		CG_DrawNumField ((x-(bigIconSize/2)) + addX, y, 2, cg.snap->ps.inventory[cg.DataPadInventorySelect], 6, 12,
+		CG_DrawNumField ((x-(bigIconSize/2)) + addX, y, 3, cg.snap->ps.inventory[cg.DataPadInventorySelect], 6, 12,
 			NUM_FONT_SMALL,qfalse);
 
 		if (inv_names[cg.DataPadInventorySelect])
@@ -3116,7 +3116,7 @@ void CG_DrawDataPadInventorySelect( void )
 			CG_DrawPic( holdX, y+10, smallIconSize, smallIconSize, inv_icons[i] );
 
 			cgi_R_SetColor(colorTable[CT_ICON_BLUE]);
-			CG_DrawNumField (holdX + addX, y + smallIconSize, 2, cg.snap->ps.inventory[i], 6, 12,
+			CG_DrawNumField (holdX + addX, y + smallIconSize, 3, cg.snap->ps.inventory[i], 6, 12,
 				NUM_FONT_SMALL,qfalse);
 
 			holdX += (smallIconSize+pad);

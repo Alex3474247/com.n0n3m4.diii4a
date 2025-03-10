@@ -327,7 +327,7 @@ typedef enum
 
 } saber_colors_t;
 
-#define MAX_BATTERIES	2500
+#define MAX_BATTERIES	99999
 
 #define ENUM2STRING(arg)   { #arg,arg }
 

@@ -2290,7 +2290,11 @@ static void Q3_SetHealth( int entID, int data )
 		data = 0;
 	}
 
-	ent->health = data;
+//	ent->health = data;
+	if(ent->health <= data)
+	{
+		ent->health = data;
+	}
 
 	// should adjust max if new health is higher than max
 	if ( ent->health > ent->max_health )
@@ -2303,7 +2307,12 @@ static void Q3_SetHealth( int entID, int data )
 		return;
 	}
 
-	ent->client->ps.stats[STAT_HEALTH] = data;
+    if (ent->client->ps.stats[STAT_HEALTH] <= data)
+	{
+		ent->client->ps.stats[STAT_HEALTH] = data;
+	}
+	//ent->client->ps.stats[STAT_HEALTH] = data;
+    
 	if ( ent->s.number == 0 )
 	{//clamp health to max
 		if ( ent->client->ps.stats[STAT_HEALTH] > ent->client->ps.stats[STAT_MAX_HEALTH] )
@@ -2347,7 +2356,12 @@ static void Q3_SetArmor( int entID, int data )
 		return;
 	}
 
-	ent->client->ps.stats[STAT_ARMOR] = data;
+    if (ent->client->ps.stats[STAT_ARMOR]<= data)
+	{
+		ent->client->ps.stats[STAT_ARMOR] = data;
+	}
+	//ent->client->ps.stats[STAT_ARMOR] = data;
+    
 	if ( ent->s.number == 0 )
 	{//clamp armor to max_health
 		if ( ent->client->ps.stats[STAT_ARMOR] > ent->client->ps.stats[STAT_MAX_HEALTH] )
@@ -3251,7 +3265,7 @@ void G_SetWeapon( gentity_t *self, int wp )
 	else
 	{
 		self->client->ps.stats[STAT_WEAPONS] |= ( 1 << wp );
-		self->client->ps.ammo[weaponData[wp].ammoIndex] = ammoData[weaponData[wp].ammoIndex].max;
+		//self->client->ps.ammo[weaponData[wp].ammoIndex] = ammoData[weaponData[wp].ammoIndex].max;
 
 		G_AddEvent( self, EV_ITEM_PICKUP, (item - bg_itemlist) );
 		//force it to change
@@ -3294,7 +3308,7 @@ static void Q3_SetWeapon (int entID, const char *wp_name)
 	if ( self->NPC )
 	{//since a script sets a weapon, we presume we don't want to auto-match the player's weapon anymore
 		self->NPC->aiFlags &= ~NPCAI_MATCHPLAYERWEAPON;
-	}
+//	}
 
 	if(!Q_stricmp("drop", wp_name))
 	{//no weapon, drop it
@@ -3303,7 +3317,7 @@ static void Q3_SetWeapon (int entID, const char *wp_name)
 		G_RemoveWeaponModels( self );
 		return;
 	}
-
+}//Alex only remove weapon for NPC
 	G_SetWeapon( self, wp );
 }
 

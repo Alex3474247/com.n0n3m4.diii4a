@@ -4494,7 +4494,7 @@ void NPC_Jedi_Pain( gentity_t *self, gentity_t *inflictor, gentity_t *other, vec
 		TIMER_Set( self, "parryTime", -1 );
 		if ( self->client->NPC_class == CLASS_DESANN )
 		{//less for Desann
-			self->client->ps.forcePowerDebounce[FP_SABER_DEFENSE] = level.time + (3-g_spskill->integer)*50;
+			self->client->ps.forcePowerDebounce[FP_SABER_DEFENSE] = level.time + (3-g_spskill->integer)*600;
 		}
 		else if ( self->NPC->rank >= RANK_LT_JG )
 		{
@@ -4976,11 +4976,11 @@ static void Jedi_Attack( void )
 			{
 				if ( g_spskill->integer )
 				{
-					chance = 4.0f;//he pushes *hard*
+					chance = 1.0f;//he pushes *hard*
 				}
 				else
 				{
-					chance = 3.0f;//he pushes *hard*
+					chance = 1.0f;//he pushes *hard*
 				}
 			}
 			else if ( NPC->client->NPC_class == CLASS_TAVION )
