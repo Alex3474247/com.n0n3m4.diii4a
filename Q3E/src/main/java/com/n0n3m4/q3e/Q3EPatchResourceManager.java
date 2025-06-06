@@ -39,7 +39,19 @@ public class Q3EPatchResourceManager
                 Q3EGlobals.GAME_QUAKE4,
                 null,
                 Q3EPatchResource.COPY_FILE_TO_DIR,
-                "pak/q4base/sabot_a9.pk4",
+                "pak/q4base/q4_sabot_a9.pk4",
+                null
+        );
+        resourceList.add(rsc);
+
+        rsc = new Q3EPatchResource(
+                Q3EGlobals.PatchResource.DOOM3_SABOT,
+                Q3ELang.tr(context, R.string.doom3_bot_sabot_a7_mod),
+                "1",
+                Q3EGlobals.GAME_DOOM3,
+                null,
+                Q3EPatchResource.COPY_FILE_TO_DIR,
+                "pak/doom3/d3_sabot_a7.pk4",
                 null
         );
         resourceList.add(rsc);
@@ -70,7 +82,7 @@ public class Q3EPatchResourceManager
 
         rsc = new Q3EPatchResource(
                 Q3EGlobals.PatchResource.TDM_GLSL_SHADER,
-                Q3ELang.tr(context, R.string.the_dark_mod_glsl_shader),
+                Q3ELang.tr(context, R.string.the_dark_mod_glsl_shader) + "(2.13)",
                 Q3EGlobals.TDM_GLSL_SHADER_VERSION,
                 Q3EGlobals.GAME_TDM,
                 null,
@@ -82,13 +94,25 @@ public class Q3EPatchResourceManager
 
         rsc = new Q3EPatchResource(
                 Q3EGlobals.PatchResource.GZDOOM_RESOURCE,
-                Q3ELang.tr(context, R.string.gzdoom_builtin_resource) + "(4.14.0)",
+                Q3ELang.tr(context, R.string.gzdoom_builtin_resource) + "(4.14.1)",
                 Q3EGlobals.GZDOOM_VERSION,
                 Q3EGlobals.GAME_GZDOOM,
                 null,
                 Q3EPatchResource.COPY_DIR_TO_DIR,
-                "pak/gzdoom/4.14.0",
+                "pak/gzdoom/4.14.1",
                 ""
+        );
+        resourceList.add(rsc);
+
+        rsc = new Q3EPatchResource(
+                Q3EGlobals.PatchResource.DOOM3_BFG_CHINESE_TRANSLATION,
+                Q3ELang.tr(context, R.string.doom3_chinese_translation_doom3bfg),
+                "1",
+                Q3EGlobals.GAME_DOOM3,
+                null,
+                Q3EPatchResource.COPY_FILE_TO_DIR,
+                "pak/doom3/doom3_chinese_translation_doom3bfg.pk4",
+                "base"
         );
         resourceList.add(rsc);
     }

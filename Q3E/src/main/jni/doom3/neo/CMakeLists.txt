@@ -1,24 +1,26 @@
 cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR) # 2.6
+
 project(doom3)
 
-# -DCMAKE_TOOLCHAIN_FILE=D:/project/c/vcpkg/scripts/buildsystems/vcpkg.cmake
-set(COMPILE_CURL "1")
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
+# build type
+if(NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE "Release")
+endif()
+#set(CMAKE_BUILD_TYPE "RelWithDebInfo")
+
+option(USE_SYSTEM_OGGVORBIS    	"use system ogg/vorbis library"      	OFF)
+option(USE_SYSTEM_CURL        	"use system curl library"      			OFF)
+option(USE_SYSTEM_FREETYPE    	"use system freetype2 library"      	OFF)
+
 set(CORE_DEFINES "__DOOM_DLL__")
+
 if(ANDROID)
 	add_definitions(-D__ANDROID__)
 	add_definitions(-D_NO_PTHREAD_CANCEL)
 	set(CORE_DEFINES "${CORE_DEFINES};NO_ALSA;_NO_GAMMA")
 elseif(WIN32)
-	find_package(CURL QUIET)
-	if(CURL_FOUND)
-		set(COMPILE_CURL "1")
-		include_directories(${CURL_INCLUDE_DIR})
-		message(STATUS "libcurl found and enabled")
-	else()
-		message(WARNING "libcurl not found, server downloads won't be available (apart from that doom3 will work)")
-		set(CURL_LIBRARY "")
-		set(COMPILE_CURL "0")
-	endif()
 	set(CORE_DEFINES "${CORE_DEFINES};NO_ALSA")
 else()
 	set(CORE_DEFINES "${CORE_DEFINES};_NO_GAMMA")
@@ -27,9 +29,13 @@ else()
 endif()
 
 add_definitions(-D_K_CLANG) # TODO
-add_definitions(-DID_ENABLE_CURL=${COMPILE_CURL})
+add_definitions(-DID_ENABLE_CURL=1)
 
-#set(CMAKE_VERBOSE_MAKEFILE ON)
+set(COMPILE_OGGVORBIS       TRUE)
+set(COMPILE_CURL        	TRUE)
+set(COMPILE_FREETYPE    	FALSE)
+
+# -DCMAKE_TOOLCHAIN_FILE=D:/project/c/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 # set(CMAKE_BUILD_TYPE "Debug")
 # TODO
@@ -113,7 +119,11 @@ option(STENCIL_SHADOW_IMPROVE				"Improve stencil shadow(translucent, soft(Only 
 option(EXTRAS_TOOLS							"Add extras commands" 														OFF)
 option(MODEL_VIEWER							"Add model viewer in engine" 												OFF)
 option(USE_MINIZ							"use miniz and minizip" 													ON)
-option(USE_STB_OGG							"use stb_vorbis" 															ON)
+option(USE_STB_OGG							"use stb_vorbis" 															OFF)
+option(D3BFG_OCCLUSION_CULLING				"DOOM3-BFG occlusion culling support" 										ON)
+option(WIDE_CHARACTER_LANGUAGE				"Wide-character language font support" 										ON)
+option(D3BFG_NEW_FONT						"DOOM3-BFG new font support"												ON)
+option(GLSL_PROGRAM							"GLSL program on new material stage support"								ON)
 
 # DOOM3 cores
 if(BUILD_D3)
@@ -121,10 +131,13 @@ option(CORE									"Build the core" 															ON)
 option(BASE									"Build the base game code" 													ON)
 
 option(D3_MOD_FULL_BODY_AWARENESS			"Build doom3 full body awareness mod support" 								ON)
+option(D3_MOD_BOTS							"Build doom3 bots mod support" 												ON)
 endif()
 
 # DOOM3 mods
 if(BUILD_D3_MOD)
+include_directories("mod/doom3")
+
 option(D3XP									"Build the d3xp game code" 													ON)
 
 option(D3LE									"Build the d3le game code" 													ON)
@@ -153,6 +166,8 @@ endif()
 
 # Quake4 mods
 if(BUILD_Q4_MOD)
+include_directories("mod/quake4")
+
 option(HARDQORE								"Build the hardqore game code" 												ON)
 endif()
 
@@ -265,16 +280,6 @@ elseif(cpu MATCHES "[aA][rR][mM].*") # some kind of arm..
 	endif()
 endif()
 
-add_definitions(-DD3_ARCH="${cpu}" -DD3_SIZEOFPTR=${CMAKE_SIZEOF_VOID_P})
-# Stores in variable <var> either 1 or 0 indicating whether the target architecture is big or little endian.
-# test_big_endian(big_endian)
-if(CMAKE_CXX_BYTE_ORDER EQUAL BIG_ENDIAN)
-	set(big_endian 1)
-else()
-	set(big_endian 0)
-endif()
-add_definitions(-DBUILD_IS_BIG_ENDIAN=${big_endian})
-
 # target os
 if(APPLE)
 	set(os "macosx")
@@ -282,21 +287,51 @@ else()
 	string(TOLOWER "${CMAKE_SYSTEM_NAME}" os)
 endif()
 
-add_definitions(-DD3_OSTYPE="${os}")
+# check char is singed or unsigned
+if(cpu MATCHES "arm.*")
+	message(STATUS "Target char is unsigned")
+	set(char_is_singed 0)
+	set(char_is_unsigned 1)
+else()
+	message(STATUS "Target char is signed")
+	set(char_is_singed 1)
+	set(char_is_unsigned 0)
+endif()
 
-message(STATUS "Setting -DD3_ARCH=\"${cpu}\" -DD3_SIZEOFPTR=${CMAKE_SIZEOF_VOID_P} -DD3_OSTYPE=\"${os}\" ")
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+	message(STATUS "Target is 64 bits")
+	set(is_64 1)
+	set(is_32 0)
+else()
+	set(is_64 0)
+	set(is_32 1)
+	message(STATUS "Target is 32 bits")
+endif()
+
+add_definitions(-DD3_OSTYPE="${os}" -DD3_SIZEOFPTR=${CMAKE_SIZEOF_VOID_P})
+add_definitions(-DD3_ARCH="${cpu}")
+# Stores in variable <var> either 1 or 0 indicating whether the target architecture is big or little endian.
+# test_big_endian(is_big_endian)
+if(CMAKE_CXX_BYTE_ORDER EQUAL BIG_ENDIAN)
+	message(STATUS "Target is Big endian")
+	set(is_big_endian 1)
+	set(is_little_endian 0)
+else()
+	message(STATUS "Target is Little endian")
+	set(is_big_endian 0)
+	set(is_little_endian 1)
+endif()
+add_definitions(-DD3_IS_BIG_ENDIAN=${is_big_endian} -DD3_IS_LITTLE_ENDIAN=${is_little_endian})
+add_definitions(-DD3_CHAR_IS_SIGNED=${char_is_singed} -DD3_CHAR_IS_UNSIGNED=${char_is_unsigned})
+add_definitions(-DD3_IS_64=${is_64} -DD3_IS_32=${is_32})
+
+message(STATUS "Setting -DD3_ARCH=\"${cpu}\" -DD3_SIZEOFPTR=${CMAKE_SIZEOF_VOID_P} -DD3_OSTYPE=\"${os}\" -DD3_IS_BIG_ENDIAN=${is_big_endian} -DD3_IS_LITTLE_ENDIAN=${is_little_endian} -DD3_CHAR_IS_SIGNED=${char_is_singed} -DD3_CHAR_IS_UNSIGNED=${char_is_unsigned} -DD3_IS_64=${is_64} -DD3_IS_32=${is_32}")
 
 if(cpu MATCHES ".*64.*" AND NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
 	# tough luck if some CPU architecture has "64" in its name but uses 32bit pointers
 	message(SEND_ERROR "CMake thinks sizeof(void*) == 4, but the target CPU looks like a 64bit CPU!")
 	message(FATAL_ERROR "If you're building in a 32bit chroot on a 64bit host, switch to it with 'linux32 chroot' or at least call cmake with linux32 (or your OSs equivalent)!")
 endif()
-
-# build type
-if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE "Release")
-endif()
-#set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 
 # precompiled libraries from the dhewm3-libs repo
 #[[if(DHEWM3LIBS)
@@ -395,10 +430,22 @@ else() # not MSVC
 		endif()
 	endif() # NOT WIN32
 
+	# check if this is some kind of clang (Clang, AppleClang, whatever)
+	# (convert compiler ID to lowercase so we match Clang, clang, AppleClang etc, regardless of case)
+	string(TOLOWER ${CMAKE_CXX_COMPILER_ID} compiler_id_lower)
+	if(compiler_id_lower MATCHES ".*clang.*")
+		message(STATUS "Compiler \"${CMAKE_CXX_COMPILER_ID}\" detected as some kind of clang")
+		set(D3_COMPILER_IS_CLANG TRUE)
+		set(D3_COMPILER_IS_GCC_OR_CLANG TRUE)
+	elseif(CMAKE_COMPILER_IS_GNUCC)
+		set(D3_COMPILER_IS_GCC_OR_CLANG TRUE)
+	endif()
+	unset(compiler_id_lower)
+
 endif() # not MSVC
 
 # compiler specific flags
-if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if(D3_COMPILER_IS_GCC_OR_CLANG)
 	add_compile_options(-pipe)
 	#k add_compile_options(-Wall)
 
@@ -414,7 +461,9 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
 	else()
 		set(OPT_LEVEL "-O2")
 	endif()
+	#set(OPT_LEVEL "-O3")
 
+	#karin: don't add `-ffinite-math-only`, because cause NaN <= 0.0 is true, example: calc NaN `fov_y` when drawRect.w == drawRect.h == 0, and call idRenderWorld::RenderScene on ui/idRenderWindow::Draw
 	set(CMAKE_C_FLAGS_DEBUG "-g -ggdb -D_DEBUG -O0 -fPIC")
 	set(CMAKE_C_FLAGS_DEBUGALL "-g -ggdb -D_DEBUG -fPIC")
 	set(CMAKE_C_FLAGS_PROFILE "-g -ggdb -D_DEBUG -O1 -fno-omit-frame-pointer -fPIC")
@@ -426,9 +475,13 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
 	set(CMAKE_CXX_FLAGS_PROFILE ${CMAKE_C_FLAGS_PROFILE})
 
 	add_compile_options(-fno-strict-aliasing)
+	#add_compile_options(-fsigned-char)
 	# dear idiot compilers, don't fuck up math code with useless FMA "optimizations"
 	# (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100839)
-	add_compile_options(-ffp-contract=off)
+	CHECK_CXX_COMPILER_FLAG("-ffp-contract=off" cxx_has_fp-contract)
+	if(cxx_has_fp-contract)
+		add_compile_options(-ffp-contract=off)
+	endif()
 
 	if(NOT AROS)
 		CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" cxx_has_fvisibility)
@@ -501,7 +554,8 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
 
 		set(sys_libs ${sys_libs} "-framework Carbon -framework Cocoa -framework IOKit")
 	elseif(WIN32)
-		set(ldflags "${ldflags} -static-libgcc -static-libstdc++")
+		# use 8MB stack instead of 1MB, so big models don't overflow it with _alloca()
+		set(ldflags "${ldflags} -static-libgcc -static-libstdc++ -Wl,--stack,8388608")
 	elseif(os STREQUAL "linux")
 		set(sys_libs ${sys_libs} dl)
 	elseif(os STREQUAL "freebsd")
@@ -530,6 +584,8 @@ elseif(MSVC)
 	set(CMAKE_C_FLAGS_RELEASE "/Ox /Oy /MD")
 	set(CMAKE_C_FLAGS_RELWITHDEBINFO "/Ox /Oy /Zi /MD")
 	set(CMAKE_C_FLAGS_MINSIZEREL "/Ox /Oy /Os /MD")
+	# use 8MB stack instead of 1MB, so big models don't overflow it with _alloca()
+	set(ldflags "${ldflags} /STACK:8388608")
 else()
 	message(FATAL_ERROR "Unsupported compiler")
 endif()
@@ -574,20 +630,20 @@ else() #TODO linux
             add_definitions(-D_SDL)
             set(sys_libs ${sys_libs} ${SDLx_LIBRARY})
 	    else()
-		    find_package(SDL2)
-            if(SDL2_FOUND)
-                set(LINUX_SDL TRUE)
+		find_package(SDL2)
+		if(SDL2_FOUND)
+			set(LINUX_SDL TRUE)
                 message(STATUS "use system SDL2")
                 include_directories(${SDL2_INCLUDE_DIRS})
-                set(SDLx_LIBRARY ${SDL2_LIBRARIES})
-                add_definitions(-D_SDL)
-                set(sys_libs ${sys_libs} ${SDLx_LIBRARY})
-            else()
-                set(LINUX_SDL FALSE)
-                message(STATUS "SDL2 not found, using X11 + EGL")
-                set(sys_libs ${sys_libs} X11 EGL)
-            endif()
-	    endif()
+			set(SDLx_LIBRARY ${SDL2_LIBRARIES})
+			add_definitions(-D_SDL)
+			set(sys_libs ${sys_libs} ${SDLx_LIBRARY})
+		else()
+			set(LINUX_SDL FALSE)
+			message(STATUS "SDL2 not found, using X11 + EGL")
+			set(sys_libs ${sys_libs} X11 EGL)
+		endif()
+	endif()
 	endif()
 	if(NOT USE_MINIZ)
 		set(sys_libs ${sys_libs} z)
@@ -642,14 +698,7 @@ function(add_globbed_headers SRCLIST PATHPREFIX)
 	set(${SRCLIST} ${tmp_hdrs} ${${SRCLIST}})
 endfunction()
 
-if(COMPILE_CURL STREQUAL "1")
-	if(NOT WIN32)
-		set(local_libs ${local_libs} static_curl)
-	else()
-		set(sys_libs ${sys_libs} ${CURL_LIBRARY})
-	endif()
-	message(STATUS "Build cURL")
-endif()
+set(REQUIRE_OGGVORBIS TRUE)
 
 if(USE_STB_IMAGE)
 	set(CORE_DEFINES "${CORE_DEFINES};_USING_STB")
@@ -657,6 +706,7 @@ if(USE_STB_IMAGE)
 endif()
 if(USE_STB_OGG)
 	set(CORE_DEFINES "${CORE_DEFINES};_USING_STB_OGG")
+	set(REQUIRE_OGGVORBIS FALSE)
 	message(STATUS "Using stb oggvorbis")
 endif()
 if(SUPPORT_OBJ)
@@ -687,6 +737,25 @@ if(STENCIL_SHADOW_IMPROVE)
 endif()
 if(USE_MINIZ)
 	message(STATUS "Using minizip and miniz instead of zlib")
+endif()
+if(D3BFG_OCCLUSION_CULLING)
+	set(CORE_DEFINES "${CORE_DEFINES};_D3BFG_CULLING")
+	message(STATUS "Add DOOM3-BFG occlusion culling support")
+endif()
+if(D3BFG_NEW_FONT)
+	add_definitions(-D_D3BFG_FONT)
+	message(STATUS "Add DOOM3-BFG new font support")
+	set(WIDE_CHARACTER_LANGUAGE ON)
+endif()
+if(WIDE_CHARACTER_LANGUAGE)
+	add_definitions(-D_WCHAR_LANG)
+	set(CORE_DEFINES "${CORE_DEFINES};_NEW_FONT_TOOLS")
+	set(REQUIRE_FREETYPE TRUE)
+	message(STATUS "Add wide-character language font support")
+endif()
+if(GLSL_PROGRAM)
+	add_definitions(-D_GLSL_PROGRAM)
+	message(STATUS "Add GLSL program on new material stage support")
 endif()
 
 if(OPENAL)
@@ -763,6 +832,7 @@ set(src_renderer
 	renderer/Image_program.cpp
 	renderer/Interaction.cpp
 	renderer/Material.cpp
+	renderer/MegaTexture.cpp
 	renderer/Model.cpp
 	renderer/ModelDecal.cpp
 	renderer/ModelManager.cpp
@@ -1199,114 +1269,264 @@ endif()
 
 if(CORE OR RAVEN OR HUMANHEAD)
 
-if(NOT WIN32)
-	if(COMPILE_CURL STREQUAL "1")
-		#//k curl
-		set(src_curl
-			externlibs/curl/lib/base64.c
-			externlibs/curl/lib/connect.c
-			externlibs/curl/lib/cookie.c
-			externlibs/curl/lib/dict.c
-			externlibs/curl/lib/easy.c
-			externlibs/curl/lib/escape.c
-			externlibs/curl/lib/file.c
-			externlibs/curl/lib/formdata.c
-			externlibs/curl/lib/ftp.c
-			externlibs/curl/lib/getdate.c
-			externlibs/curl/lib/getenv.c
-			externlibs/curl/lib/getinfo.c
-			externlibs/curl/lib/hash.c
-			externlibs/curl/lib/hostip.c
-			externlibs/curl/lib/http.c
-			externlibs/curl/lib/http_chunks.c
-			externlibs/curl/lib/if2ip.c
-			externlibs/curl/lib/krb4.c
-			externlibs/curl/lib/ldap.c
-			externlibs/curl/lib/llist.c
-			externlibs/curl/lib/memdebug.c
-			externlibs/curl/lib/mprintf.c
-			externlibs/curl/lib/multi.c
-			externlibs/curl/lib/netrc.c
-			externlibs/curl/lib/progress.c
-			externlibs/curl/lib/security.c
-			externlibs/curl/lib/sendf.c
-			externlibs/curl/lib/share.c
-			externlibs/curl/lib/speedcheck.c
-			externlibs/curl/lib/ssluse.c
-			externlibs/curl/lib/strequal.c
-			externlibs/curl/lib/strtok.c
-			externlibs/curl/lib/telnet.c
-			externlibs/curl/lib/timeval.c
-			externlibs/curl/lib/transfer.c
-			externlibs/curl/lib/url.c
-			externlibs/curl/lib/version.c
-			externlibs/curl/lib/http_digest.c
-			externlibs/curl/lib/http_ntlm.c
-			externlibs/curl/lib/inet_pton.c
-			externlibs/curl/lib/md5.c
-			externlibs/curl/lib/content_encoding.c
-		)
-
-		add_globbed_headers(src_curl "externlibs/curl/lib")
-		include_directories("externlibs/curl/lib")
-		include_directories("externlibs/curl/include")
-		add_library(static_curl STATIC ${src_curl})
-		set(CURL_DEFINES "HAVE_CONFIG_H") # without autoconf
-		INCLUDE(CheckFunctionExists)
-		check_function_exists(strlcat HAVE_STRLCAT)
-		if(NOT HAVE_STRLCAT)
-			set(CURL_DEFINES "${CURL_DEFINES};_NOT_HAVE_STRLCAT")
-			message(STATUS "No strlcat for cURL")
+if(USE_SYSTEM_CURL)
+		find_package(CURL QUIET)
+		if(CURL_FOUND)
+			set(curl_inc ${CURL_INCLUDE_DIR})
+			set(curl_lib ${CURL_LIBRARY})
+			set(COMPILE_CURL FALSE)
+			message(STATUS "using system curl")
 		else()
-			message(STATUS "Have strlcat for cURL")
+			message(WARNING "libcurl not found, server downloads won't be available (apart from that doom3 will work)")
+			set(curl_inc "externlibs/curl/include" "externlibs/curl/lib")
+			set(curl_lib "static_curl")
+			set(COMPILE_CURL TRUE)
+			message(STATUS "using internal curl")
 		endif()
-		set_target_properties(static_curl PROPERTIES COMPILE_DEFINITIONS "${CURL_DEFINES}")
-		target_link_libraries(static_curl z)
+	else()
+		set(curl_inc "externlibs/curl/include" "externlibs/curl/lib")
+		set(curl_lib "static_curl")
+		set(COMPILE_CURL TRUE)
+		message(STATUS "using internal curl")
+endif()
+include_directories(${curl_inc})
+
+if(COMPILE_CURL #[[STREQUAL "1"]])
+	set(local_libs ${local_libs} ${curl_lib})
+else()
+	set(sys_libs ${sys_libs} ${curl_lib})
+endif()
+
+if(COMPILE_CURL #[[STREQUAL "1"]])
+	message(STATUS "Build cURL")
+	find_package(ZLIB REQUIRED)
+    #//k curl
+    set(src_curl
+        externlibs/curl/lib/base64.c
+        externlibs/curl/lib/connect.c
+        externlibs/curl/lib/cookie.c
+        externlibs/curl/lib/dict.c
+        externlibs/curl/lib/easy.c
+        externlibs/curl/lib/escape.c
+        externlibs/curl/lib/file.c
+        externlibs/curl/lib/formdata.c
+        externlibs/curl/lib/ftp.c
+        externlibs/curl/lib/getdate.c
+        externlibs/curl/lib/getenv.c
+        externlibs/curl/lib/getinfo.c
+        externlibs/curl/lib/hash.c
+        externlibs/curl/lib/hostip.c
+        externlibs/curl/lib/http.c
+        externlibs/curl/lib/http_chunks.c
+        externlibs/curl/lib/if2ip.c
+        externlibs/curl/lib/krb4.c
+        externlibs/curl/lib/ldap.c
+        externlibs/curl/lib/llist.c
+        externlibs/curl/lib/memdebug.c
+        externlibs/curl/lib/mprintf.c
+        externlibs/curl/lib/multi.c
+        externlibs/curl/lib/netrc.c
+        externlibs/curl/lib/progress.c
+        externlibs/curl/lib/security.c
+        externlibs/curl/lib/sendf.c
+        externlibs/curl/lib/share.c
+        externlibs/curl/lib/speedcheck.c
+        externlibs/curl/lib/ssluse.c
+        externlibs/curl/lib/strequal.c
+        externlibs/curl/lib/strtok.c
+        externlibs/curl/lib/telnet.c
+        externlibs/curl/lib/timeval.c
+        externlibs/curl/lib/transfer.c
+        externlibs/curl/lib/url.c
+        externlibs/curl/lib/version.c
+        externlibs/curl/lib/http_digest.c
+        externlibs/curl/lib/http_ntlm.c
+        externlibs/curl/lib/inet_pton.c
+        externlibs/curl/lib/md5.c
+        externlibs/curl/lib/content_encoding.c
+    )
+
+    add_globbed_headers(src_curl "externlibs/curl/lib")
+    add_library(static_curl STATIC ${src_curl})
+    set(CURL_DEFINES "HAVE_CONFIG_H") # without autoconf
+    INCLUDE(CheckFunctionExists)
+    check_function_exists(strlcat HAVE_STRLCAT)
+    if(NOT HAVE_STRLCAT)
+        set(CURL_DEFINES "${CURL_DEFINES};_NOT_HAVE_STRLCAT")
+        message(STATUS "No strlcat for cURL")
+    else()
+        message(STATUS "Have strlcat for cURL")
+    endif()
+    set_target_properties(static_curl PROPERTIES COMPILE_DEFINITIONS "${CURL_DEFINES}")
+    if(D3_COMPILER_IS_GCC_OR_CLANG)
+        target_compile_options(static_curl PRIVATE -Wno-deprecated-non-prototype)
+	endif()
+	target_include_directories(static_curl PRIVATE ${ZLIB_INCLUDE_DIRS})
+	if(WIN32)
+		target_link_libraries(static_curl PRIVATE ws2_32 ZLIB::ZLIB)
+	else()
+    	target_link_libraries(static_curl PRIVATE z)
 	endif()
 endif()
 
+if(REQUIRE_OGGVORBIS)
+	if(USE_SYSTEM_OGGVORBIS)
+		find_package(Vorbis QUIET)
+		if(Vorbis_FOUND)
+			find_path (Vorbis_Vorbis_INCLUDE_DIR vorbis/codec.h)
+			find_path (Vorbis_Enc_INCLUDE_DIR vorbis/vorbisenc.h)
+			find_path (Vorbis_File_INCLUDE_DIR vorbis/vorbisfile.h)
+			set(Vorbis_Vorbis_LIBRARY Vorbis::vorbis)
+			set(Vorbis_Enc_LIBRARY Vorbis::vorbisenc)
+			set(Vorbis_File_LIBRARY Vorbis::vorbisfile)
+			set(oggvorbis_inc ${OGG_INCLUDE_DIR} ${Vorbis_Vorbis_INCLUDE_DIR} ${Vorbis_Enc_INCLUDE_DIR} ${Vorbis_File_INCLUDE_DIR})
+			set(oggvorbis_lib ${OGG_LIBRARY} ${Vorbis_Vorbis_LIBRARY} ${Vorbis_Enc_LIBRARY} ${Vorbis_File_LIBRARY})
+			set(COMPILE_OGGVORBIS FALSE)
+			message(STATUS "using system ogg/vorbis")
+		else()
+			set(oggvorbis_inc "externlibs/libogg/include" "externlibs/libvorbis/include")
+			set(oggvorbis_lib "static_oggvorbis")
+			set(COMPILE_OGGVORBIS TRUE)
+			message(STATUS "using internal ogg/vorbis")
+		endif()
+	else()
+		set(oggvorbis_inc "externlibs/libogg/include" "externlibs/libvorbis/include")
+		set(oggvorbis_lib "static_oggvorbis")
+		set(COMPILE_OGGVORBIS TRUE)
+		message(STATUS "using internal ogg/vorbis")
+	endif()
 
-if(NOT USE_STB_OGG)
-# Build internal ogg/vorbis
-set(src_ogg
-	externlibs/libogg/src/bitwise.c
-	externlibs/libogg/src/framing.c
-	externlibs/libvorbis/lib/analysis.c
-	externlibs/libvorbis/lib/floor1.c
-	externlibs/libvorbis/lib/psy.c
-	# externlibs/libvorbis/lib/tone.c
-	# externlibs/libvorbis/lib/barkmel.c
-	externlibs/libvorbis/lib/info.c
-	externlibs/libvorbis/lib/vorbisenc.c
-	externlibs/libvorbis/lib/bitrate.c
-	externlibs/libvorbis/lib/lookup.c
-	externlibs/libvorbis/lib/registry.c
-	externlibs/libvorbis/lib/vorbisfile.c
-	externlibs/libvorbis/lib/block.c
-	externlibs/libvorbis/lib/lpc.c
-	externlibs/libvorbis/lib/res0.c
-	externlibs/libvorbis/lib/window.c
-	externlibs/libvorbis/lib/codebook.c
-	externlibs/libvorbis/lib/lsp.c
-	externlibs/libvorbis/lib/sharedbook.c
-	externlibs/libvorbis/lib/envelope.c
-	externlibs/libvorbis/lib/mapping0.c
-	externlibs/libvorbis/lib/smallft.c
-	externlibs/libvorbis/lib/floor0.c
-	externlibs/libvorbis/lib/mdct.c
-	externlibs/libvorbis/lib/synthesis.c
-)
+	include_directories(${oggvorbis_inc})
 
-add_globbed_headers(src_ogg "externlibs/libogg")
-add_globbed_headers(src_ogg "externlibs/libvorbis")
-include_directories("externlibs/libogg/include")
-include_directories("externlibs/libvorbis/include")
-add_library(static_ogg STATIC ${src_ogg})
-target_include_directories(static_ogg PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/externlibs/libogg/include/ogg")
-target_include_directories(static_ogg PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/externlibs/libvorbis/include/vorbis")
-target_include_directories(static_ogg PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/externlibs/libvorbis/lib")
-set(local_libs ${local_libs} static_ogg)
+	if(COMPILE_OGGVORBIS #[[STREQUAL "1"]])
+		set(local_libs ${local_libs} ${oggvorbis_lib})
+	else()
+		set(sys_libs ${sys_libs} ${oggvorbis_lib})
+	endif()
+else()
+	set(COMPILE_OGGVORBIS FALSE)
+endif()
+if(COMPILE_OGGVORBIS #[[STREQUAL "1"]])
+	message(STATUS "Build ogg/vorbis")
+	# Build internal ogg/vorbis
+	set(src_oggvorbis
+			externlibs/libogg/src/bitwise.c
+			externlibs/libogg/src/framing.c
+			externlibs/libvorbis/lib/analysis.c
+			externlibs/libvorbis/lib/floor1.c
+			externlibs/libvorbis/lib/psy.c
+			# externlibs/libvorbis/lib/tone.c
+			# externlibs/libvorbis/lib/barkmel.c
+			externlibs/libvorbis/lib/info.c
+			externlibs/libvorbis/lib/vorbisenc.c
+			externlibs/libvorbis/lib/bitrate.c
+			externlibs/libvorbis/lib/lookup.c
+			externlibs/libvorbis/lib/registry.c
+			externlibs/libvorbis/lib/vorbisfile.c
+			externlibs/libvorbis/lib/block.c
+			externlibs/libvorbis/lib/lpc.c
+			externlibs/libvorbis/lib/res0.c
+			externlibs/libvorbis/lib/window.c
+			externlibs/libvorbis/lib/codebook.c
+			externlibs/libvorbis/lib/lsp.c
+			externlibs/libvorbis/lib/sharedbook.c
+			externlibs/libvorbis/lib/envelope.c
+			externlibs/libvorbis/lib/mapping0.c
+			externlibs/libvorbis/lib/smallft.c
+			externlibs/libvorbis/lib/floor0.c
+			externlibs/libvorbis/lib/mdct.c
+			externlibs/libvorbis/lib/synthesis.c
+			)
+
+	add_globbed_headers(src_oggvorbis "externlibs/libogg")
+	add_globbed_headers(src_oggvorbis "externlibs/libvorbis")
+	add_library(static_oggvorbis STATIC ${src_oggvorbis})
+	target_include_directories(static_oggvorbis PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/externlibs/libogg/include/ogg")
+	target_include_directories(static_oggvorbis PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/externlibs/libvorbis/include/vorbis")
+	target_include_directories(static_oggvorbis PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/externlibs/libvorbis/lib")
 endif() # ogg
+
+if(REQUIRE_FREETYPE)
+	if(USE_SYSTEM_FREETYPE)
+		find_package(FREETYPE QUIET)
+		if(FREETYPE_FOUND)
+			set(freetype_inc ${FREETYPE_INCLUDE_DIRS})
+			set(freetype_lib ${FREETYPE_LIBRARIES})
+			set(COMPILE_FREETYPE FALSE)
+			message(STATUS "using system freetype")
+		else()
+			message(WARNING "libfreetype not found, wide character language font won't be available (apart from that doom3 will work)")
+			set(freetype_inc "externlibs/freetype/include")
+			set(freetype_lib "static_freetype")
+			set(COMPILE_FREETYPE TRUE)
+			message(STATUS "using internal freetype")
+		endif()
+	else()
+		set(freetype_inc "externlibs/freetype/include")
+		set(freetype_lib "static_freetype")
+		set(COMPILE_FREETYPE TRUE)
+		message(STATUS "using internal freetype")
+	endif()
+
+	include_directories(${freetype_inc})
+
+	if(COMPILE_FREETYPE #[[STREQUAL "1"]])
+		set(local_libs ${local_libs} ${freetype_lib})
+	else()
+		set(sys_libs ${sys_libs} ${freetype_lib})
+	endif()
+endif()
+if(COMPILE_FREETYPE)
+	message(STATUS "Build freetype2")
+	set(src_freetype # -2.9
+			externlibs/freetype/src/base/ftsystem.c
+			externlibs/freetype/src/base/ftdebug.c
+			externlibs/freetype/src/base/ftinit.c
+			externlibs/freetype/src/base/ftbase.c
+			externlibs/freetype/src/base/ftbbox.c
+			externlibs/freetype/src/base/ftbdf.c
+			externlibs/freetype/src/base/ftbitmap.c
+			externlibs/freetype/src/base/ftcid.c
+			externlibs/freetype/src/base/ftfntfmt.c
+			externlibs/freetype/src/base/ftfstype.c
+			externlibs/freetype/src/base/ftgasp.c
+			externlibs/freetype/src/base/ftglyph.c
+			externlibs/freetype/src/base/ftgxval.c
+			externlibs/freetype/src/base/ftlcdfil.c
+			externlibs/freetype/src/base/ftmm.c
+			externlibs/freetype/src/base/ftotval.c
+			externlibs/freetype/src/base/ftpatent.c
+			externlibs/freetype/src/base/ftpfr.c
+			externlibs/freetype/src/base/ftstroke.c
+			externlibs/freetype/src/base/ftsynth.c
+			externlibs/freetype/src/base/fttype1.c
+			externlibs/freetype/src/base/ftwinfnt.c
+			externlibs/freetype/src/truetype/truetype.c
+			externlibs/freetype/src/type1/type1.c
+			externlibs/freetype/src/cff/cff.c
+			externlibs/freetype/src/cid/type1cid.c
+			externlibs/freetype/src/pfr/pfr.c
+			externlibs/freetype/src/type42/type42.c
+			externlibs/freetype/src/winfonts/winfnt.c
+			externlibs/freetype/src/pcf/pcf.c
+			externlibs/freetype/src/bdf/bdf.c
+			externlibs/freetype/src/sfnt/sfnt.c
+			externlibs/freetype/src/autofit/autofit.c
+			externlibs/freetype/src/pshinter/pshinter.c
+			externlibs/freetype/src/raster/raster.c
+			externlibs/freetype/src/smooth/smooth.c
+			externlibs/freetype/src/cache/ftcache.c
+			externlibs/freetype/src/gzip/ftgzip.c
+			externlibs/freetype/src/lzw/ftlzw.c
+			externlibs/freetype/src/bzip2/ftbzip2.c
+			externlibs/freetype/src/psaux/psaux.c
+			externlibs/freetype/src/psnames/psnames.c
+			)
+
+	add_globbed_headers(src_freetype "externlibs/freetype/include")
+	add_definitions(-DFT2_BUILD_LIBRARY)
+	add_library(static_freetype STATIC ${src_freetype})
+endif()
 
 endif() # build engine
 
@@ -1403,17 +1623,17 @@ else()
 			sys/sdl/glimp.cpp
 		)
 	else()
-	set(src_sys_base
-		${src_sys_base}
-		sys/linux/main.cpp
-		sys/linux/input.cpp
-		sys/linux/sound.cpp
-		sys/linux/sound_alsa.cpp
-	)
-	set(src_sys_core
-		sys/linux/gles2.cpp
-	)
-endif()
+		set(src_sys_base
+			${src_sys_base}
+			sys/linux/main.cpp
+			sys/linux/input.cpp
+			sys/linux/sound.cpp
+			sys/linux/sound_alsa.cpp
+		)
+		set(src_sys_core
+			sys/linux/gles2.cpp
+		)
+	endif()
 
 endif()
 
@@ -1565,12 +1785,12 @@ if(CORE)
 	else()
 		set(DOOM3BINARY "Doom3")
 		if(CONSOLE)
-		add_executable(${DOOM3BINARY}
-				${src_core}
-				${src_sys_base}
-				${src_sys_core}
-				${src_editor_tools}
-				)
+			add_executable(${DOOM3BINARY}
+					${src_core}
+					${src_sys_base}
+					${src_sys_core}
+					${src_editor_tools}
+					)
 		else()
 			add_executable(${DOOM3BINARY} WIN32 MACOSX_BUNDLE
 					${src_core}
@@ -1611,21 +1831,29 @@ if(BASE)
 	add_globbed_headers(src_game "game")
 
 	add_library(game SHARED ${src_game})
-	
+
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX neo FILES ${src_game})
-	
+
 	#set_target_properties(game PROPERTIES PREFIX "")
 	set(d3_compile_definitions "GAME_DLL")
 	if(D3_MOD_FULL_BODY_AWARENESS)
 		set(d3_compile_definitions "${d3_compile_definitions};_MOD_FULL_BODY_AWARENESS")
 		set(d3_compile_definitions "${d3_compile_definitions};_MOD_VIEW_BODY")
+		set(d3_compile_definitions "${d3_compile_definitions};_MOD_VIEW_LIGHT")
 		message(STATUS "Build doom3 full body awareness mod support")
+	endif()
+	if(D3_MOD_BOTS)
+		set(d3_compile_definitions "${d3_compile_definitions};MOD_BOTS")
+		message(STATUS "Build doom3 bots mod support")
 	endif()
 	set_target_properties(game PROPERTIES COMPILE_DEFINITIONS "${d3_compile_definitions}")
 	target_include_directories(game PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/game")
 	set_target_properties(game PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(game PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(game idlib)
+	if(NOT MSVC)
+		target_compile_options(game PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS game
@@ -1655,6 +1883,9 @@ if(D3XP)
 	set_target_properties(d3xp PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(d3xp PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(d3xp idlib)
+	if(NOT MSVC)
+		target_compile_options(d3xp PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS d3xp
@@ -1684,6 +1915,9 @@ if(D3LE)
 	set_target_properties(d3le PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(d3le PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(d3le idlib)
+	if(NOT MSVC)
+		target_compile_options(d3le PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS d3le
@@ -1708,6 +1942,9 @@ if(CDOOM)
 	set_target_properties(cdoom PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(cdoom PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(cdoom idlib)
+	if(NOT MSVC)
+		target_compile_options(cdoom PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS cdoom
@@ -1741,6 +1978,9 @@ if(RIVENSIN)
 	set_target_properties(rivensin PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(rivensin PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(rivensin idlib)
+	if(NOT MSVC)
+		target_compile_options(rivensin PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS rivensin
@@ -1773,6 +2013,9 @@ if(HARDCORPS)
 	set_target_properties(hardcorps PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(hardcorps PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(hardcorps idlib)
+	if(NOT MSVC)
+		target_compile_options(hardcorps PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS hardcorps
@@ -1801,6 +2044,9 @@ if(OVERTHINKED)
 	set_target_properties(overthinked PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(overthinked PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(overthinked idlib)
+	if(NOT MSVC)
+		target_compile_options(overthinked PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS overthinked
@@ -1833,6 +2079,9 @@ if(SABOT)
 	set_target_properties(sabot PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(sabot PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(sabot idlib)
+	if(NOT MSVC)
+		target_compile_options(sabot PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS sabot
@@ -1871,6 +2120,9 @@ if(HEXENEOC)
 	set_target_properties(hexeneoc PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(hexeneoc PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(hexeneoc idlib)
+	if(NOT MSVC)
+		target_compile_options(hexeneoc PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS hexeneoc
@@ -1901,6 +2153,9 @@ if(FRAGGINGFREE)
 	set_target_properties(fraggingfree PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(fraggingfree PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(fraggingfree idlib)
+	if(NOT MSVC)
+		target_compile_options(fraggingfree PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS fraggingfree
@@ -1925,6 +2180,9 @@ if(LIBRECOOP)
 	set_target_properties(librecoop PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(librecoop PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(librecoop idlib)
+	if(NOT MSVC)
+		target_compile_options(librecoop PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS librecoop
@@ -1954,6 +2212,9 @@ if(LIBRECOOPXP)
 	set_target_properties(librecoopxp PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(librecoopxp PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(librecoopxp idlib)
+	if(NOT MSVC)
+		target_compile_options(librecoopxp PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS librecoopxp
@@ -1984,6 +2245,9 @@ if(PERFECTED)
 	set_target_properties(perfected PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(perfected PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(perfected idlib)
+	if(NOT MSVC)
+		target_compile_options(perfected PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS perfected
@@ -2014,6 +2278,9 @@ if(PERFECTEDROE)
 	set_target_properties(perfected_roe PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(perfected_roe PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(perfected_roe idlib)
+	if(NOT MSVC)
+		target_compile_options(perfected_roe PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS perfected_roe
@@ -2043,6 +2310,9 @@ if(PHOBOS)
 	set_target_properties(tfphobos PROPERTIES LINK_FLAGS "${ldflags}")
 	set_target_properties(tfphobos PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(tfphobos idlib)
+	if(NOT MSVC)
+		target_compile_options(tfphobos PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS tfphobos
@@ -2109,12 +2379,12 @@ if(RAVEN)
 	else()
 		set(QUAKE4BINARY "Quake4")
 		if(CONSOLE)
-		add_executable(${QUAKE4BINARY}
-				${src_core_raven}
-				${src_sys_base}
-				${src_sys_core}
-				${src_editor_tools}
-		)
+			add_executable(${QUAKE4BINARY}
+					${src_core_raven}
+					${src_sys_base}
+					${src_sys_core}
+					${src_editor_tools}
+			)
 		else()
 			add_executable(${QUAKE4BINARY} WIN32 MACOSX_BUNDLE
 					${src_core_raven}
@@ -2156,12 +2426,6 @@ endif()
 if(QUAKE4)
 	# quake4 game source
 	set(src_quake4 ${base_q4game_src})
-	set(quake4_game_src
-			bots/BotAASBuild.cpp
-			bots/BotAI.cpp
-			bots/BotSabot.cpp
-			)
-	list(APPEND src_quake4 ${quake4_game_src})
 	set_src_dir(src_quake4 "quake4" ${src_quake4})
 	add_globbed_headers(src_quake4 "quake4")
 
@@ -2184,6 +2448,9 @@ if(QUAKE4)
 	set_target_properties(q4game PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(q4game idlib_raven)
 	target_include_directories(q4game PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/raven")
+	if(NOT MSVC)
+		target_compile_options(q4game PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS q4game
@@ -2209,6 +2476,9 @@ if(HARDQORE)
 	set_target_properties(hardqore PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(hardqore idlib_raven)
 	target_include_directories(hardqore PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/raven")
+	if(NOT MSVC)
+		target_compile_options(hardqore PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS hardqore
@@ -2263,12 +2533,12 @@ if(HUMANHEAD)
 	else()
 		set(PREYBINARY "Prey")
 		if(CONSOLE)
-		add_executable(${PREYBINARY}
-				${src_core_humanhead}
-				${src_sys_base}
-				${src_sys_core}
-				${src_editor_tools}
-				)
+			add_executable(${PREYBINARY}
+					${src_core_humanhead}
+					${src_sys_base}
+					${src_sys_core}
+					${src_editor_tools}
+					)
 		else()
 			add_executable(${PREYBINARY} WIN32 MACOSX_BUNDLE
 					${src_core_humanhead}
@@ -2495,6 +2765,9 @@ if(PREY)
 	set_target_properties(preygame PROPERTIES INSTALL_NAME_DIR "@executable_path")
 	target_link_libraries(preygame idlib_humanhead)
 	target_include_directories(preygame PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/humanhead")
+	if(NOT MSVC)
+		target_compile_options(preygame PRIVATE -Wno-format-security)
+	endif()
 
 	if(NOT APPLE AND NOT WIN32 AND NOT ANDROID)
 		install(TARGETS preygame

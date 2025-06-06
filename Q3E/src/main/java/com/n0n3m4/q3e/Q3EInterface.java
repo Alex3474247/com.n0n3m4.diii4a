@@ -151,13 +151,20 @@ public class Q3EInterface
 			else
 				return Q3EGlobals.LIB_ENGINE4_D3BFG;
 		}
-		else if(isRealRTCW)
+/*		else if(isRealRTCW)
 		{
 			if(Q3EGlobals.GAME_VERSION_REALRTCW_5_0.equalsIgnoreCase(game_version))
 				return Q3EGlobals.LIB_ENGINE3_REALRTCW_5_0;
 			else
 				return Q3EGlobals.LIB_ENGINE3_REALRTCW;
 		}
+		else if(isTDM)
+		{
+			if(Q3EGlobals.GAME_VERSION_TDM_2_12.equalsIgnoreCase(game_version))
+				return Q3EGlobals.LIB_ENGINE4_TDM_2_12;
+			else
+				return Q3EGlobals.LIB_ENGINE4_TDM;
+		}*/
 		else
 			return EngineLibName();
 	}
@@ -1080,8 +1087,10 @@ public class Q3EInterface
 	{
 		if(isD3BFG)
 			return Q3EPreference.pref_harm_d3bfg_rendererBackend;
-		else if(isRealRTCW)
+/*		else if(isRealRTCW)
 			return Q3EPreference.pref_harm_realrtcw_version;
+		else if(isTDM)
+			return Q3EPreference.pref_harm_tdm_version;*/
 		else
 			return null;
 	}
@@ -1147,11 +1156,16 @@ public class Q3EInterface
 					Q3EGlobals.GAME_VERSION_D3BFG_OPENGL,
 					Q3EGlobals.GAME_VERSION_D3BFG_VULKAN,
 			};
-		else if(Q3EGlobals.GAME_REALRTCW.equalsIgnoreCase(name))
+/*		else if(Q3EGlobals.GAME_REALRTCW.equalsIgnoreCase(name))
 			return new String[] {
-					Q3EGlobals.GAME_VERSION_CURRENT,
+					Q3EGlobals.GAME_VERSION_REALRTCW,
 					Q3EGlobals.GAME_VERSION_REALRTCW_5_0,
 			};
+		else if(Q3EGlobals.GAME_TDM.equalsIgnoreCase(name))
+			return new String[] {
+					Q3EGlobals.GAME_VERSION_TDM,
+					Q3EGlobals.GAME_VERSION_TDM_2_12,
+			};*/
 		else
 			return null;
 	}
@@ -1194,8 +1208,10 @@ public class Q3EInterface
 	{
 		if(Q3EGlobals.GAME_DOOM3BFG.equalsIgnoreCase(name))
 			return Q3EPreference.pref_harm_d3bfg_rendererBackend;
-		else if(Q3EGlobals.GAME_REALRTCW.equalsIgnoreCase(name))
+/*		else if(Q3EGlobals.GAME_REALRTCW.equalsIgnoreCase(name))
 			return Q3EPreference.pref_harm_realrtcw_version;
+		else if(Q3EGlobals.GAME_TDM.equalsIgnoreCase(name))
+			return Q3EPreference.pref_harm_tdm_version;*/
 		else
 			return null;
 	}
@@ -1282,6 +1298,10 @@ public class Q3EInterface
 			int autoAspectRatio = preferences.getInt(Q3EPreference.pref_harm_r_autoAspectRatio, 1);
 			if(autoAspectRatio > 0)
 				extraCommand = GetGameCommandEngine(extraCommand).SetProp("harm_r_autoAspectRatio", autoAspectRatio).toString();
+
+			boolean skipHitEffect = preferences.getBoolean(Q3EPreference.pref_harm_g_skipHitEffect, false);
+			if(skipHitEffect)
+				extraCommand = GetGameCommandEngine(extraCommand).SetBoolProp("harm_g_skipHitEffect", skipHitEffect).toString();
 		}
 
 		if ((IsIdTech4() || IsIdTech3()) && preferences.getBoolean(Q3EPreference.pref_harm_skip_intro, false))

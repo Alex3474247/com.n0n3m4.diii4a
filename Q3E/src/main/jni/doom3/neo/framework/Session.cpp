@@ -110,6 +110,10 @@ idCVar	idSessionLocal::com_aviDemoHeight("com_aviDemoHeight", "256", CVAR_SYSTEM
 idCVar	idSessionLocal::com_aviDemoTics("com_aviDemoTics", "2", CVAR_SYSTEM | CVAR_INTEGER, "", 1, 60);
 idCVar	idSessionLocal::com_wipeSeconds("com_wipeSeconds", "1", CVAR_SYSTEM, "");
 idCVar	idSessionLocal::com_guid("com_guid", "", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_ROM, "");
+idCVar	idSessionLocal::com_disableAutoSaves( "com_disableAutoSaves", "0", CVAR_SYSTEM|CVAR_ARCHIVE|CVAR_BOOL,
+                                                "Don't create Autosaves when entering a new map" );
+
+static idCVar harm_g_skipHitEffect("harm_g_skipHitEffect", "0", CVAR_GAME | CVAR_ARCHIVE | CVAR_BOOL, "Skip all hit effect in game");
 
 #ifdef _HUMANHEAD //k: play level music when map loading
 static idCVar g_levelloadmusic("g_levelloadmusic", "1", CVAR_GAME | CVAR_ARCHIVE | CVAR_BOOL, "play music during level loads");
@@ -1084,7 +1088,7 @@ void idSessionLocal::StopPlayingRenderDemo()
 		float	demoFPS = numDemoFrames / demoSeconds;
 		idStr	message = va("%i frames rendered in %3.1f seconds = %3.1f fps\n", numDemoFrames, demoSeconds, demoFPS);
 
-		common->Printf(message);
+		common->Printf("%s", message.c_str());
 
 		if (timeDemo == TD_YES_THEN_QUIT) {
 			cmdSystem->BufferCommandText(CMD_EXEC_APPEND, "quit\n");
@@ -1511,8 +1515,18 @@ void idSessionLocal::MoveToNewMap(const char *mapName)
     {
 #endif
     if (!mapSpawnData.serverInfo.GetBool("devmap")) {
-        // Autosave at the beginning of the level
-        SaveGame(GetAutoSaveName(mapName), true);
+        if ( !com_disableAutoSaves.GetBool() )
+        {
+            // DG: set an explicit savename to avoid problems with autosave names
+            //     (they were translated which caused problems like all alpha labs parts
+            //      getting the same filename in spanish, probably because the strings contained
+            //      dots and everything behind them was cut off as "file extension".. see #305)
+
+            // Autosave at the beginning of the level
+            SaveGame(GetAutoSaveName(mapName), true);
+        }
+        else
+            common->Printf("Autosave at the beginning of the level disabled with `com_disableAutoSaves` = 1");
     }
 
     SetGUI(NULL, NULL);
@@ -1745,7 +1759,7 @@ void idSessionLocal::LoadLoadingGui(const char *mapName)
 	stripped.StripPath();
 
 	char guiMap[ MAX_STRING_CHARS ];
-	strncpy(guiMap, va("guis/map/%s.gui", stripped.c_str()), MAX_STRING_CHARS);
+    idStr::Copynz(guiMap, va("guis/map/%s.gui", stripped.c_str()), MAX_STRING_CHARS);
 	// give the gamecode a chance to override
 #if !defined(_RAVEN) && !defined(_HUMANHEAD) // k: quake4 and prey loading gui is generic
 	game->GetMapLoadingGUI(guiMap);
@@ -2306,6 +2320,42 @@ void Session_Hitch_f(const idCmdArgs &args)
 		sw->UnPause();
 		soundSystem->SetMute(false);
 	}
+}
+
+static void G_SkipHitEffect(bool on)
+{
+	idStr cmds = on ? 
+		"set g_dvTime 0;set g_kickTime 0;set g_knockback 0"
+		: 
+		"reset g_dvTime;reset g_kickTime;reset g_knockback"
+		;
+	if(on)
+	{
+		common->Printf("Skip hit effect\n");
+		cvarSystem->SetCVarInteger("g_dvTime", 0);
+		cvarSystem->SetCVarInteger("g_kickTime", 0);
+		cvarSystem->SetCVarInteger("g_knockback", 0);
+	}
+	else
+	{
+		common->Printf("Recovery hit effect\n");
+		Com_ResetCVarValue("g_dvTime");
+		Com_ResetCVarValue("g_kickTime");
+		Com_ResetCVarValue("g_knockback");
+	}
+	common->Printf("%s\n", cmds.c_str());
+	//cmdSystem->BufferCommandText(CMD_EXEC_APPEND, cmds.c_str());
+}
+
+static void Game_SkipHitEffect_f(const idCmdArgs &args)
+{
+	bool disable = false;
+	if(args.Argc() > 1)
+	{
+		if(!idStr::Cmp(args.Argv(1), "0"))
+			disable = true;
+	}
+	G_SkipHitEffect(!disable);
 }
 
 /*
@@ -2877,10 +2927,6 @@ void idSessionLocal::PacifierUpdate()
 		return;
 	}
 
-#ifdef _MULTITHREAD
-	if(multithreadActive && Sys_InRenderThread()) // render thread do not continue in multithreading, e.g. call this from idCommon::Printf
-		return;
-#endif
 	int	time = eventLoop->Milliseconds();
 
 	if (time - lastPacifierTime < 100) {
@@ -2899,6 +2945,9 @@ void idSessionLocal::PacifierUpdate()
 
 	Sys_GenerateEvents();
 
+#ifdef _MULTITHREAD
+	if(!multithreadActive || !Sys_InRenderThread()) // render thread do not continue in multithreading, e.g. call this from idCommon::Printf
+#endif
 	UpdateScreen();
 
 	idAsyncNetwork::client.PacifierUpdate();
@@ -2928,6 +2977,9 @@ void idSessionLocal::Draw()
 		// NOTE that you can't use this for aviGame recording, it will tick at real com_frameTime between screenshots..
 		renderSystem->SetColor(colorBlack);
 		renderSystem->DrawStretchPic(0, 0, 640, 480, 0, 0, 1, 1, declManager->FindMaterial("_white"));
+#if 0 //karin: make active first?
+		guiTest->Activate(true, com_frameTime);
+#endif
 		guiTest->Redraw(com_frameTime);
 	} else if (guiActive && !guiActive->State().GetBool("gameDraw")) {
 
@@ -3543,6 +3595,7 @@ void idSessionLocal::Init()
 	cmdSystem->AddCommand("promptKey", Session_PromptKey_f, CMD_FL_SYSTEM, "prompt and sets the CD Key");
 
 	cmdSystem->AddCommand("hitch", Session_Hitch_f, CMD_FL_SYSTEM|CMD_FL_CHEAT, "hitches the game");
+	cmdSystem->AddCommand("skipHitEffect", Game_SkipHitEffect_f, CMD_FL_GAME, "skip all hit effect in game");
 
 #ifdef _RAVEN //k: quake4 game cmd callback
 	cmdSystem->AddCommand("endOfGame", Session_EndOfGame_f, CMD_FL_SYSTEM, "ends the game");
@@ -3610,6 +3663,9 @@ void idSessionLocal::Init()
 	guiHandle = NULL;
 
 	ReadCDKey();
+
+	if(harm_g_skipHitEffect.GetBool())
+		G_SkipHitEffect(true); // cmdSystem->BufferCommandText(CMD_EXEC_APPEND, "skipHitEffect;");
 
 	common->Printf("session initialized\n");
 	common->Printf("--------------------------------------\n");
@@ -4112,7 +4168,7 @@ void idSessionLocal::ShowSubtitle(const idStrList &strList)
 				float f = textScale > 0.0f ? textScale : subtitlesTextScale[index]; \
 				if(f > 0.0f) \
 				{ \
-					sprintf(text, /*sizeof(text), */"%f", f); \
+					idStr::snPrintf(text, sizeof(text), "%f", f); \
 					desktop->SetChildWinVarVal(name, "textScale", text); \
 				} \
 			}
@@ -4131,14 +4187,14 @@ void idSessionLocal::ShowSubtitle(const idStrList &strList)
 		index = num - 1 - i;
 		if(index >= 0)
 		{
-			sprintf(text, /*sizeof(text), */"subtitleText%d", 3 - i);
+			idStr::snPrintf(text, sizeof(text), "subtitleText%d", 3 - i);
 			guiSubtitles->SetStateString(text, strList[index].c_str());
-			sprintf(text, /*sizeof(text), */"subtitleAlpha%d", 3 - i);
+            idStr::snPrintf(text, sizeof(text), "subtitleAlpha%d", 3 - i);
 			guiSubtitles->SetStateFloat(text, 1);
 		}
 		else
 		{
-			sprintf(text, /*sizeof(text), */"subtitleAlpha%d", 3 - i);
+            idStr::snPrintf(text, sizeof(text), "subtitleAlpha%d", 3 - i);
 			guiSubtitles->SetStateFloat(text, 0);
 		}
 	}
@@ -4197,7 +4253,7 @@ void idSessionLocal::UpdateScreen(byte *data, bool outOfSequence)
 	if (com_speeds.GetBool()) {
 		renderSystem->EndFrame(&time_frontend, &time_backend);
 	} else {
-		renderSystem->EndFrame(data, NULL, NULL);
+        renderSystem->EndFrame(data, NULL, NULL);
 	}
 
 	insideUpdateScreen = false;

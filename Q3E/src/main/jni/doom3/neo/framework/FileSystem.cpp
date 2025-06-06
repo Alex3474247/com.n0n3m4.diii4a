@@ -2236,7 +2236,7 @@ void idFileSystemLocal::Path_f(const idCmdArgs &args)
 					status += ")\n";
 				}
 
-				common->Printf(status.c_str());
+				common->Printf("%s", status.c_str());
 			} else {
 				common->Printf("%s (%i files)\n", sp->pack->pakFilename.c_str(), sp->pack->numfiles);
 			}
@@ -3566,7 +3566,7 @@ idFile_InZip *idFileSystemLocal::ReadFileFromZip(pack_t *pak, fileInPack_t *pakF
     d3_unz_file_info	file_info;
     int err = d3_unzGetCurrentFileInfo( uf, &file_info, filename_inzip, sizeof(filename_inzip), NULL, 0, NULL, 0 );
     if ( err != UNZ_OK ) {
-        common->FatalError( "Couldn't get file info for %s in %s, pos %llu", relativePath, pak->pakFilename.c_str(), pakFile->pos );
+        common->FatalError( "Couldn't get file info for %s in %s, pos %lu", relativePath, pak->pakFilename.c_str(), pakFile->pos );
     }
 
     // create idFile_InZip and set fields accordingly
@@ -4516,7 +4516,7 @@ void idFileSystemLocal::FindDLL(const char *name, char _dllPath[ MAX_OSPATH ], b
 		dllPath = "";
 	}
 
-	idStr::snPrintf(_dllPath, MAX_OSPATH, dllPath.c_str());
+	idStr::snPrintf(_dllPath, MAX_OSPATH, "%s", dllPath.c_str());
 }
 
 /*

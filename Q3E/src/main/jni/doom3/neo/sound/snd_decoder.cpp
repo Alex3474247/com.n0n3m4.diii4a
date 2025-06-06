@@ -34,8 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 #include <vorbis/codec.h>
 #include <vorbis/vorbisfile.h>
 #else
-#include "../sys/Stub_SDL_endian.h"
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#if D3_IS_BIG_ENDIAN
   #define STB_VORBIS_BIG_ENDIAN
 #endif
 #define STB_VORBIS_NO_STDIO
@@ -251,6 +250,7 @@ int idWaveFile::OpenOGG(const char *strFileName, waveformatex_t *pwfx)
 		Sys_LeaveCriticalSection(CRITICAL_SECTION_ONE);
 		fileSystem->CloseFile(mhmmio);
 		mhmmio = NULL;
+        common->Warning( "Opening OGG file '%s' with libogg/libvorbis failed.", strFileName );
 		return -1;
 	}
 
@@ -705,7 +705,7 @@ int idSampleDecoderLocal::DecodePCM(idSoundSample *sample, int sampleOffset44k, 
 	int sampleCount = sampleCount44k >> shift;
 
 	if (sample->nonCacheData == NULL) {
-		//k2024 assert(false);	// this should never happen ( note: I've seen that happen with the main thread down in idGameLocal::MapClear clearing entities - TTimo )
+		//assert(false);	// this should never happen ( note: I've seen that happen with the main thread down in idGameLocal::MapClear clearing entities - TTimo )
         // DG: see comment in DecodeOGG()
         common->Warning( "Called idSampleDecoderLocal::DecodePCM() on idSoundSample '%s' without nonCacheData\n", sample->name.c_str() );
 		failed = true;
@@ -750,7 +750,7 @@ int idSampleDecoderLocal::DecodeOGG(idSoundSample *sample, int sampleOffset44k, 
 		}
 
 		if (sample->nonCacheData == NULL) {
-            //k2024 assert(false);	// this should never happen
+            //assert(false);	// this should never happen
             /* DG: turned this assertion into a warning, because this can happen, at least with
              * the Classic Doom3 mod (when starting a new game). There idSoundCache::EndLevelLoad()
              * purges (with idSoundSample::PurgeSoundSample()) sound/music/cdoomtheme.ogg
@@ -767,7 +767,7 @@ int idSampleDecoderLocal::DecodeOGG(idSoundSample *sample, int sampleOffset44k, 
 		}
 
 #if !defined(_USING_STB_OGG)
-		file.SetData((const char *)sample->nonCacheData, sample->objectMemSize);
+        file.SetData((const char *)sample->nonCacheData, sample->objectMemSize);
 
 		if (ov_openFile(&file, &ogg) < 0) {
 			failed = true;

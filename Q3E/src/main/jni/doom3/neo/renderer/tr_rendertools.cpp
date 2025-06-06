@@ -1090,6 +1090,13 @@ static void RB_ShowSurfaceInfo(drawSurf_t **drawSurfs, int numDrawSurfs)
 	                          0.35f, colorRed, tr.primaryView->renderView.viewaxis);
 	tr.primaryWorld->DrawText(mt.material->GetName(), mt.point,
 	                          0.35f, colorBlue, tr.primaryView->renderView.viewaxis);
+#ifdef _RAVEN //karin: show materialType
+	if(mt.materialType)
+	{
+		tr.primaryWorld->DrawText(mt.materialType->GetName(), mt.point - tr.primaryView->renderView.viewaxis[2] * 12,
+				0.35f, colorGreen, tr.primaryView->renderView.viewaxis);
+	}
+#endif
 #ifdef _K_DEV //karin: show stage texgen
 	idStr str;
 	const char *TG_NAMES[] = {
@@ -1104,7 +1111,7 @@ static void RB_ShowSurfaceInfo(drawSurf_t **drawSurfs, int numDrawSurfs)
 	};
 	for(int i = 0; i < mt.material->GetNumStages(); i++)
 		str += va("%d. %s\n", i, TG_NAMES[mt.material->GetStage(i)->texture.texgen]);
-	tr.primaryWorld->DrawText(str.c_str(), mt.point - tr.primaryView->renderView.viewaxis[2] * 12,
+	tr.primaryWorld->DrawText(str.c_str(), mt.point - tr.primaryView->renderView.viewaxis[2] * 24,
 	                          0.35f, colorRed, tr.primaryView->renderView.viewaxis);
 #endif
 
@@ -2840,6 +2847,7 @@ void RB_TestImage(void)
 		w = 0.25;
 		h = 0.25;
 	} else {
+		// common->Printf("testImage::image size %d x %d\n", image->uploadWidth,image->uploadHeight);
 		max = image->uploadWidth > image->uploadHeight ? image->uploadWidth : image->uploadHeight;
 
 		w = 0.25 * image->uploadWidth / max;
@@ -2998,6 +3006,13 @@ void R_ShowSurfaceInfo(void)
 	                          0.35f, colorRed, tr.primaryView->renderView.viewaxis);
 	tr.primaryWorld->DrawText(mt.material->GetName(), mt.point,
 	                          0.35f, colorBlue, tr.primaryView->renderView.viewaxis);
+#ifdef _RAVEN //karin: show materialType
+	if(mt.materialType)
+	{
+		tr.primaryWorld->DrawText(mt.materialType->GetName(), mt.point - tr.primaryView->renderView.viewaxis[2] * 12,
+				0.35f, colorGreen, tr.primaryView->renderView.viewaxis);
+	}
+#endif
 #ifdef _K_DEV //karin: show stage texgen
 	idStr str;
 	const char *TG_NAMES[] = {
@@ -3012,9 +3027,40 @@ void R_ShowSurfaceInfo(void)
 	};
 	for(int i = 0; i < mt.material->GetNumStages(); i++)
 		str += va("%d. %s\n", i, TG_NAMES[mt.material->GetStage(i)->texture.texgen]);
-	tr.primaryWorld->DrawText(str.c_str(), mt.point - tr.primaryView->renderView.viewaxis[2] * 12,
+	tr.primaryWorld->DrawText(str.c_str(), mt.point - tr.primaryView->renderView.viewaxis[2] * 24,
 	                          0.35f, colorRed, tr.primaryView->renderView.viewaxis);
 #endif
 }
 
 #endif
+
+/*
+=================
+RB_DrawElementsImmediate
+
+Draws with immediate mode commands, which is going to be very slow.
+This should never happen if the vertex cache is operating properly.
+=================
+*/
+void RB_DrawElementsImmediate( const srfTriangles_t *tri ) {
+
+	backEnd.pc.c_drawElements++;
+	backEnd.pc.c_drawIndexes += tri->numIndexes;
+	backEnd.pc.c_drawVertexes += tri->numVerts;
+
+	if ( tri->ambientSurface != NULL  ) {
+		if ( tri->indexes == tri->ambientSurface->indexes ) {
+			backEnd.pc.c_drawRefIndexes += tri->numIndexes;
+		}
+		if ( tri->verts == tri->ambientSurface->verts ) {
+			backEnd.pc.c_drawRefVertexes += tri->numVerts;
+		}
+	}
+
+	glBegin( GL_TRIANGLES );
+	for ( int i = 0 ; i < tri->numIndexes ; i++ ) {
+		glTexCoord2fv( tri->verts[ tri->indexes[i] ].st.ToFloatPtr() );
+		glVertex3fv( tri->verts[ tri->indexes[i] ].xyz.ToFloatPtr() );
+	}
+	glEnd();
+}

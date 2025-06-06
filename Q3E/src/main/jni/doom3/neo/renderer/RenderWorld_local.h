@@ -29,6 +29,10 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __RENDERWORLDLOCAL_H__
 #define __RENDERWORLDLOCAL_H__
 
+#ifdef _D3BFG_CULLING
+#include "matrix/RenderMatrix.h"
+#endif
+
 // assume any lightDef or entityDef index above this is an internal error
 const int LUDICROUS_INDEX	= 10000;
 
@@ -39,6 +43,11 @@ typedef struct portal_s {
 	idPlane					plane;			// view must be on the positive side of the plane to cross
 	struct portal_s 		*next;			// next portal of the area
 	struct doublePortal_s 	*doublePortal;
+#ifdef _HUMANHEAD
+#if GAMEPORTAL_PVS
+    bool                    isGamePortal;
+#endif
+#endif
 } portal_t;
 
 
@@ -74,6 +83,19 @@ typedef struct {
 	// this is the area number, else CHILDREN_HAVE_MULTIPLE_AREAS
 } areaNode_t;
 
+
+#ifdef _HUMANHEAD
+#if GAMEPORTAL_PVS
+typedef struct gamePortalInfo_s
+{
+	idStr name; // entity name
+	int srcArea; // a1, portal in area num
+	int dstArea; // a2, cameraTarget in area num
+	idVec3 srcPosition; // portal position
+	idVec3 dstPosition; // cameraTarget position
+} gamePortalInfo_t;
+#endif
+#endif
 
 class idRenderWorldLocal : public idRenderWorld
 {
@@ -135,39 +157,44 @@ class idRenderWorldLocal : public idRenderWorld
 
 		//-----------------------
 #ifdef _RAVEN
-	virtual void			RenderScene( const renderView_t *renderView, int renderFlags/* = RF_NORMAL */) {
-		(void)renderFlags;
-		RenderScene(renderView);
-	}
-	virtual bool			HasSkybox(int areaNum);
+        virtual void			RenderScene( const renderView_t *renderView, int renderFlags/* = RF_NORMAL */) {
+            (void)renderFlags;
+            RenderScene(renderView);
+        }
+        virtual bool			HasSkybox(int areaNum);
 
-	virtual void			DebugClear(int time) {
-		DebugClearLines(time);
-		DebugClearPolygons(time);
-	};
+        virtual void			DebugClear(int time) {
+            DebugClearLines(time);
+            DebugClearPolygons(time);
+        };
 
 // jscott: want to be able to specify depth test
-	virtual void			DebugBounds(const idVec4& color, const idBounds& bounds, const idVec3& org, const int lifetime, bool depthTest) {
-		(void)depthTest;
-		DebugBox(color, idBox(bounds) + org, lifetime);
-	}
+        virtual void			DebugBounds(const idVec4& color, const idBounds& bounds, const idVec3& org, const int lifetime, bool depthTest) {
+            (void)depthTest;
+            DebugBox(color, idBox(bounds) + org, lifetime);
+        }
 
-	virtual void			DebugFOV(const idVec4& color, const idVec3& origin, const idVec3& dir, float farDot, float farDist, float nearDot, float nearDist, float alpha, int lifetime) { (void)color; (void)origin; (void)dir; (void)farDot; (void)farDist; (void)nearDot; (void)nearDist; (void)alpha; (void)lifetime; }
+        virtual void			DebugFOV(const idVec4& color, const idVec3& origin, const idVec3& dir, float farDot, float farDist, float nearDot, float nearDist, float alpha, int lifetime) { (void)color; (void)origin; (void)dir; (void)farDot; (void)farDist; (void)nearDot; (void)nearDist; (void)alpha; (void)lifetime; }
 
-	virtual void			FindVisibleAreas( idVec3 origin, int areaNum, bool *visibleAreas );
-	void					FindVisibleAreas_r(const idVec3 &origin, int areaNum, const struct portalStack_s *ps, bool *visibleAreas);
+        virtual void			FindVisibleAreas( idVec3 origin, int areaNum, bool *visibleAreas );
+        void					FindVisibleAreas_r(const idVec3 &origin, int areaNum, const struct portalStack_s *ps, bool *visibleAreas);
 
-	// jscott: handling of effects
-	virtual qhandle_t		AddEffectDef(const renderEffect_t* reffect, int time);
-	virtual bool			UpdateEffectDef(qhandle_t effectHandle, const renderEffect_t* reffect, int time);
-	virtual void			StopEffectDef(qhandle_t effectHandle);
-	virtual const class rvRenderEffectLocal* GetEffectDef(qhandle_t effectHandle) const;
-	virtual void			FreeEffectDef(qhandle_t effectHandle);
-	virtual bool			EffectDefHasSound(const renderEffect_s* reffect);
+// jscott: handling of effects
+        virtual qhandle_t		AddEffectDef(const renderEffect_t* reffect, int time);
+        virtual bool			UpdateEffectDef(qhandle_t effectHandle, const renderEffect_t* reffect, int time);
+        virtual void			StopEffectDef(qhandle_t effectHandle);
+        virtual const class rvRenderEffectLocal* GetEffectDef(qhandle_t effectHandle) const;
+        virtual void			FreeEffectDef(qhandle_t effectHandle);
+        virtual bool			EffectDefHasSound(const renderEffect_s* reffect);
 
 // jmarshall: BSE
-	idList<rvRenderEffectLocal*>	effectsDef;
+	    idList<rvRenderEffectLocal*>	effectsDef;
 // jmarshll end
+#endif
+
+#ifdef _D3BFG_CULLING
+        void					PushFrustumIntoTree_r( idRenderEntityLocal* def, idRenderLightLocal* light, const frustumCorners_t& corners, int nodeNum );
+        void					PushFrustumIntoTree( idRenderEntityLocal* def, idRenderLightLocal* light, const idRenderMatrix& frustumTransform, const idBounds& frustumBounds );
 #endif
 
 		idStr					mapName;				// ie: maps/tim_dm2.proc, written to demoFile
@@ -305,7 +332,21 @@ class idRenderWorldLocal : public idRenderWorld
 #endif
 
 #if DEATHWALK_AUTOLOAD
-		int numAppendPortalAreas;
+		int                     numAppendPortalAreas; //karin: num deathwalk areas, should be 1 or 0
+#endif
+
+#if GAMEPORTAL_PVS
+        virtual qhandle_t		FindGamePortal(const char *name);
+        virtual void			RegisterGamePortals(idMapFile *mapFile);
+        virtual void			DrawGamePortals(int mode, const idMat3 &viewAxis);
+        virtual bool			IsGamePortal( qhandle_t handle );
+        virtual idVec3			GetGamePortalSrc( qhandle_t handle );
+        virtual idVec3			GetGamePortalDst( qhandle_t handle );
+
+        //karin: numMapInterAreaPortals + gamePortalInfos.Num() == numInterAreaPortals
+        idList<gamePortalInfo_t> gamePortalInfos;
+        int                     numMapInterAreaPortals; //karin: raw numInterAreaPortals
+        void                    ClearGamePortalInfos(void);
 #endif
 #endif
 };

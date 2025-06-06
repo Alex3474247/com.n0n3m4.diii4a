@@ -71,12 +71,8 @@ static void R_InitGLSLCvars(void)
 #ifdef _SHADOW_MAPPING
 	r_shadowMapping = r_useShadowMapping.GetBool();
 	r_shadowMapPerforated = r_forceShadowMapsOnAlphaTestedSurfaces.GetBool();
-#ifdef _CONTROL_SHADOW_MAPPING_RENDERING
-	int i = harm_r_shadowMappingScheme.GetInteger();
-    if(i < 0 || i > SHADOW_MAPPING_NON_PRELIGHT)
-        i = SHADOW_MAPPING_PURE;
-    r_shadowMappingScheme = i;
-#endif
+    r_shadowMapCombine = harm_r_shadowMapCombine.GetBool();
+    r_shadowMapParallelSplitFrustums = r_shadowMapSplits.GetInteger();
 #ifdef GL_ES_VERSION_3_0
 	if(!USING_GLES3) {
 #endif
@@ -182,16 +178,16 @@ void R_CheckBackEndCvars(void)
 		r_shadowMapPerforated = r_forceShadowMapsOnAlphaTestedSurfaces.GetBool();
 		r_forceShadowMapsOnAlphaTestedSurfaces.ClearModified();
 	}
-#ifdef _CONTROL_SHADOW_MAPPING_RENDERING
-	if(harm_r_shadowMappingScheme.IsModified())
+    if(harm_r_shadowMapCombine.IsModified())
+    {
+        r_shadowMapCombine = harm_r_shadowMapCombine.GetBool();
+        harm_r_shadowMapCombine.ClearModified();
+    }
+	if(r_shadowMapSplits.IsModified())
 	{
-        int i = harm_r_shadowMappingScheme.GetInteger();
-        if(i < 0 || i > SHADOW_MAPPING_NON_PRELIGHT)
-            i = SHADOW_MAPPING_PURE;
-        r_shadowMappingScheme = i;
-		harm_r_shadowMappingScheme.ClearModified();
+		r_shadowMapParallelSplitFrustums = r_shadowMapSplits.GetInteger();
+		r_shadowMapSplits.ClearModified();
 	}
-#endif
 #endif
 
 #ifdef _STENCIL_SHADOW_IMPROVE

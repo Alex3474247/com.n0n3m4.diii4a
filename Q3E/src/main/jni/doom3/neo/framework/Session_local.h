@@ -166,18 +166,18 @@ class idSessionLocal : public idSession
 
 		const char			*GetAuthMsg(void);
 #ifdef _HUMANHEAD
-		virtual bool ShouldAppendLevel(void) const;
+		virtual bool        ShouldAppendLevel(void) const;
 		virtual const char * GetDeathwalkMapName(void) const;
-		const char * GetDeathwalkMapName(const char *mapName) const;
-		void ShowSubtitle(const idStrList &strList);
-		void HideSubtitle(void) const;
+		const char *        GetDeathwalkMapName(const char *mapName) const;
+		void                ShowSubtitle(const idStrList &strList);
+		void                HideSubtitle(void) const;
 
 		idUserInterface 	*guiSubtitles;
 		bool				subtitleTextScaleInited;
 		float 				subtitlesTextScale[3];
 #endif
 #ifdef _MULTITHREAD
-		virtual void UpdateScreen(byte *data, bool outOfSequence);
+		virtual void        UpdateScreen(byte *data, bool outOfSequence);
 #endif
 
 		//=====================================
@@ -194,6 +194,7 @@ class idSessionLocal : public idSession
 		static idCVar		com_aviDemoTics;
 		static idCVar		com_wipeSeconds;
 		static idCVar		com_guid;
+        static idCVar		com_disableAutoSaves;
 
 		static idCVar		gui_configServerRate;
 
