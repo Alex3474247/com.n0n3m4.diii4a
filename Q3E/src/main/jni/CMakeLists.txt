@@ -46,6 +46,7 @@ OPTION(GAME_FTEQW       "Build FTEQW"                           ON)
 OPTION(GAME_JK          "Build Jedi Knight"                     ON)
 
 # Experimental
+OPTION(GAME_SERIOUSSAM  "Build Serious Sam"                     ON)
 OPTION(GAME_QUAKES      "Build Quake SandBox"                   OFF)
 OPTION(GAME_DNF         "Build Duke Nukem Forever"              OFF)
 
@@ -69,6 +70,10 @@ if(GAME_QUAKE3 OR GAME_QUAKE2 OR GAME_QUAKE1 OR GAME_RTCW OR GAME_ETW OR GAME_RE
     add_subdirectory (deplibs/oboe) # 1.8.1
     add_subdirectory ( common )
 endif()
+
+set(DIII4A_DEPEND_LIBRARY_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deplibs")
+set(DIII4A_DEPEND_INCLUDE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/depincs")
+set(DIII4A_DEPEND_COMMON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/common")
 
 if(GAME_RTCW) # 438e7d413b5f7277187c35b032eb0ef9093ae778 | May 27, 2024 | All: Fix compilation on FreeBSD
     message(STATUS "Build Return to Castle Wolfenstein")
@@ -149,4 +154,12 @@ endif()
 if(GAME_QUAKES) # noire-dev/SourceTech/commit/b0a1d46740d5a76f172a2889f285214a95dd3702 noire-dev/QuakeSandbox/commit/f01cab6d123784f6e2aaa839e9ccd3ec0a6f1325
     message(STATUS "Build Quake SandBox")
     add_subdirectory ( quakes ) # Quake SandBox
+endif()
+
+
+if(GAME_SERIOUSSAM) # v1.10.7 | Update README.md | https://github.com/tx00100xt/SeriousSamClassic/commit/871c9ebf1af0a09a976a080cbdc2ab6e7a21ab57
+    message(STATUS "Build Serious Sam")
+    OPTION(GAME_SAMTFE  "Build Serious Sam Classic The First Encounter"                     ON)
+    OPTION(GAME_SAMTSE  "Build Serious Sam Classic The Second Encounter"                     OFF)
+    add_subdirectory ( serioussam ) # Serious-Engine
 endif()
