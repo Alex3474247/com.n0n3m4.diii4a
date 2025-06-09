@@ -108,6 +108,11 @@ public final class Q3EGlobals
     public static final int ONSCRREN_JOYSTICK_VISIBLE_HIDDEN       = 1;
     public static final int ONSCRREN_JOYSTICK_VISIBLE_ONLY_PRESSED = 2;
 
+    // button swipe release delay
+    public static final int BUTTON_SWIPE_RELEASE_DELAY_AUTO        = -1;
+    public static final int BUTTON_SWIPE_RELEASE_DELAY_NONE        = 0;
+    public static final int SERIOUS_SAM_BUTTON_SWIPE_RELEASE_DELAY = 50;
+
     // disc button trigger
     public static final int ONSCRREN_DISC_SWIPE = 0;
     public static final int ONSCRREN_DISC_CLICK = 1;
@@ -149,6 +154,7 @@ public final class Q3EGlobals
     public static final String LIB_ENGINE_JA        = "libopenjk_sp.so"; // Jedi Academy
     public static final String LIB_ENGINE_JO        = "libopenjo_sp.so"; // Jedi Outcast
     public static final String LIB_ENGINE_SAMTFE    = "libSeriousSamTFE.so"; // Serious Sam First
+    public static final String LIB_ENGINE_SAMTSE    = "libSeriousSamTSE.so"; // Serious Sam Second
 
     public static final String LIB_ENGINE4_D3BFG_VULKAN = "libRBDoom3BFGVulkan.so"; // Doom3-BFG(Vulkan)
     public static final String LIB_ENGINE3_REALRTCW_5_0 = "libRealRTCW_5_0.so"; // RealRTCW(5.0)
@@ -182,6 +188,7 @@ public final class Q3EGlobals
     public static final String CONFIG_FILE_JA       = "openjk_sp.cfg";
     public static final String CONFIG_FILE_JO       = "openjo_sp.cfg";
     public static final String CONFIG_FILE_SAMTFE   = "";
+    public static final String CONFIG_FILE_SAMTSE   = "";
 
     // game type token
     public static final String GAME_DOOM3    = "doom3";
@@ -200,6 +207,7 @@ public final class Q3EGlobals
     public static final String GAME_JA       = "openja";
     public static final String GAME_JO       = "openjo";
     public static final String GAME_SAMTFE   = "samtfe";
+    public static final String GAME_SAMTSE   = "samtse";
 
     // game name
     public static final String GAME_NAME_DOOM3    = "DOOM 3";
@@ -218,6 +226,7 @@ public final class Q3EGlobals
     public static final String GAME_NAME_JA       = "Jedi Academy";
     public static final String GAME_NAME_JO       = "Jedi Outcast";
     public static final String GAME_NAME_SAMTFE   = "Serious Sam TFE";
+    public static final String GAME_NAME_SAMTSE   = "Serious Sam TSE";
 
     // game base folder
     public static final String GAME_BASE_DOOM3      = "base";
@@ -238,6 +247,7 @@ public final class Q3EGlobals
     public static final String GAME_BASE_JA         = "base";
     public static final String GAME_BASE_JO         = "base";
     public static final String GAME_BASE_SAMTFE     = "";
+    public static final String GAME_BASE_SAMTSE     = "";
 
     // game sub directory
     public static final String GAME_SUBDIR_DOOM3    = "doom3";
@@ -256,6 +266,7 @@ public final class Q3EGlobals
     public static final String GAME_SUBDIR_JA       = "openja";
     public static final String GAME_SUBDIR_JO       = "openjo";
     public static final String GAME_SUBDIR_SAMTFE   = "serioussamtfe";
+    public static final String GAME_SUBDIR_SAMTSE   = "serioussamtse";
 
     // game type index(ID)
     public static final int GAME_ID_DOOM3    = 0;
@@ -274,6 +285,7 @@ public final class Q3EGlobals
     public static final int GAME_ID_JA       = 13;
     public static final int GAME_ID_JO       = 14;
     public static final int GAME_ID_SAMTFE   = 15;
+    public static final int GAME_ID_SAMTSE   = 16;
 
     public enum PatchResource
     {

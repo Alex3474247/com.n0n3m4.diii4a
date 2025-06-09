@@ -151,10 +151,17 @@ public final class Q3EPreference
     // SamTFE
     public static final String pref_harm_samtfe_fs_game          = "q3e_harm_samtfe_fs_game"; //k
     public static final String pref_harm_samtfe_game_lib         = "q3e_harm_samtfe_game_lib"; //k
-    public static final String pref_harm_samtfe_user_mod         = "q3e_harm_samtfeuser_mod"; //k
+    public static final String pref_harm_samtfe_user_mod         = "q3e_harm_samtfe_user_mod"; //k
     public static final String pref_params_samtfe                = "q3e_params_samtfe"; //k
     public static final String pref_harm_samtfe_command_record   = "q3e_harm_samtfe_command_record";
     public static final String pref_harm_samtfe_game_mod         = "q3e_harm_samtfe_game_mod"; //k
+    // SamTSE
+    public static final String pref_harm_samtse_fs_game          = "q3e_harm_samtse_fs_game"; //k
+    public static final String pref_harm_samtse_game_lib         = "q3e_harm_samtse_game_lib"; //k
+    public static final String pref_harm_samtse_user_mod         = "q3e_harm_samtse_user_mod"; //k
+    public static final String pref_params_samtse                = "q3e_params_samtse"; //k
+    public static final String pref_harm_samtse_command_record   = "q3e_harm_samtse_command_record";
+    public static final String pref_harm_samtse_game_mod         = "q3e_harm_samtse_game_mod"; //k
 
     public static final String pref_harm_view_motion_control_gyro     = "q3e_harm_mouse_move_control_gyro"; //k
     public static final String pref_harm_view_motion_gyro_x_axis_sens = "q3e_harm_view_motion_gyro_x_axis_sens"; //k
@@ -220,6 +227,7 @@ public final class Q3EPreference
     public static final String EVENT_QUEUE                   = "harm_event_queue"; // 0 = native; 1 = java
     public static final String GAME_THREAD                   = "harm_game_thread"; // 0 = native; 1 = java
     public static final String AUTOSAVE_BUTTON_SETTINGS      = "harm_autosave_button_settings";
+    public static final String BUTTON_SWIPE_RELEASE_DELAY    = "harm_button_swipe_release_delay";
     public static final String DISC_PANEL_KEYS_PREFIX        = "harm_disc_panel_keys_";
 
     public static float GetFloatFromString(Context context, String name, float defVal)
