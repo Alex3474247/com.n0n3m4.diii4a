@@ -28,8 +28,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 // armor & health constants 
 // NOTE: these _do not_ reflect easy/tourist maxvalue adjustments. that is by design!
-#define TOP_ARMOR  100
-#define TOP_HEALTH 100
+#define TOP_ARMOR  9999
+#define TOP_HEALTH 9999
 
 #ifdef PLATFORM_UNIX
 extern "C" __attribute__ ((visibility("default"))) FLOAT _fArmorHeightAdjuster;
