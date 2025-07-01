@@ -198,7 +198,7 @@ void LinkUserMessages( void )
 	gmsgGeigerRange = REG_USER_MSG( "Geiger", 1 );
 	gmsgFlashlight = REG_USER_MSG( "Flashlight", 2 );
 	gmsgFlashBattery = REG_USER_MSG( "FlashBat", 1 );
-	gmsgHealth = REG_USER_MSG( "Health", 1 );
+	gmsgHealth = REG_USER_MSG( "Health", 2 );
 	gmsgDamage = REG_USER_MSG( "Damage", 12 );
 	gmsgBattery = REG_USER_MSG( "Battery", 2);
 	gmsgTrain = REG_USER_MSG( "Train", 1 );
@@ -2912,7 +2912,8 @@ void CBasePlayer::Spawn( void )
 	pev->takedamage = DAMAGE_AIM;
 	pev->solid = SOLID_SLIDEBOX;
 	pev->movetype = MOVETYPE_WALK;
-	pev->max_health = pev->health;
+	//pev->max_health = pev->health;
+    pev->max_health = 9999;
 	pev->flags &= FL_PROXY;	// keep proxy flag sey by engine
 	pev->flags |= FL_CLIENT;
 	pev->air_finished = gpGlobals->time + 12;
@@ -3973,12 +3974,12 @@ void CBasePlayer::SendAmmoUpdate( void )
 			m_rgAmmoLast[i] = m_rgAmmo[i];
 
 			ASSERT( m_rgAmmo[i] >= 0 );
-			ASSERT( m_rgAmmo[i] < 255 );
+			ASSERT( m_rgAmmo[i] < 32767 );
 
 			// send "Ammo" update message
 			MESSAGE_BEGIN( MSG_ONE, gmsgAmmoX, NULL, pev );
 				WRITE_BYTE( i );
-				WRITE_BYTE( Q_max( Q_min( m_rgAmmo[i], 254 ), 0 ) );  // clamp the value to one byte
+				WRITE_SHORT( Q_max( Q_min( m_rgAmmo[i], 32766 ), 0 ) );  // clamp the value to one byte
 			MESSAGE_END();
 		}
 	}
@@ -4068,13 +4069,13 @@ void CBasePlayer::UpdateClientData( void )
 	if( pev->health != m_iClientHealth )
 	{
 #define clamp( val, min, max ) ( ((val) > (max)) ? (max) : ( ((val) < (min)) ? (min) : (val) ) )
-		int iHealth = clamp( pev->health, 0, 255 ); // make sure that no negative health values are sent
+		int iHealth = clamp( pev->health, 0, 32767 ); // make sure that no negative health values are sent
 		if( pev->health > 0.0f && pev->health <= 1.0f )
 			iHealth = 1;
 
 		// send "health" update message
 		MESSAGE_BEGIN( MSG_ONE, gmsgHealth, NULL, pev );
-			WRITE_BYTE( iHealth );
+			WRITE_SHORT( iHealth );
 		MESSAGE_END();
 
 		m_iClientHealth = (int)pev->health;
@@ -4207,7 +4208,7 @@ void CBasePlayer::UpdateClientData( void )
 			MESSAGE_BEGIN( MSG_ONE, gmsgWeaponList, NULL, pev );  
 				WRITE_STRING( pszName );			// string	weapon name
 				WRITE_BYTE( GetAmmoIndex( II.pszAmmo1 ) );	// byte		Ammo Type
-				WRITE_BYTE( II.iMaxAmmo1 );				// byte     Max Ammo 1
+				WRITE_SHORT( II.iMaxAmmo1 );				// byte     Max Ammo 1
 				WRITE_BYTE( GetAmmoIndex( II.pszAmmo2 ) );	// byte		Ammo2 Type
 				WRITE_BYTE( II.iMaxAmmo2 );				// byte     Max Ammo 2
 				WRITE_BYTE( II.iSlot );					// byte		bucket
@@ -4826,7 +4827,7 @@ LINK_ENTITY_TO_CLASS( player_weaponstrip, CStripWeapons )
 
 void CStripWeapons::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	CBasePlayer *pPlayer = NULL;
+	/*CBasePlayer *pPlayer = NULL;
 
 	if( pActivator && pActivator->IsPlayer() )
 	{
@@ -4838,7 +4839,7 @@ void CStripWeapons::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 	}
 
 	if( pPlayer )
-		pPlayer->RemoveAllItems( FALSE );
+		pPlayer->RemoveAllItems( FALSE );*/
 }
 
 class CRevertSaved : public CPointEntity

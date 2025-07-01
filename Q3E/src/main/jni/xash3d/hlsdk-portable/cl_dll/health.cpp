@@ -101,7 +101,7 @@ int CHudHealth::MsgFunc_Health( const char *pszName, int iSize, void *pbuf )
 {
 	// TODO: update local health data
 	BEGIN_READ( pbuf, iSize );
-	int x = READ_BYTE();
+	int x = READ_SHORT();
 
 	m_iFlags |= HUD_ACTIVE;
 
@@ -226,7 +226,7 @@ int CHudHealth::Draw( float flTime )
 
 		x = CrossWidth + HealthWidth / 2;
 
-		x = gHUD.DrawHudNumber( x, y + gHUD.m_iHudNumbersYOffset, DHN_3DIGITS | DHN_DRAWZERO, m_iHealth, r, g, b );
+		x = gHUD.DrawHudNumber( x+80, y + gHUD.m_iHudNumbersYOffset, DHN_4DIGITS | DHN_DRAWZERO, m_iHealth, r, g, b );
 
 		x += HealthWidth / 2;
 

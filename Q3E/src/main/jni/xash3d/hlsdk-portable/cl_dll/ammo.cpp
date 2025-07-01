@@ -651,8 +651,8 @@ int CHudAmmo::MsgFunc_WeaponList( const char *pszName, int iSize, void *pbuf )
 
 	Weapon.iAmmoType = (int)READ_CHAR();	
 	
-	Weapon.iMax1 = READ_BYTE();
-	if( Weapon.iMax1 == 255 )
+	Weapon.iMax1 = READ_SHORT();
+	if( Weapon.iMax1 == 32767 )
 		Weapon.iMax1 = -1;
 
 	Weapon.iAmmo2Type = READ_CHAR();
@@ -903,7 +903,7 @@ int CHudAmmo::Draw( float flTime )
 		{
 			// room for the number and the '|' and the current ammo
 			x = ScreenWidth - ( 8 * AmmoWidth ) - iIconWidth;
-			x = gHUD.DrawHudNumber( x, y, iFlags | DHN_3DIGITS, pw->iClip, r, g, b );
+			x = gHUD.DrawHudNumber( x-80, y, iFlags | DHN_3DIGITS, pw->iClip, r, g, b );
 
 			/*wrect_t rc;
 			rc.top = 0;
@@ -924,13 +924,13 @@ int CHudAmmo::Draw( float flTime )
 
 			// GL Seems to need this
 			ScaleColors( r, g, b, a );
-			x = gHUD.DrawHudNumber( x, y, iFlags | DHN_3DIGITS, gWR.CountAmmo( pw->iAmmoType ), r, g, b );
+			x = gHUD.DrawHudNumber( x, y, iFlags | DHN_4DIGITS, gWR.CountAmmo( pw->iAmmoType ), r, g, b );
 		}
 		else
 		{
 			// SPR_Draw a bullets only line
 			x = ScreenWidth - 4 * AmmoWidth - iIconWidth;
-			x = gHUD.DrawHudNumber( x, y, iFlags | DHN_3DIGITS, gWR.CountAmmo( pw->iAmmoType ), r, g, b );
+			x = gHUD.DrawHudNumber( x-80, y, iFlags | DHN_4DIGITS, gWR.CountAmmo( pw->iAmmoType ), r, g, b );
 		}
 
 		// Draw the ammo Icon

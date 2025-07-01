@@ -36,15 +36,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #define SURFACE_SNOW 21
 
 // Max ammo
-#define MAX_BULLETS INDEX(500)
-#define MAX_SHELLS INDEX(100)
-#define MAX_ROCKETS INDEX(50)
-#define MAX_GRENADES INDEX(50)
-#define MAX_NAPALM INDEX(500)
-#define MAX_ELECTRICITY INDEX(400)
-#define MAX_IRONBALLS INDEX(30)
+#define MAX_BULLETS INDEX(9999)
+#define MAX_SHELLS INDEX(9999)
+#define MAX_ROCKETS INDEX(9999)
+#define MAX_GRENADES INDEX(9999)
+#define MAX_NAPALM INDEX(9999)
+#define MAX_ELECTRICITY INDEX(9999)
+#define MAX_IRONBALLS INDEX(9999)
 //#define MAX_NUKEBALLS INDEX(3)
-#define MAX_SNIPERBULLETS INDEX(50)
+#define MAX_SNIPERBULLETS INDEX(9999)
 
 // Bit shifters for ammo
 #define AMMO_BULLETS       0
