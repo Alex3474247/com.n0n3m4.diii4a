@@ -9,9 +9,10 @@ endif ()
 
 option(BUILD_CS16_CLIENT "Build CS1.6 library" ON)
 
-add_subdirectory(hlsdk-portable)
-add_subdirectory(xash3d-fwgs)
+add_subdirectory(hlsdk-portable) # Jul 18, 2025 | https://github.com/FWGS/hlsdk-portable/commit/895b28d0379f8902051d2b733029fc6a0fa9989c
+add_subdirectory(xash3d-fwgs) # Jul 18, 2025 | https://github.com/FWGS/xash3d-fwgs/commit/74b196d2c362ea195967be6f139faeed18795a53
 
+# https://github.com/Velaron/cs16-client/commit/65ccebe56af34bc9086e60d83745794f76e578ac
 if(BUILD_CS16_CLIENT)
 add_subdirectory(cs16-client)
 endif()

@@ -107,28 +107,6 @@ static SDL_Surface *window = NULL;
 #define SDL_WINDOW_FULLSCREEN SDL_FULLSCREEN
 #endif
 
-#ifdef _OPENGLES3
-const char	*r_openglesArgs[]	= {
-        GL_VERSION_NAME_GL_ES3,
-        GL_VERSION_NAME_GL_ES2,
-        GL_VERSION_NAME_GL_CORE,
-        GL_VERSION_NAME_GL_COMPATIBILITY,
-        NULL };
-idCVar harm_r_openglVersion("harm_r_openglVersion",
-                              r_openglesArgs[2]
-        , CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INIT,
-                              "OpenGL version", r_openglesArgs, idCmdSystem::ArgCompletion_String<r_openglesArgs>);
-#define DEFAULT_GLES_VERSION GL_VERSION_GL_ES3
-#else
-#define DEFAULT_GLES_VERSION GL_VERSION_GL_ES2
-#endif
-bool USING_GLES3 = true;
-bool USING_GL = false;
-int gl_version = DEFAULT_GLES_VERSION;
-#ifdef _OPENGLES3
-int GLES3_VERSION = USING_GLES3 ? 2 : -1;
-#endif
-
 static idCVar r_fullscreenDesktop( "r_fullscreenDesktop", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "0: 'real' fullscreen mode 1: keep resolution 'desktop' fullscreen mode" );
 static idCVar win_xpos( "win_xpos", "-1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "horizontal position of window" );
 static idCVar win_ypos( "win_ypos", "-1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "vertical position of window" );
@@ -884,9 +862,9 @@ void GLimp_Startup(void)
 #if !defined(__ANDROID__) //karin: enable multithreading-rendering from command cvar
     multithreadActive = cvarSystem->GetCVarBool("r_multithread");
     if(multithreadActive)
-        Sys_Printf("[Harmattan]: Enable multi-threading rendering\n");
+        Sys_Printf("Enable multi-threading rendering\n");
     else
-        Sys_Printf("[Harmattan]: Disable multi-threading rendering\n");
+        Sys_Printf("Disable multi-threading rendering\n");
 #endif
 #endif
 #ifdef _OPENGLES3
@@ -894,36 +872,34 @@ void GLimp_Startup(void)
     const char *openglVersion = cvarSystem->GetCVarString("harm_r_openglVersion");
     if(openglVersion && openglVersion[0])
     {
-//        extern int gl_version;
-//        extern bool USING_GLES3;
-        Sys_Printf("[Harmattan]: harm_r_openglVersion = %s\n", openglVersion);
+        Sys_Printf("harm_r_openglVersion = %s\n", openglVersion);
         if(!idStr::Icmp(GL_VERSION_NAME_GL_ES2, openglVersion))
         {
             gl_version = GL_VERSION_GL_ES2;
             USING_GLES3 = false;
             USING_GL = false;
-            Sys_Printf("[Harmattan]: Using OpenGL ES2\n");
+            Sys_Printf("Using OpenGL ES2\n");
         }
         else if(!idStr::Icmp(GL_VERSION_NAME_GL_CORE, openglVersion))
         {
             gl_version = GL_VERSION_GL_CORE;
             USING_GLES3 = true;
             USING_GL = true;
-            Sys_Printf("[Harmattan]: Using OpenGL Core\n");
+            Sys_Printf("Using OpenGL Core\n");
         }
         else if(!idStr::Icmp(GL_VERSION_NAME_GL_COMPATIBILITY, openglVersion))
         {
             gl_version = GL_VERSION_GL_COMPATIBILITY;
             USING_GLES3 = true;
             USING_GL = true;
-            Sys_Printf("[Harmattan]: Using OpenGL Compatibility\n");
+            Sys_Printf("Using OpenGL Compatibility\n");
         }
         else // GL_VERSION_NAME_GL_ES3
         {
             gl_version = GL_VERSION_GL_ES3;
             USING_GLES3 = true;
             USING_GL = false;
-            Sys_Printf("[Harmattan]: Using OpenGL ES3\n");
+            Sys_Printf("Using OpenGL ES3\n");
         }
     }
 #endif

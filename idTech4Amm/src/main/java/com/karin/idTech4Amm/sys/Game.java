@@ -13,6 +13,8 @@ import com.n0n3m4.q3e.Q3ELang;
  */
 public enum Game
 {
+    // KARIN_NEW_GAME_BOOKMARK
+
     // DOOM 3
     DOOM3_BASE(Q3EGameConstants.GAME_DOOM3, "base", "", "game", "", "base", false, R.string.doom_iii),
     DOOM3_D3XP(Q3EGameConstants.GAME_DOOM3, "d3xp", "d3xp", "d3xp", "", "d3xp", true, R.string.doom3_resurrection_of_evil_d3xp),
@@ -95,8 +97,22 @@ public enum Game
     SAMTSE_BASE(Q3EGameConstants.GAME_SAMTSE, "", "", "samtse", "", "", false, R.string.samtse_base),
 
     // Xash3D
-    XASH3D(Q3EGameConstants.GAME_XASH3D, "valve", "valve", "xash3d", "", "", false, R.string.halflife_base),
-    XASH3D_CS(Q3EGameConstants.GAME_XASH3D, "cstrike", "cstrike", "xash3d", "cstrike", "cstrike", true, R.string.cs_base),
+    XASH3D_HL(Q3EGameConstants.GAME_XASH3D, "valve", "valve", "xash3d", "", "valve", false, R.string.halflife_base),
+    XASH3D_CS(Q3EGameConstants.GAME_XASH3D, "cstrike", "cstrike", "xash3d", "", "cstrike", true, R.string.cs_base),
+
+    // Source Engine
+    SOURCE_HL2(Q3EGameConstants.GAME_SOURCE, "hl2", "hl2", "source", "", "hl2", false, R.string.halflife_2_base),
+    SOURCE_CSS(Q3EGameConstants.GAME_SOURCE, "cstrike", "cstrike", "source", "", "cstrike", true, R.string.css_base),
+    SOURCE_PORTAL(Q3EGameConstants.GAME_SOURCE, "portal", "portal", "source", "", "portal", true, R.string.portal_base),
+    SOURCE_DOD(Q3EGameConstants.GAME_SOURCE, "dod", "dod", "source", "", "dod", true, R.string.dod_base),
+    SOURCE_EPISODIC(Q3EGameConstants.GAME_SOURCE, "episodic", "episodic", "source", "", "episodic", true, R.string.halflife_2_ep1_base),
+    SOURCE_EP2(Q3EGameConstants.GAME_SOURCE, "ep2", "ep2", "source", "", "ep2", true, R.string.halflife_2_ep2_base),
+    SOURCE_HL2MP(Q3EGameConstants.GAME_SOURCE, "hl2mp", "hl2mp", "source", "", "hl2mp", false, R.string.halflife_2_mp_base),
+    SOURCE_HL1(Q3EGameConstants.GAME_SOURCE, "hl1", "hl1", "source", "", "hl1", false, R.string.halflife_1_source_base),
+    SOURCE_HL1MP(Q3EGameConstants.GAME_SOURCE, "hl1mp", "hl1mp", "source", "", "hl1mp", false, R.string.halflife_1_mp_source_base),
+
+    // Urban Terror
+    URT_BASE(Q3EGameConstants.GAME_URT, "q3ut4", "", "", "", "q3ut4", false, R.string.urbanterror_base),
     ;
 
     public final String  type; // game type: doom3/quake4/prey2006/......

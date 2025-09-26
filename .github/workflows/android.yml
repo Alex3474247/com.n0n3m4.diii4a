@@ -1,6 +1,6 @@
 # Only for building testing version by Github CI workflow
 
-name: Android apk CI
+name: Android apk CI(arm64-v8a 64-bit only)
 
 on:
   push:
@@ -27,6 +27,15 @@ jobs:
         working-directory: .
         
     steps:
+    - name: Mound working directory
+      run: |
+        u=`whoami`
+        sudo mkdir /mnt/diii4a
+        sudo chown $u /mnt -R
+        echo "disk usage: >>>"
+        df -h
+        du -ch | tail -n -1
+        echo "<<< disk usage"
     - name: Checkout code
       uses: actions/checkout@v2
 
@@ -44,14 +53,129 @@ jobs:
 
     - name: Build with Gradle
       run: |
+        echo "Move to working directory"
+        mv ./* /mnt/diii4a/
+        cd /mnt/diii4a
+        echo "work directory: `pwd`"
         chmod +x ./gradlew
-        ./gradlew assembleRelease
+        echo "disk usage: >>>"
+        df -h
+        du -ch | tail -n -1
+        echo "<<< disk usage"
+        arch=arm64-v8a
+        barch=-Pabifilters=${arch}
+        # remove 32-bit libraries
+        echo "Remove 32-bit libraries"
+        rm -rf Q3E/libs/armeabi-v7a
+        # build Xash3d only
+        echo "Build Xash3D libraries"
+        bargs="$barch -Pcmake_options=-DGAME_DOOM3=OFF,-DGAME_RTCW=OFF,-DGAME_QUAKE3=OFF,-DGAME_QUAKE2=OFF,-DGAME_QUAKE1=OFF,-DGAME_TDM=OFF,-DGAME_DOOM3BFG=OFF,-DGAME_DOOM=OFF,-DGAME_ETW=OFF,-DGAME_REALRTCW=OFF,-DGAME_FTEQW=OFF,-DGAME_JK=OFF,-DGAME_SERIOUSSAM=OFF,-DGAME_REALRTCW=OFF,-DGAME_URT=OFF,-DGAME_SOURCE=OFF"
+        ./gradlew assembleRelease $bargs
+        echo "disk usage: >>>"
+        df -h
+        du -ch | tail -n -1
+        echo "<<< disk usage"
+        echo "Copy Xash3D libraries to libs"
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libxash3d*so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libfilesystem_stdio.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libclient_cs.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libmenu_cs.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libserver_cs.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libserver_yapb.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libclient_hl.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libserver_hl.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libmenu_hl.so Q3E/libs/${arch}
+        ls Q3E/libs/${arch}
+        # build Source only
+        echo "Clean builds"
+        ./gradlew clean $bargs
+        rm -rf Q3E/.cxx Q3E/build idTech4Amm/build
+        rm -rf Q3E/src/main/jni/xash3d
+        echo "disk usage: >>>"
+        df -h
+        du -ch | tail -n -1
+        echo "<<< disk usage"
+        echo "Build Source libraries"
+        # ,-DBUILD_SOURCE_HL2=OFF,-DBUILD_SOURCE_HL2MP=OFF,-DBUILD_SOURCE_EPISODIC=OFF,-DBUILD_SOURCE_HL1=OFF,-DBUILD_SOURCE_HL1MP=OFF,-DBUILD_SOURCE_PORTAL=OFF
+        bargs="$barch -Pcmake_options=-DGAME_DOOM3=OFF,-DGAME_RTCW=OFF,-DGAME_QUAKE3=OFF,-DGAME_QUAKE2=OFF,-DGAME_QUAKE1=OFF,-DGAME_TDM=OFF,-DGAME_DOOM3BFG=OFF,-DGAME_DOOM=OFF,-DGAME_ETW=OFF,-DGAME_REALRTCW=OFF,-DGAME_FTEQW=OFF,-DGAME_JK=OFF,-DGAME_SERIOUSSAM=OFF,-DGAME_REALRTCW=OFF,-DGAME_URT=OFF,-DGAME_XASH3D=OFF"
+        ./gradlew assembleRelease $bargs
+        echo "disk usage: >>>"
+        df -h
+        du -ch | tail -n -1
+        echo "<<< disk usage"
+        echo "Copy Source libraries to libs"
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libsource*so Q3E/libs/${arch}
+        ls Q3E/libs/${arch}
+        # build idTech4 only
+        echo "Clean builds"
+        ./gradlew clean $bargs
+        rm -rf Q3E/.cxx Q3E/build idTech4Amm/build
+        rm -rf Q3E/src/main/jni/source
+        echo "disk usage: >>>"
+        df -h
+        du -ch | tail -n -1
+        echo "<<< disk usage"
+        echo "Build idTech4"
+        bargs="$barch -Pcmake_options=-DGAME_RTCW=OFF,-DGAME_QUAKE3=OFF,-DGAME_QUAKE2=OFF,-DGAME_QUAKE1=OFF,-DGAME_TDM=OFF,-DGAME_DOOM=OFF,-DGAME_ETW=OFF,-DGAME_REALRTCW=OFF,-DGAME_FTEQW=OFF,-DGAME_JK=OFF,-DGAME_SERIOUSSAM=OFF,-DGAME_REALRTCW=OFF,-DGAME_URT=OFF,-DGAME_XASH3D=OFF,-DGAME_SOURCE=OFF"
+        ./gradlew assembleRelease $bargs
+        echo "disk usage: >>>"
+        df -h
+        du -ch | tail -n -1
+        echo "<<< disk usage"
+        echo "Copy idTech4 libraries to libs"
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libdoom3.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libquake4.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libprey.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libRBDoom3BFG*.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libgame.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libd3xp.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libcdoom.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libd3le.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libfraggingfree.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libhardcorps.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libhexeneoc.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/liblibrecoop.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/liblibrecoopxp.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/liboverthinked.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libperfected.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libperfected_roe.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/librivensin.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libsabot.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libtfphobos.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libq4game.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libhardqore.so Q3E/libs/${arch}
+        cp -f Q3E/build/intermediates/library_jni/release/jni/${arch}/libpreygame.so Q3E/libs/${arch}
+        ls Q3E/libs/${arch}
+        # build non-idTech4 only
+        echo "Clean builds"
+        ./gradlew clean $bargs
+        rm -rf Q3E/.cxx Q3E/build idTech4Amm/build
+        rm -rf Q3E/src/main/jni/source
+        rm -rf Q3E/src/main/jni/doom3/neo/[^es]*
+        rm -rf Q3E/src/main/jni/doom3bfg
+        echo "disk usage: >>>"
+        df -h
+        du -ch | tail -n -1
+        echo "<<< disk usage"
+        echo "Build final apk"
+        bargs="$barch -Pcmake_options=-DGAME_XASH3D=OFF,-DGAME_SOURCE=OFF,-DGAME_DOOM3=OFF,-DGAME_DOOM3BFG=OFF"
+        ./gradlew assembleRelease $bargs
+        echo "disk usage: >>>"
+        df -h
+        du -ch | tail -n -1
+        echo "<<< disk usage"
 
     - name: Rename APK
       id: rename_apk
       run: |
-        apk_file=idTech4A++-testing-`date "+%Y_%m_%d-%H_%M_%S"`.apk
+        cd /mnt/diii4a
+        apk_file=idTech4A++-testing_`date "+%Y%m%d.%H%M%S"`_arm64.apk
         cp ./idTech4Amm/build/outputs/apk/release/idTech4Amm-release.apk $apk_file
+        apk_file=`pwd`/$apk_file
+        echo "disk usage: >>>"
+        df -h
+        du -ch | tail -n -1
+        echo "<<< disk usage"
         echo "::set-output name=value::$apk_file"
       working-directory: ${{ github.workspace }}
 
@@ -63,12 +187,18 @@ jobs:
         repo: glKarin/com.n0n3m4.diii4a
         github_token: ${{ secrets.TOKEN }}
 
+    - name: Get release date time
+      id: release_datetime
+      uses: Kaven-Universe/github-action-current-date-time@v1
+      with:
+        format: "YYYYMMDD-HHmmss"
+
     - name: Create release
       uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.TOKEN }}"
         automatic_release_tag: "android_testing"
         prerelease: true
-        title: "Android testing (Non-release. Automatic CI builds)"
+        title: "[${{steps.release_datetime.outputs.time}}] Android arm64-v8a 64-bit testing (Non-release. Automatic CI builds)"
         files: |
           ${{ steps.rename_apk.outputs.value }}

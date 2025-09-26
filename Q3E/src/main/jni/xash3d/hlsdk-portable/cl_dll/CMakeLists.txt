@@ -23,7 +23,7 @@
 cmake_minimum_required(VERSION 3.9)
 project (CLDLL)
 
-set (CLDLL_LIBRARY hlsdk_client)
+set (CLDLL_LIBRARY client_hl)
 
 add_definitions(-DCLIENT_DLL)
 
@@ -124,7 +124,6 @@ set (CLDLL_SOURCES
 	tri.cpp
 	util.cpp
 	view.cpp
-	../game_shared/vcs_info.cpp
 	../public/safe_snprintf.c
 )
 
@@ -199,6 +198,7 @@ if(USE_VOICEMGR)
 endif()
 
 add_library (${CLDLL_LIBRARY} SHARED ${CLDLL_SOURCES})
+target_link_libraries(${CLDLL_LIBRARY} hlsdk_vcs_info)
 
 if (GOLDSOURCE_SUPPORT)
 	target_link_libraries( ${CLDLL_LIBRARY} ${CMAKE_DL_LIBS} )
@@ -227,16 +227,9 @@ endif()
 set_target_properties (${CLDLL_LIBRARY} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)
 
-if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Android" OR XASH_TERMUX)
-	set(CLDLL_NAME "client")
-	set_target_properties(${CLDLL_LIBRARY} PROPERTIES
-		OUTPUT_NAME "${CLDLL_NAME}${POSTFIX}"
-		PREFIX "")
-endif()
+set_target_postfix(${CLDLL_LIBRARY})
 
-if(MSVC)
 	set_property(TARGET ${CLDLL_LIBRARY} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-endif()
 
 if(HAVE_LTO)
 	set_property(TARGET ${CLDLL_LIBRARY} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
@@ -249,12 +242,8 @@ install( TARGETS ${CLDLL_LIBRARY}
 	    GROUP_READ GROUP_EXECUTE
 		WORLD_READ WORLD_EXECUTE )
 
-if(CMAKE_BUILD_TYPE MATCHES "Release")
+if(CMAKE_BUILD_TYPE MATCHES "Release" AND NOT WIN32)
 	add_custom_command(TARGET ${CLDLL_LIBRARY}
 			POST_BUILD DEPENDS ${CLDLL_LIBRARY}
 			COMMAND ${CMAKE_STRIP} -s $<TARGET_FILE:${CLDLL_LIBRARY}>)
-endif()
-
-if(DIII4Axxx)
-set_target_properties(${CLDLL_LIBRARY} PROPERTIES OUTPUT_NAME "client")
 endif()

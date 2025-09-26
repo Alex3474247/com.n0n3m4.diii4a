@@ -50,19 +50,9 @@ idCVar sys_videoRam("sys_videoRam", "0", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEG
 					"Texture memory on the video card (in megabytes) - 0: autodetect", 0, 1024);
 
 #ifdef _OPENGLES3
-const char	*r_openglesArgs[]	= {
-		"GLES2",
-		"GLES3.0",
-		NULL };
-idCVar harm_r_openglVersion("harm_r_openglVersion",
-                              r_openglesArgs[0]
-		, CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INIT,
-                              "OpenGL version", r_openglesArgs, idCmdSystem::ArgCompletion_String<r_openglesArgs>);
-#define DEFAULT_GLES_VERSION 0x00020000 // still es2.0
-#define HARM_EGL_OPENGL_ES_BIT (gl_version != 0x00020000 ? EGL_OPENGL_ES3_BIT : EGL_OPENGL_ES2_BIT)
-#define HARM_EGL_CONTEXT_CLIENT_VERSION (gl_version != 0x00020000 ? 3 : 2)
+#define HARM_EGL_OPENGL_ES_BIT (gl_version != GL_VERSION_GL_ES2 ? EGL_OPENGL_ES3_BIT : EGL_OPENGL_ES2_BIT)
+#define HARM_EGL_CONTEXT_CLIENT_VERSION (gl_version != GL_VERSION_GL_ES2 ? 3 : 2)
 #else
-#define DEFAULT_GLES_VERSION 0x00020000
 #define HARM_EGL_OPENGL_ES_BIT EGL_OPENGL_ES2_BIT
 #define HARM_EGL_CONTEXT_CLIENT_VERSION 2
 #endif
@@ -81,14 +71,8 @@ int gl_format = GLFORMAT_RGBA8888;
 int gl_depth_bits = 24;
 // OpenGL multisamples
 int gl_msaa = 0;
-// OpenGL version
-int gl_version = DEFAULT_GLES_VERSION;
 
-bool USING_GLES3 = gl_version != 0x00020000;
-bool USING_GL = false;
-#ifdef _OPENGLES3
-int GLES3_VERSION = USING_GLES3 ? 0 : -1;
-#endif
+
 
 #define MAX_NUM_CONFIGS 1000
 static volatile ANativeWindow *win;
@@ -129,9 +113,9 @@ static void GLimp_HandleError(const char *func, bool exit = true)
 		return;
 
 	if(exit)
-		common->Error("[Harmattan]: EGL error %s: 0x%04x: %s\n", func, err, GLimp_StringErrors[err - EGL_SUCCESS]);
+		common->Error("EGL error %s: 0x%04x: %s\n", func, err, GLimp_StringErrors[err - EGL_SUCCESS]);
 	else
-		common->Printf("[Harmattan]: EGL error %s: 0x%04x: %s\n", func, err, GLimp_StringErrors[err - EGL_SUCCESS]);
+		common->Printf("EGL error %s: 0x%04x: %s\n", func, err, GLimp_StringErrors[err - EGL_SUCCESS]);
 }
 
 typedef struct EGLConfigInfo_s
@@ -336,7 +320,7 @@ void GLimp_AndroidInit(volatile ANativeWindow *w)
 		return;
 	}
 	//has_gl_context = true;
-	Sys_Printf("[Harmattan]: EGL surface created and using EGL context.\n");
+	Sys_Printf("EGL surface created and using EGL context.\n");
 }
 
 void GLimp_AndroidQuit(void)
@@ -353,7 +337,7 @@ void GLimp_AndroidQuit(void)
 	}
 	ANativeWindow_release((ANativeWindow *)win);
 	win = NULL;
-	Sys_Printf("[Harmattan]: EGL surface destroyed and no EGL context.\n");
+	Sys_Printf("EGL surface destroyed and no EGL context.\n");
 }
 
 void GLimp_WakeBackEnd(void *a)
@@ -501,7 +485,7 @@ void GLimp_Shutdown()
 	}
 	GLimp_dlclose();
 
-	Sys_Printf("[Harmattan]: EGL destroyed.\n");
+	Sys_Printf("EGL destroyed.\n");
 }
 
 static void GLimp_UpdateSwapInterval( void )
@@ -595,7 +579,7 @@ static bool GLES_Init_special(const glimpParms_t &ap)
 			EGL_NONE,
 	};
 
-	common->Printf( "[Harmattan]: Request special EGL context: %d/%d/%d Color bits, %d Alpha bits, %d depth, %d stencil display. samples %d sample buffers %d.\n",
+	common->Printf( "Request special EGL context: %d/%d/%d Color bits, %d Alpha bits, %d depth, %d stencil display. samples %d sample buffers %d.\n",
 					red_bits, green_bits,
 					blue_bits, alpha_bits,
 					depth_bits,
@@ -624,7 +608,7 @@ static bool GLES_Init_special(const glimpParms_t &ap)
 		}
 		else
 		{
-			common->Printf( "[Harmattan]: Get EGL context num -> %d.\n", config_count);
+			common->Printf( "Get EGL context num -> %d.\n", config_count);
 			for(int i = 0; i < config_count; i++)
 			{
 				EGLConfigInfo_t cinfo = GLimp_GetConfigInfo(eglConfigs[i]);
@@ -740,7 +724,7 @@ static bool GLES_Init_prefer(const glimpParms_t &ap)
 				EGL_NONE,
 		};
 
-		common->Printf( "[Harmattan]: Request EGL context: %d/%d/%d Color bits, %d Alpha bits, %d depth, %d stencil display. samples %d, sample buffers %d.\n",
+		common->Printf( "Request EGL context: %d/%d/%d Color bits, %d Alpha bits, %d depth, %d stencil display. samples %d, sample buffers %d.\n",
 						channelcolorbits, channelcolorbits,
 						channelcolorbits, talphabits,
 						tdepthbits,
@@ -888,11 +872,11 @@ int GLES_Init(glimpParms_t &ap)
 	if(USING_GLES3)
 	{
 		GLES3_VERSION = gles3_version;
-		common->Printf("[Harmattan]: Create OpenGL ES3.%d context.\n", GLES3_VERSION);
+		common->Printf("Create OpenGL ES3.%d context.\n", GLES3_VERSION);
 	}
 	else
 #endif
-	common->Printf("[Harmattan]: Create OpenGL ES2.0 context.\n");
+	common->Printf("Create OpenGL ES2.0 context.\n");
 
 	if (!eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext))
 	{
@@ -907,7 +891,7 @@ int GLES_Init(glimpParms_t &ap)
 	depth_bits = info.depth;
 	stencil_bits = info.stencil;
 
-	common->Printf( "[Harmattan]: EGL context: %d/%d/%d Color bits, %d Alpha bits, %d depth, %d stencil display. samples %d, sample buffers %d.\n",
+	common->Printf( "EGL context: %d/%d/%d Color bits, %d Alpha bits, %d depth, %d stencil display. samples %d, sample buffers %d.\n",
 					info.red, info.green,
 					info.blue, info.alpha,
 					info.depth,
@@ -944,7 +928,7 @@ bool GLimp_ExtensionSupported(const char *name)
 	new_exts.Append(" ");
 	bool has = new_exts.Find(name) >= 0;
 
-	common->Printf("[Harmattan]: OpenGL extension '%s' -> %s\n", name, has ? "support" : "missing");
+	common->Printf("OpenGL extension '%s' -> %s\n", name, has ? "support" : "missing");
 	return has;
 }
 

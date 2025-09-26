@@ -638,6 +638,7 @@ typedef struct
 
 	// server's build number (might be zero)
 	int build_num;
+	uint8_t steamid[8];
 } client_static_t;
 
 #ifdef __cplusplus
@@ -1048,6 +1049,11 @@ intptr_t CL_RenderGetParm( const int parm, const int arg, const qboolean checkRe
 lightstyle_t *CL_GetLightStyle( int number );
 int R_FatPVS( const vec3_t org, float radius, byte *visbuffer, qboolean merge, qboolean fullvis );
 const ref_overview_t *GL_GetOverviewParms( void );
+
+//
+// cl_spray.c
+//
+qboolean CL_ConvertImageToWAD3( const char *filename );
 
 //
 // cl_efrag.c

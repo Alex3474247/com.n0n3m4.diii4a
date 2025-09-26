@@ -258,6 +258,7 @@
             android:orientation="vertical">
 
             <com.karin.idTech4Amm.widget.Divider
+                android:id="@+id/gameversion_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 myapp:label="@string/version"
@@ -422,6 +423,30 @@
                         android:imeOptions="flagNoExtractUi"
                         android:inputType="numberDecimal|textNoSuggestions"
                         android:text="1.0" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/launcher_layout_PBRNormalCorrection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight="1"
+                        android:text="@string/pbr_normal_correction_surface_smoothness" />
+
+                    <EditText
+                        android:id="@+id/edt_harm_r_PBRNormalCorrection"
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:hint="0.0 - 1.0"
+                        android:imeOptions="flagNoExtractUi"
+                        android:inputType="numberDecimal|textNoSuggestions"
+                        android:text="0.25" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -922,29 +947,6 @@
                     android:text="@string/enable_built_in_bot_assets_if_external_assets_missing" />
 
                 <LinearLayout
-                    android:id="@+id/dll_section"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <CheckBox
-                        android:id="@+id/find_dll"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/find_game_library_in_game_data_directory" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="32dp"
-                        android:layout_marginTop="0dp"
-                        android:layout_marginBottom="0dp"
-                        android:text="@string/using_external_game_library"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
@@ -1000,6 +1002,26 @@
             layout="@layout/launcher_xash3d"
             android:visibility="gone"></include>
 
+        <include
+            android:id="@+id/source_section"
+            layout="@layout/launcher_source"
+            android:visibility="gone"></include>
+
+        <include
+            android:id="@+id/urt_section"
+            layout="@layout/launcher_urt"
+            android:visibility="gone"></include>
+
+        <include
+            android:id="@+id/openal_section"
+            layout="@layout/launcher_openal"
+            android:visibility="gone"></include>
+
+        <include
+            android:id="@+id/sdl_section"
+            layout="@layout/launcher_sdl"
+            android:visibility="gone"></include>
+
         <LinearLayout
             android:id="@+id/general_section"
             android:layout_width="match_parent"
@@ -1051,6 +1073,30 @@
                     android:layout_height="wrap_content"
                     android:max="100"
                     />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/dll_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <CheckBox
+                    android:id="@+id/find_dll"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/find_game_library_in_game_data_directory" />
+
+                <TextView
+                    android:id="@+id/find_dll_desc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="32dp"
+                    android:layout_marginTop="0dp"
+                    android:layout_marginBottom="0dp"
+                    android:text="@string/using_external_game_library"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textSize="12sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -1109,19 +1155,19 @@
                     android:orientation="horizontal">
 
                     <Button
-                        android:id="@+id/launcher_tab1_edit_autoexec"
+                        android:id="@+id/launcher_tab1_edit_config"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="0.5"
-                        android:text="@string/edit_autoexec_cfg"
+                        android:text="@string/edit_config_file"
                         android:textAllCaps="false" />
 
                     <Button
-                        android:id="@+id/launcher_tab1_edit_doomconfig"
+                        android:id="@+id/launcher_tab1_edit_env"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="0.5"
-                        android:text="@string/edit_doomconfig_cfg"
+                        android:text="@string/env"
                         android:textAllCaps="false" />
                 </LinearLayout>
 

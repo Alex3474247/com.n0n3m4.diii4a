@@ -46,6 +46,10 @@ If you have questions concerning this license or the applicable additional terms
 
 // using shorts for triangle indexes can save a significant amount of traffic, but
 // to support the large models that renderBump loads, they need to be 32 bits
+#ifdef _GL_INT_INDEX
+#define GL_INDEX_TYPE		GL_UNSIGNED_INT
+typedef int glIndex_t;
+#else
 #if 1
 
 #ifdef __ANDROID__ //karin: Android 32bits device has low memory
@@ -67,6 +71,8 @@ typedef int glIndex_t;
 
 #define GL_INDEX_TYPE		GL_UNSIGNED_SHORT
 typedef short glIndex_t;
+
+#endif
 
 #endif
 
@@ -299,7 +305,14 @@ class idRenderModel
 		// The renderer will delete the returned dynamic model the next view
 		// This isn't const, because it may need to reload a purged model if it
 		// wasn't precached correctly.
+#ifdef _RAVEN
+        // RAVEN BEGIN
+        // dluetscher: added surface mask parameter
+        virtual idRenderModel *		InstantiateDynamicModel( const struct renderEntity_s *ent, const struct viewDef_s *view, idRenderModel *cachedModel, dword surfMask = ~SURF_COLLISION  ) = 0;
+        // RAVEN END
+#else
 		virtual idRenderModel 		*InstantiateDynamicModel(const struct renderEntity_s *ent, const struct viewDef_s *view, idRenderModel *cachedModel) = 0;
+#endif
 
 		// Returns the number of joints or 0 if the model is not an MD5
 		virtual int					NumJoints(void) const = 0;
@@ -327,11 +340,6 @@ class idRenderModel
         // RAVEN BEGIN
         // bdube: surface flag manipulation
         virtual int					GetSurfaceMask ( const char* surface ) const = 0;
-
-        // RAVEN BEGIN
-        // dluetscher: added surface mask parameter
-        virtual idRenderModel *		InstantiateDynamicModel( const struct renderEntity_s *ent, const struct viewDef_s *view, idRenderModel *cachedModel, dword surfMask/* = ~SURF_COLLISION */ ) = 0;
-        // RAVEN END
 
 		// jscott: for portal skies
         virtual void                                SetHasSky( bool on ) = 0;

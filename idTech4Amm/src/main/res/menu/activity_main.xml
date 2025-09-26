@@ -100,6 +100,16 @@
                 android:title="@string/xash3d"
                 android:icon="@drawable/xash3d_icon"
                 android:showAsAction="never|withText"/>
+            <item
+                android:id="@+id/main_menu_game_source"
+                android:title="@string/sourceengine"
+                android:icon="@drawable/source_icon"
+                android:showAsAction="never|withText"/>
+            <item
+                android:id="@+id/main_menu_game_urt"
+                android:title="@string/urbanterror"
+                android:icon="@drawable/urbanterror_icon"
+                android:showAsAction="never|withText"/>
         </menu>
     </item>
 
@@ -167,10 +177,10 @@
                 android:id="@+id/main_menu_shortcut"
                 android:title="@string/shortcut"
                 android:showAsAction="never"/>
-<!--            <item
-                android:id="@+id/main_menu_shortcut_command"
-                android:title="@string/command_shortcut"
-                android:showAsAction="never"/>-->
+            <item
+                android:id="@+id/main_menu_download_testing"
+                android:title="@string/download_testing"
+                android:showAsAction="never"/>
         </menu>
     </item>
     

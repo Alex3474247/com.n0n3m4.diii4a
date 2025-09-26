@@ -8,6 +8,14 @@ cmake_minimum_required(VERSION 3.4.1)
 project(idTech4Amm)
 
 
+message(STATUS "Product flavor: ${DIII4A_PRODUCT_FLAVOR}")
+if(DIII4A_PRODUCT_FLAVOR STREQUAL "fdroid")
+    set(PRODUCT_FLAVOR_IS_GITHUB False)
+    set(PRODUCT_FLAVOR_IS_FDROID True)
+else()
+    set(PRODUCT_FLAVOR_IS_GITHUB True)
+    set(PRODUCT_FLAVOR_IS_FDROID False)
+endif()
 
 #[[OPTION(BUILD_D3        "Build DOOM 3"    OFF)
 OPTION(BUILD_Q4        "Build Quake 4"    OFF)
@@ -31,9 +39,14 @@ OPTION(GAME_REALRTCW    "Build RealRTCW"                        ON)
 OPTION(GAME_FTEQW       "Build FTEQW"                           ON)
 OPTION(GAME_JK          "Build Jedi Knight"                     ON)
 OPTION(GAME_SERIOUSSAM  "Build Serious Sam"                     ON)
+OPTION(GAME_URT "Build Urbant Error"                    ON)
+if(NOT PRODUCT_FLAVOR_IS_FDROID)
 OPTION(GAME_XASH3D      "Build Xash3D"                          ON)
+OPTION(GAME_SOURCE      "Build Source"                          ON)
+endif()
 
 # Experimental
+OPTION(GAME_Q3RALLY "Build Quake 3 Rally"                    OFF)
 OPTION(GAME_QUAKES      "Build Quake SandBox"                   OFF)
 OPTION(GAME_DNF         "Build Duke Nukem Forever"              OFF)
 
@@ -56,9 +69,9 @@ set(DIII4A_DEPEND_COMMON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/common")
 add_subdirectory ( common/bt )
 
 # using Q3E_SDL2
-if(GAME_XASH3D)
+#if(GAME_XASH3D OR GAME_SOURCE)
 set(Q3E_SDL TRUE)
-endif()
+#endif()
 
 # build SDL2
 if(Q3E_SDL)
@@ -72,26 +85,40 @@ add_subdirectory( q3e )
 
 
 
+if(GAME_QUAKE3 OR GAME_QUAKE2 OR GAME_QUAKE1 OR GAME_RTCW OR GAME_ETW OR GAME_REALRTCW OR GAME_FTEQW OR GAME_QUAKES OR GAME_JK OR GAME_Q3RALLY OR GAME_URT OR GAME_SERIOUSSAM)
+    set(DIII4A_BUILD_COMMON True)
+endif()
+
+if(GAME_DOOM3 OR GAME_DNF OR GAME_TDM OR GAME_DOOM OR DIII4A_BUILD_COMMON)
+    set(DIII4A_BUILD_OPENAL True)
+endif()
+
+if(DIII4A_BUILD_OPENAL)
+    message(STATUS "Build oboe for audio")
+    add_subdirectory (deplibs/oboe) # 1.8.1
+endif()
+
 if(GAME_DOOM3)
     message(STATUS "Build DOOM 3/Quake 4/Prey(2006)")
     add_subdirectory ( doom3/neo ) # DOOM3 | RoE, Quake4, Prey(2006)
 endif()
 
-if(GAME_QUAKE3 OR GAME_QUAKE2 OR GAME_QUAKE1 OR GAME_DNF OR GAME_TDM OR GAME_RTCW OR GAME_DOOM OR GAME_ETW OR GAME_REALRTCW OR GAME_FTEQW OR GAME_QUAKES OR GAME_JK)
-    message(STATUS "Build extras depend shared libraries")
-    add_subdirectory ( deplibs ) # common depend libraries
+if(DIII4A_BUILD_COMMON)
+    message(STATUS "Build common static libraries")
+    add_subdirectory ( common )
+endif()
 
-if(NOT GAME_DOOM3)
+if(NOT GAME_DOOM3 AND DIII4A_BUILD_OPENAL)
     message(STATUS "Build OpenAL alone")
     add_subdirectory(doom3/neo/externlibs/openal-soft)
 endif()
+
+if(GAME_QUAKE3 OR GAME_QUAKE2 OR GAME_QUAKE1 OR GAME_DNF OR GAME_TDM OR GAME_RTCW OR GAME_DOOM OR GAME_ETW OR GAME_REALRTCW OR GAME_FTEQW OR GAME_QUAKES OR GAME_JK OR GAME_Q3RALLY OR GAME_URT OR GAME_SOURCE)
+    message(STATUS "Build extras depend shared libraries")
+    add_subdirectory ( deplibs ) # common depend libraries
 endif()
 
-if(GAME_QUAKE3 OR GAME_QUAKE2 OR GAME_QUAKE1 OR GAME_RTCW OR GAME_ETW OR GAME_REALRTCW OR GAME_FTEQW OR GAME_QUAKES OR GAME_JK OR GAME_SERIOUSSAM)
-    message(STATUS "Build common static libraries")
-    add_subdirectory (deplibs/oboe) # 1.8.1
-    add_subdirectory ( common )
-endif()
+
 
 if(GAME_RTCW) # 438e7d413b5f7277187c35b032eb0ef9093ae778 | May 27, 2024 | All: Fix compilation on FreeBSD
     message(STATUS "Build Return to Castle Wolfenstein")
@@ -103,7 +130,7 @@ if(GAME_QUAKE3) # https://github.com/ioquake/ioq3/commit/3fb9006e6461b877b67781c
     add_subdirectory ( quake3 ) # Quake 3 Arena | Team Arena
 endif()
 
-if(GAME_QUAKE2) # 8.4 | 141bf6e7ddf0ee0895783db1de90d96e6a483ab0 | Aug 9, 2024 | Bump version number to 8.41.
+if(GAME_QUAKE2) # 8.51 | dc473a9830fd705430d2aef1f78f23d6777216a3 | May 11, 2025 | Bump version number to 8.51.
     message(STATUS "Build Quake 2")
     add_subdirectory ( quake2 ) # Quake 2
 endif()
@@ -116,10 +143,10 @@ endif()
 if(GAME_TDM) # 2.13 | 2da36cc9e83046160b91bca91c116dc642740b78 | Mar 8, 2025 | Merge one commit from trunk.
     message(STATUS "Build The Dark Mod")
     add_subdirectory ( darkmod ) # The Dark Mod
-    if(BUILD_BACKPORT)
+#[[    if(BUILD_BACKPORT)
         # 2.12 | 5f4793f69bc0b61cbf2f921496455fb9e9296bcd | Feb 24, 2024 | Merged some changes from trunk.
         add_subdirectory ( backports/darkmod_2_12 "darkmod_2_12" )
-    endif()
+    endif()]]
 endif()
 
 if(GAME_DOOM3BFG) # 1.4.0 | f81a8c1dd9b762774a233ba071837b2c7a374751 | Mar 6, 2022 | Updated release notes
@@ -144,12 +171,12 @@ if(GAME_ETW) # v2.83.1 | e8d0ec06800630fd458791ccd29ed488e04648d9 | Nov 12, 2024
     add_subdirectory ( etw ) # ETW
 endif()
 
-if(GAME_REALRTCW) # 5.1 | a6e94b82bd11c41f62ffc969e27b0e63f267ef8e | Version is upped to 5.1
+if(GAME_REALRTCW) # 5.2 | Jul 26, 2025 | ad529d588e4dec717aff0779f9d1555eddc1e2be | Update ai_cast_survival.c
     message(STATUS "Build RealRTCW")
     add_subdirectory ( realrtcw ) # RealRTCW
-    if(BUILD_BACKPORT)
-        add_subdirectory ( backports/realrtcw_5_0 "realrtcw_5_0" ) # RealRTCW 5.0 # 5.0 | on Jul 2, 2024 | 49ebd2964f7d15be3ca2723401ef3ea07bfbf586 | Disable eject brass delay, it crashes the game
-    endif()
+#[[    if(BUILD_BACKPORT)
+        add_subdirectory ( backports/realrtcw_5_1 "realrtcw_5_1" ) # 5.1 | on Feb 14, 2025 | a6e94b82bd11c41f62ffc969e27b0e63f267ef8e | Version is upped to 5.1
+    endif()]]
 endif()
 
 if(GAME_FTEQW) # 5662b3a23d3c16f5a3b5fe74efb88e77d8fc4da0 | engine/common/fs.c: Update game definitions
@@ -171,10 +198,24 @@ if(GAME_SERIOUSSAM) # v1.10.7 | Update README.md | https://github.com/tx00100xt/
 endif()
 
 
-if(GAME_XASH3D) # hlsdk-portable | Make cppcheck happy. | https://github.com/FWGS/hlsdk-portable/commit/f03c31c16a39890c56cb11709098f04d9f4b7363
-    # xash3d-fwgs | engine: platform: sdl2: assign K_AUX32 and K_AUX31 to volume buttons to match old engine behavior on Android | https://github.com/FWGS/xash3d-fwgs/commit/c90d1100965ec5a072d95c0c257f853a6673ca74
+if(GAME_XASH3D) # xash3d-fwgs | https://github.com/FWGS/xash3d-fwgs/commit/74b196d2c362ea195967be6f139faeed18795a53
     message(STATUS "Build Xash3D")
     add_subdirectory(xash3d) # Xash3D
+endif()
+
+if(GAME_SOURCE) # 29985681a18508e78dc79ad863952f830be237b6 | Dec 30, 2023 | Merge pull request #312 from AruMoon/add-master-server Add new master server
+	message(STATUS "Build Source")
+    add_subdirectory(source) # Source-Engine
+endif()
+
+if(GAME_Q3RALLY) # v0.5b | Aug 5, 2025 | https://github.com/Q3Rally-Team/q3rally/commit/d495c7518dc17d24357de1df5b308ba251994d1e
+    message(STATUS "Build Q3Rally")
+    add_subdirectory ( q3rally/engine ) # Quake 3 Rally
+endif()
+
+if(GAME_URT) # 4.3.4 | May 26, 2018 | https://github.com/FrozenSand/ioq3-for-UrbanTerror-4/commit/53fdee781c263168965f48cb87cc9187705f5ca3 | Removed dmflags from the serverinfo string, it's an unused leftover from Quake 2
+    message(STATUS "Build Urban Terror")
+    add_subdirectory ( urt ) # Urban Terror
 endif()
 
 
