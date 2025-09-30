@@ -3000,9 +3000,9 @@ void Weapon::PickupWeapon(Event *ev)
             }
         }
 
-        if (bSameAmmo[FIRE_PRIMARY] && bSameAmmo[FIRE_SECONDARY]) {
-            return;
-        }
+        //if (bSameAmmo[FIRE_PRIMARY] && bSameAmmo[FIRE_SECONDARY]) {
+        //    return;
+        //}
 
         if (bSameAmmo[FIRE_PRIMARY]) {
             startammo[FIRE_PRIMARY] = 0;

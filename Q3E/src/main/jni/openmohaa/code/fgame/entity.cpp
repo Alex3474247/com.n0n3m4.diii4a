@@ -1914,7 +1914,9 @@ void Entity::EventRevive(Event *ev)
         }
     }
 
+    if (health < ev->GetFloat(1) * multiplier)
     health = ev->GetFloat(1) * multiplier;
+
     if (health <= 0.f) {
         throw ScriptException("health must be greated than 0");
     }
@@ -1928,6 +1930,7 @@ void Entity::SetHealth(Event *ev)
         ScriptError("cannot give health to dead entities");
     }
 
+    if (health < ev->GetFloat(1))
     health = ev->GetFloat(1);
 
     if (health <= 0) {
@@ -1949,9 +1952,9 @@ void Entity::EventSetMaxHealth(Event *ev)
         ScriptError("max_health must be greater than 0");
     }
 
-    if (health > max_health) {
-        health = max_health;
-    }
+    //if (health > max_health) {
+    //    health = max_health;
+    //}
 }
 
 void Entity::EventGetMaxHealth(Event *ev)
@@ -1965,14 +1968,16 @@ void Entity::EventSetHealthOnly(Event *ev)
         ScriptError("cannot give health to dead entities");
     }
 
+    if (health < ev->GetFloat(1))
     health = ev->GetFloat(1);
+
     if (health <= 0.0f) {
         ScriptError("health must be greater than 0");
     }
 
-    if (health > max_health) {
-        health = max_health;
-    }
+    //if (health > max_health) {
+    //    health = max_health;
+    //}
 }
 
 void Entity::GetYaw(Event *ev)

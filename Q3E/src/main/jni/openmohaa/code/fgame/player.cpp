@@ -2695,9 +2695,9 @@ void Player::EndLevel(Event *ev)
     }
 
     InitPowerups();
-    if (health > max_health) {
-        health = max_health;
-    }
+    //if (health > max_health) {
+    //    health = max_health;
+    //}
 
     if (health < 1) {
         health = 1;
@@ -4930,10 +4930,10 @@ void Player::Think(void)
 
         // heal
         health += newrate;
-        if (health > max_health) {
+        //if (health > max_health) {
             // make sure it doesn't go above the maximum player health
-            health = max_health;
-        }
+        //    health = max_health;
+        //}
     }
 
     //
@@ -11503,6 +11503,7 @@ void Player::FullHeal(Event *ev)
             HUDPrint("TESTING:  You used the fullheal.\n");
         }
 
+        if (health < max_health)
         health = max_health;
     }
 }

@@ -69,10 +69,10 @@ Item *AmmoEntity::ItemPickup(Entity *other, qboolean add_to_inventory)
 
     player = (Sentient *)other;
 
-    if (player->AmmoCount(item_name.c_str()) == player->MaxAmmoCount(item_name.c_str())) {
+    //if (player->AmmoCount(item_name.c_str()) == player->MaxAmmoCount(item_name.c_str())) {
         // don't pickup if the player already has max ammo
-        return NULL;
-    }
+    //    return NULL;
+    //}
 
     // Play pickup sound
     player->Sound(sPickupSound, CHAN_ITEM);
@@ -155,9 +155,9 @@ void Ammo::setAmount(int a)
 {
     amount = a;
 
-    if ((maxamount > 0) && (amount > maxamount)) {
-        amount = maxamount;
-    }
+    //if ((maxamount > 0) && (amount > maxamount)) {
+    //    amount = maxamount;
+    //}
 }
 
 int Ammo::getAmount(void)

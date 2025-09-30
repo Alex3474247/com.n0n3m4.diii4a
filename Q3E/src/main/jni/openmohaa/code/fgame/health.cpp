@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
-// health.cpp: Health powerup
+// health.cpp: Health powerup 
 //
 
 #include "g_local.h"
@@ -81,42 +81,42 @@ void Health::PickupHealth(Event *ev)
 
     player = (Player *)other;
 
-    if (g_healrate->value && other->IsSubclassOfPlayer()) {
+    //if (g_healrate->value && other->IsSubclassOfPlayer()) {
         // Added in OPM
         //  OG doesn't check if the future health will be full
         //  which is problematic as other can pickup the item
         //  will healing
-        if (player->m_fHealRate + player->health >= player->max_health) {
+        //if (player->m_fHealRate + player->health >= player->max_health) {
             // will be healing to 100%
-            return;
-        }
-    } else {
-        if (player->health >= player->max_health) {
-            return;
-        }
-    }
+        //    return;
+        //}
+    //} else {
+        //if (player->health >= player->max_health) {
+        //    return;
+        //}
+    //}
 
     if (!ItemPickup(other, qfalse)) {
         return;
     }
 
     if (g_healrate->value && other->IsSubclassOfPlayer()) {
-        if (player->m_fHealRate + player->health >= player->max_health) {
+        //if (player->m_fHealRate + player->health >= player->max_health) {
             // will be healing to 100%
-            return;
-        }
+        //    return;
+        //}
 
         player->m_fHealRate += amount / 100.0 * player->max_health;
-        if (player->m_fHealRate + player->health > player->max_health) {
+        //if (player->m_fHealRate + player->health > player->max_health) {
             // make sure to not overflow
-            player->m_fHealRate = player->max_health - player->health + 0.1f;
-        }
+        //    player->m_fHealRate = player->max_health - player->health + 0.1f;
+        //}
     } else {
         player->health += amount / 100.0 * player->max_health;
 
-        if (player->health > player->max_health) {
-            player->health = player->max_health;
-        }
+        //if (player->health > player->max_health) {
+        //    player->health = player->max_health;
+        //}
     }
 
     gi.SendServerCommand(

@@ -934,14 +934,14 @@ void Sentient::RemoveItem(Item *object)
 
 void Sentient::RemoveWeapons(void)
 {
-    for (int i = inventory.NumObjects(); i > 0; i--) {
-        int     entnum = inventory.ObjectAt(i);
-        Weapon *item   = (Weapon *)G_GetEntity(entnum);
+    //for (int i = inventory.NumObjects(); i > 0; i--) {
+    //    int     entnum = inventory.ObjectAt(i);
+    //    Weapon *item   = (Weapon *)G_GetEntity(entnum);
 
-        if (item->IsSubclassOfWeapon()) {
-            item->Delete();
-        }
-    }
+    //    if (item->IsSubclassOfWeapon()) {
+    //        item->Delete();
+    //    }
+    //}
 }
 
 Weapon *Sentient::GetWeapon(int index)
@@ -1038,33 +1038,33 @@ Item *Sentient::FindItem(const char *itemname)
 
 void Sentient::FreeInventory(void)
 {
-    int   num;
-    int   i;
-    Item *item;
-    Ammo *ammo;
-
-    // Detach all Weapons
-    DetachAllActiveWeapons();
-
-    // Delete all inventory items ( this includes weapons )
-    num = inventory.NumObjects();
-    for (i = num; i > 0; i--) {
-        item = (Item *)G_GetEntity(inventory.ObjectAt(i));
-        item->Delete();
-    }
-    inventory.ClearObjectList();
-
-    // Remove all ammo
-    num = ammo_inventory.NumObjects();
-    for (i = num; i > 0; i--) {
-        ammo = (Ammo *)ammo_inventory.ObjectAt(i);
-        delete ammo;
-    }
-    ammo_inventory.ClearObjectList();
-
-    if (IsSubclassOfPlayer()) {
-        ((Player *)this)->InitMaxAmmo();
-    }
+//    int   num;
+//    int   i;
+//    Item *item;
+//    Ammo *ammo;
+//
+//    // Detach all Weapons
+//    DetachAllActiveWeapons();
+//
+//    // Delete all inventory items ( this includes weapons )
+//    num = inventory.NumObjects();
+//    for (i = num; i > 0; i--) {
+//        item = (Item *)G_GetEntity(inventory.ObjectAt(i));
+//        item->Delete();
+//    }
+//    inventory.ClearObjectList();
+//
+//    // Remove all ammo
+//    num = ammo_inventory.NumObjects();
+//    for (i = num; i > 0; i--) {
+//        ammo = (Ammo *)ammo_inventory.ObjectAt(i);
+//        delete ammo;
+//    }
+//    ammo_inventory.ClearObjectList();
+//
+//    if (IsSubclassOfPlayer()) {
+//        ((Player *)this)->InitMaxAmmo();
+//    }
 }
 
 void Sentient::EventFreeInventory(Event *ev)
@@ -1246,25 +1246,25 @@ void Sentient::takeItem(const char *name)
         return;
     }
 
-    Ammo *ammo;
-    ammo = FindAmmoByName(name);
-    if (ammo) {
-        gi.DPrintf("Taking ammo %s away from player\n", name);
-
-        ammo->setAmount(0);
-    }
+//    Ammo *ammo;
+//    ammo = FindAmmoByName(name);
+//    if (ammo) {
+//        gi.DPrintf("Taking ammo %s away from player\n", name);
+//
+//        ammo->setAmount(0);
+//    }
 }
 
 void Sentient::takeAmmoType(const char *name)
 {
-    Ammo *ammo;
-
-    ammo = FindAmmoByName(name);
-    if (ammo) {
-        gi.DPrintf("Taking ammo %s away from player\n", name);
-
-        ammo->setAmount(0);
-    }
+//    Ammo *ammo;
+//
+//    ammo = FindAmmoByName(name);
+//    if (ammo) {
+//        gi.DPrintf("Taking ammo %s away from player\n", name);
+//
+//        ammo->setAmount(0);
+//    }
 }
 
 void Sentient::EventUseItem(Event *ev)

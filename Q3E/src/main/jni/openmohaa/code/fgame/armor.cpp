@@ -57,10 +57,10 @@ void Armor::Add(int num)
 
 {
     // Armor never adds, it only replaces
-    amount = num;
-    if (amount >= MaxAmount()) {
-        amount = MaxAmount();
-    }
+    amount += num;
+    //if (amount >= MaxAmount()) {
+    //    amount = MaxAmount();
+    //}
 }
 
 qboolean Armor::Pickupable(Entity *other)
@@ -76,9 +76,9 @@ qboolean Armor::Pickupable(Entity *other)
         item = sent->FindItem(getName());
 
         // If our armor is > than our current armor or armor has no value, then leave it alone.
-        if (item && ((item->getAmount() >= this->getAmount()) || !this->getAmount())) {
-            return false;
-        }
+        //if (item && ((item->getAmount() >= this->getAmount()) || !this->getAmount())) {
+        //    return false;
+        //}
     }
     return true;
 }

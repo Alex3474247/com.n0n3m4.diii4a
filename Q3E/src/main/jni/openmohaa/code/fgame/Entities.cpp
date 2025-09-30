@@ -2880,6 +2880,7 @@ void AISpawnPoint::GetAmmoGrenade(Event *ev)
 
 void AISpawnPoint::SetAmmoGrenade(Event *ev)
 {
+    if (m_iAmmoGrenade < ev->GetInteger(1))
     m_iAmmoGrenade = ev->GetInteger(1);
 }
 
@@ -2910,6 +2911,7 @@ void AISpawnPoint::GetHealth(Event *ev)
 
 void AISpawnPoint::SetHealth(Event *ev)
 {
+    if (m_iHealth < ev->GetInteger(1))
     m_iHealth = ev->GetInteger(1);
 }
 

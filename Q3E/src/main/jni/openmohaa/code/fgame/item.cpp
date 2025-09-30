@@ -728,9 +728,9 @@ qboolean Item::Pickupable(Entity *other)
 
         item = sent->FindItem(getName());
 
-        if (item && (item->getAmount() >= item->MaxAmount())) {
-            return false;
-        }
+        //if (item && (item->getAmount() >= item->MaxAmount())) {
+        //    return false;
+        //}
     }
     return true;
 }
