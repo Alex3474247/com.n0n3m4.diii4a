@@ -2700,8 +2700,8 @@ public class GameLauncher extends Activity
 		menuGames.put(R.id.main_menu_game_fteqw, Q3EGameConstants.GAME_FTEQW);
 		menuGames.put(R.id.main_menu_game_ja, Q3EGameConstants.GAME_JA);
 		menuGames.put(R.id.main_menu_game_jo, Q3EGameConstants.GAME_JO);
-		menuGames.put(R.id.main_menu_game_samtfe, Q3EGameConstants.GAME_SAMTFE);
-		menuGames.put(R.id.main_menu_game_samtse, Q3EGameConstants.GAME_SAMTSE);
+		//menuGames.put(R.id.main_menu_game_samtfe, Q3EGameConstants.GAME_SAMTFE);
+		//menuGames.put(R.id.main_menu_game_samtse, Q3EGameConstants.GAME_SAMTSE);
 		menuGames.put(R.id.main_menu_game_xash3d, Q3EGameConstants.GAME_XASH3D);
 		menuGames.put(R.id.main_menu_game_source, Q3EGameConstants.GAME_SOURCE);
 		menuGames.put(R.id.main_menu_game_urt, Q3EGameConstants.GAME_URT);
@@ -4392,8 +4392,8 @@ public class GameLauncher extends Activity
 			RemoveAllParamsPrefix(KidTechCommand.ARG_PREFIX_QUAKETECH);
 			SetParamPrefix(KidTechCommand.ARG_PREFIX_QUAKETECH, mod, "");
 		}
-		else if(Q3EUtils.q3ei.isSamTFE) {}
-		else if(Q3EUtils.q3ei.isSamTSE) {}
+		//else if(Q3EUtils.q3ei.isSamTFE) {}
+		//else if(Q3EUtils.q3ei.isSamTSE) {}
 		else
 			SetProp(arg, mod);
 	}
@@ -4416,10 +4416,10 @@ public class GameLauncher extends Activity
 			else
 				return "";
 		}
-		else if(Q3EUtils.q3ei.isSamTFE)
-			return "";
-		else if(Q3EUtils.q3ei.isSamTSE)
-			return "";
+		//else if(Q3EUtils.q3ei.isSamTFE)
+		//	return "";
+		//else if(Q3EUtils.q3ei.isSamTSE)
+		//	return "";
 		else
 			return GetProp(arg);
 	}
@@ -4433,8 +4433,8 @@ public class GameLauncher extends Activity
 			RemoveParamPrefix(KidTechCommand.ARG_PREFIX_ALL, arg);
 		else if(Q3EUtils.q3ei.isFTEQW)
 			RemoveAllParamsPrefix(KidTechCommand.ARG_PREFIX_QUAKETECH);
-		else if(Q3EUtils.q3ei.isSamTFE);
-		else if(Q3EUtils.q3ei.isSamTSE);
+		//else if(Q3EUtils.q3ei.isSamTFE);
+		//else if(Q3EUtils.q3ei.isSamTSE);
 		else
 			RemoveProp(arg);
 	}
@@ -4693,8 +4693,8 @@ public class GameLauncher extends Activity
 		public RadioGroup rg_fs_fteqwgame;
 		public RadioGroup rg_fs_jagame;
 		public RadioGroup rg_fs_jogame;
-		public RadioGroup rg_fs_samtfegame;
-		public RadioGroup rg_fs_samtsegame;
+		//public RadioGroup rg_fs_samtfegame;
+		//public RadioGroup rg_fs_samtsegame;
 		public RadioGroup rg_fs_xash3dgame;
 		public RadioGroup rg_fs_sourcegame;
 		public RadioGroup rg_fs_urtgame;
@@ -4826,8 +4826,8 @@ public class GameLauncher extends Activity
 			rg_fs_fteqwgame = CreateGameRadioGroup(gameId);
 			rg_fs_jagame = CreateGameRadioGroup(gameId);
 			rg_fs_jogame = CreateGameRadioGroup(gameId);
-			rg_fs_samtfegame = CreateGameRadioGroup(gameId);
-			rg_fs_samtsegame = CreateGameRadioGroup(gameId);
+			//rg_fs_samtfegame = CreateGameRadioGroup(gameId);
+			//rg_fs_samtsegame = CreateGameRadioGroup(gameId);
 			rg_fs_xash3dgame = CreateGameRadioGroup(gameId);
 			rg_fs_sourcegame = CreateGameRadioGroup(gameId);
 			rg_fs_urtgame = CreateGameRadioGroup(gameId);

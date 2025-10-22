@@ -91,10 +91,10 @@ public enum Game
     JO_BASE(Q3EGameConstants.GAME_JO, "base", "", "jospgame", "", "base", false, R.string.openjo_base),
 
     // SamTFE
-    SAMTFE_BASE(Q3EGameConstants.GAME_SAMTFE, "", "", "samtfe", "", "", false, R.string.samtfe_base),
+    //SAMTFE_BASE(Q3EGameConstants.GAME_SAMTFE, "", "", "samtfe", "", "", false, R.string.samtfe_base),
 
     // SamTSE
-    SAMTSE_BASE(Q3EGameConstants.GAME_SAMTSE, "", "", "samtse", "", "", false, R.string.samtse_base),
+    //SAMTSE_BASE(Q3EGameConstants.GAME_SAMTSE, "", "", "samtse", "", "", false, R.string.samtse_base),
 
     // Xash3D
     XASH3D_HL(Q3EGameConstants.GAME_XASH3D, "valve", "valve", "xash3d", "", "valve", false, R.string.halflife_base),

@@ -70,8 +70,8 @@ public class Q3EInterface
 	public boolean isFTEQW = false;
 	public boolean isJA = false;
 	public boolean isJO = false;
-	public boolean isSamTFE = false;
-	public boolean isSamTSE = false;
+	//public boolean isSamTFE = false;
+	//public boolean isSamTSE = false;
 	public boolean isXash3D = false;
 	public boolean isSource = false;
 	public boolean isUrT = false;
@@ -205,10 +205,10 @@ public class Q3EInterface
 			return Q3EGameConstants.GAME_ID_JA;
 		else if(isJO)
 			return Q3EGameConstants.GAME_ID_JO;
-		else if(isSamTFE)
-			return Q3EGameConstants.GAME_ID_SAMTFE;
-		else if(isSamTSE)
-			return Q3EGameConstants.GAME_ID_SAMTSE;
+		//else if(isSamTFE)
+		//	return Q3EGameConstants.GAME_ID_SAMTFE;
+		//else if(isSamTSE)
+		//	return Q3EGameConstants.GAME_ID_SAMTSE;
 		else if(isXash3D)
 			return Q3EGameConstants.GAME_ID_XASH3D;
 		else if(isSource)
@@ -274,10 +274,10 @@ public class Q3EInterface
 			SetupJA();
 		else if(Q3EGameConstants.GAME_JO.equalsIgnoreCase(name))
 			SetupJO();
-		else if(Q3EGameConstants.GAME_SAMTFE.equalsIgnoreCase(name))
-			SetupSamTFE();
-		else if(Q3EGameConstants.GAME_SAMTSE.equalsIgnoreCase(name))
-			SetupSamTSE();
+		//else if(Q3EGameConstants.GAME_SAMTFE.equalsIgnoreCase(name))
+		//	SetupSamTFE();
+		//else if(Q3EGameConstants.GAME_SAMTSE.equalsIgnoreCase(name))
+		//	SetupSamTSE();
 		else if(Q3EGameConstants.GAME_XASH3D.equalsIgnoreCase(name))
 			SetupXash3D();
 		else if(Q3EGameConstants.GAME_SOURCE.equalsIgnoreCase(name))
@@ -307,8 +307,8 @@ public class Q3EInterface
 		isFTEQW = false;
 		isJA = false;
 		isJO = false;
-		isSamTFE = false;
-		isSamTSE = false;
+		//isSamTFE = false;
+		//isSamTSE = false;
 		isXash3D = false;
 		isSource = false;
 		isUrT = false;
@@ -422,7 +422,7 @@ public class Q3EInterface
 		SetupGameConfig();
 	}
 
-	public void SetupSamTFE()
+	/*public void SetupSamTFE()
 	{
 		ResetGameState();
 		isSamTFE = true;
@@ -434,7 +434,7 @@ public class Q3EInterface
 		ResetGameState();
 		isSamTSE = true;
 		SetupGameConfig();
-	}
+	}*/
 
 	public void SetupXash3D()
 	{
@@ -542,7 +542,7 @@ public class Q3EInterface
 				|| isD3BFG || isTDM
 				|| isQ3 || isRTCW || isETW || isRealRTCW || isJA || isJO || isUrT || isMOHAA || isFTEQW
 				|| isDOOM || isQ2 || isQ1
-				|| isSamTFE || isSamTSE
+				//|| isSamTFE || isSamTSE
 				;
 	}
 
@@ -695,12 +695,12 @@ public class Q3EInterface
 			list.add("<mod>/autoexec_sp.cfg");
 			list.add("<base>/autoexec_sp.cfg");
 		}
-		else if(isSamTFE)
+		/*else if(isSamTFE)
 		{
 		}
 		else if(isSamTSE)
 		{
-		}
+		}*/
 		else if(isXash3D)
 		{
 			list.add("<mod>/" + Q3EGameConstants.CONFIG_FILE_XASH3D);
@@ -837,14 +837,14 @@ public class Q3EInterface
 				|| isD3BFG || isTDM
 				|| isRTCW || isQ3 || isETW || isRealRTCW || isFTEQW || isJA || isJO || isUrT || isMOHAA
 				|| isQ2 || isQ1 || isDOOM
-				|| isSamTFE || isSamTSE
+				//|| isSamTFE || isSamTSE
 				|| isXash3D || isSource
 				;
 	}
 
 	public boolean IsStandaloneGame()
 	{
-		return isTDM || isDOOM || isFTEQW || isSamTFE || isSamTSE || isXash3D || isSource;
+		return isTDM || isDOOM || isFTEQW /*|| isSamTFE || isSamTSE*/ || isXash3D || isSource;
 	}
 
 	public boolean IS_D3()
@@ -867,8 +867,8 @@ public class Q3EInterface
 		final String[] UnsupportGames = {
 				Q3EGameConstants.GAME_QUAKE1,
 				Q3EGameConstants.GAME_FTEQW,
-				Q3EGameConstants.GAME_SAMTFE,
-				Q3EGameConstants.GAME_SAMTSE,
+				//Q3EGameConstants.GAME_SAMTFE,
+				//Q3EGameConstants.GAME_SAMTSE,
 		};
 		for(String unsupportGame : UnsupportGames)
 		{

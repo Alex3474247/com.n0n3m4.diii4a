@@ -188,23 +188,23 @@ public final class Q3EPreference
     public static final String pref_harm_jo_env                   = PREF_HARM_JO_PREFIX + "env";
     public static final String pref_harm_jo_game_mod              = PREF_HARM_JO_PREFIX + "game_mod"; //k
     // SamTFE
-    public static final String PREF_HARM_SAMTFE_PREFIX            = "q3e_harm_samtfe_";
-    public static final String pref_harm_samtfe_fs_game           = PREF_HARM_SAMTFE_PREFIX + "fs_game"; //k
-    public static final String pref_harm_samtfe_game_lib          = PREF_HARM_SAMTFE_PREFIX + "game_lib"; //k
-    public static final String pref_harm_samtfe_user_mod          = PREF_HARM_SAMTFE_PREFIX + "user_mod"; //k
-    public static final String pref_params_samtfe                 = PREF_HARM_SAMTFE_PREFIX + "params"; //k
-    public static final String pref_harm_samtfe_command_record    = PREF_HARM_SAMTFE_PREFIX + "command_record";
-    public static final String pref_harm_samtfe_env               = PREF_HARM_SAMTFE_PREFIX + "env";
-    public static final String pref_harm_samtfe_game_mod          = PREF_HARM_SAMTFE_PREFIX + "game_mod"; //k
+    //public static final String PREF_HARM_SAMTFE_PREFIX            = "q3e_harm_samtfe_";
+    //public static final String pref_harm_samtfe_fs_game           = PREF_HARM_SAMTFE_PREFIX + "fs_game"; //k
+    //public static final String pref_harm_samtfe_game_lib          = PREF_HARM_SAMTFE_PREFIX + "game_lib"; //k
+    //public static final String pref_harm_samtfe_user_mod          = PREF_HARM_SAMTFE_PREFIX + "user_mod"; //k
+    //public static final String pref_params_samtfe                 = PREF_HARM_SAMTFE_PREFIX + "params"; //k
+    //public static final String pref_harm_samtfe_command_record    = PREF_HARM_SAMTFE_PREFIX + "command_record";
+    //public static final String pref_harm_samtfe_env               = PREF_HARM_SAMTFE_PREFIX + "env";
+    //public static final String pref_harm_samtfe_game_mod          = PREF_HARM_SAMTFE_PREFIX + "game_mod"; //k
     // SamTSE
-    public static final String PREF_HARM_SAMTSE_PREFIX            = "q3e_harm_samtse_";
-    public static final String pref_harm_samtse_fs_game           = PREF_HARM_SAMTSE_PREFIX + "fs_game"; //k
-    public static final String pref_harm_samtse_game_lib          = PREF_HARM_SAMTSE_PREFIX + "game_lib"; //k
-    public static final String pref_harm_samtse_user_mod          = PREF_HARM_SAMTSE_PREFIX + "user_mod"; //k
-    public static final String pref_params_samtse                 = PREF_HARM_SAMTSE_PREFIX + "params"; //k
-    public static final String pref_harm_samtse_command_record    = PREF_HARM_SAMTSE_PREFIX + "command_record";
-    public static final String pref_harm_samtse_env               = PREF_HARM_SAMTSE_PREFIX + "env";
-    public static final String pref_harm_samtse_game_mod          = PREF_HARM_SAMTSE_PREFIX + "game_mod"; //k
+    //public static final String PREF_HARM_SAMTSE_PREFIX            = "q3e_harm_samtse_";
+    //public static final String pref_harm_samtse_fs_game           = PREF_HARM_SAMTSE_PREFIX + "fs_game"; //k
+    //public static final String pref_harm_samtse_game_lib          = PREF_HARM_SAMTSE_PREFIX + "game_lib"; //k
+    //public static final String pref_harm_samtse_user_mod          = PREF_HARM_SAMTSE_PREFIX + "user_mod"; //k
+    //public static final String pref_params_samtse                 = PREF_HARM_SAMTSE_PREFIX + "params"; //k
+    //public static final String pref_harm_samtse_command_record    = PREF_HARM_SAMTSE_PREFIX + "command_record";
+    //public static final String pref_harm_samtse_env               = PREF_HARM_SAMTSE_PREFIX + "env";
+    //public static final String pref_harm_samtse_game_mod          = PREF_HARM_SAMTSE_PREFIX + "game_mod"; //k
     // Xash3D
     public static final String PREF_HARM_XASH3D_PREFIX            = "q3e_harm_xash3d_";
     public static final String pref_harm_xash3d_fs_game           = PREF_HARM_XASH3D_PREFIX + "fs_game"; //k

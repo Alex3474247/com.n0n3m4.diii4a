@@ -105,18 +105,18 @@ public enum Q3EGame
             Q3EKeyCodes.KeyCodesJK.class
     ),
 
-    SAMTFE(Q3EGameConstants.GAME_ID_SAMTFE, Q3EGameConstants.GAME_SAMTFE, Q3EGameConstants.LIB_ENGINE_SAMTFE, Q3EGameConstants.GAME_NAME_SAMTFE, Q3EGameConstants.GAME_BASE_SAMTFE,
-            Q3EGameConstants.GAME_VERSION_SAMTFE, Q3EGameConstants.GAME_SUBDIR_SAMTFE, true, Q3EGameConstants.CONFIG_FILE_SAMTFE,
-            "", null, null, null,
-            Q3EPreference.pref_harm_samtfe_fs_game, Q3EPreference.pref_harm_samtfe_user_mod, Q3EPreference.pref_harm_samtfe_game_mod, Q3EPreference.pref_harm_samtfe_game_lib, Q3EPreference.pref_params_samtfe, Q3EPreference.pref_harm_samtfe_command_record, null, Q3EPreference.pref_harm_samtfe_env,
-            Q3EKeyCodes.KeyCodesSDL.class
-    ),
-    SAMTSE(Q3EGameConstants.GAME_ID_SAMTSE, Q3EGameConstants.GAME_SAMTSE, Q3EGameConstants.LIB_ENGINE_SAMTSE, Q3EGameConstants.GAME_NAME_SAMTSE, Q3EGameConstants.GAME_BASE_SAMTSE,
-            Q3EGameConstants.GAME_VERSION_SAMTSE, Q3EGameConstants.GAME_SUBDIR_SAMTSE, true, Q3EGameConstants.CONFIG_FILE_SAMTSE,
-            "", null, null, null,
-            Q3EPreference.pref_harm_samtse_fs_game, Q3EPreference.pref_harm_samtse_user_mod, Q3EPreference.pref_harm_samtse_game_mod, Q3EPreference.pref_harm_samtse_game_lib, Q3EPreference.pref_params_samtse, Q3EPreference.pref_harm_samtse_command_record, null, Q3EPreference.pref_harm_samtse_env,
-            Q3EKeyCodes.KeyCodesSDL.class
-    ),
+    //SAMTFE(Q3EGameConstants.GAME_ID_SAMTFE, Q3EGameConstants.GAME_SAMTFE, Q3EGameConstants.LIB_ENGINE_SAMTFE, Q3EGameConstants.GAME_NAME_SAMTFE, Q3EGameConstants.GAME_BASE_SAMTFE,
+    //        Q3EGameConstants.GAME_VERSION_SAMTFE, Q3EGameConstants.GAME_SUBDIR_SAMTFE, true, Q3EGameConstants.CONFIG_FILE_SAMTFE,
+    //        "", null, null, null,
+    //        Q3EPreference.pref_harm_samtfe_fs_game, Q3EPreference.pref_harm_samtfe_user_mod, Q3EPreference.pref_harm_samtfe_game_mod, Q3EPreference.pref_harm_samtfe_game_lib, Q3EPreference.pref_params_samtfe, Q3EPreference.pref_harm_samtfe_command_record, null, Q3EPreference.pref_harm_samtfe_env,
+    //        Q3EKeyCodes.KeyCodesSDL.class
+    //),
+    //SAMTSE(Q3EGameConstants.GAME_ID_SAMTSE, Q3EGameConstants.GAME_SAMTSE, Q3EGameConstants.LIB_ENGINE_SAMTSE, Q3EGameConstants.GAME_NAME_SAMTSE, Q3EGameConstants.GAME_BASE_SAMTSE,
+    //        Q3EGameConstants.GAME_VERSION_SAMTSE, Q3EGameConstants.GAME_SUBDIR_SAMTSE, true, Q3EGameConstants.CONFIG_FILE_SAMTSE,
+    //        "", null, null, null,
+    //        Q3EPreference.pref_harm_samtse_fs_game, Q3EPreference.pref_harm_samtse_user_mod, Q3EPreference.pref_harm_samtse_game_mod, Q3EPreference.pref_harm_samtse_game_lib, Q3EPreference.pref_params_samtse, Q3EPreference.pref_harm_samtse_command_record, null, Q3EPreference.pref_harm_samtse_env,
+    //        Q3EKeyCodes.KeyCodesSDL.class
+    //),
 
     XASH3D(Q3EGameConstants.GAME_ID_XASH3D, Q3EGameConstants.GAME_XASH3D, Q3EGameConstants.LIB_ENGINE_XASH3D, Q3EGameConstants.GAME_NAME_XASH3D, Q3EGameConstants.GAME_BASE_XASH3D,
             Q3EGameConstants.GAME_VERSION_XASH3D, Q3EGameConstants.GAME_SUBDIR_XASH3D, true, Q3EGameConstants.CONFIG_FILE_XASH3D,

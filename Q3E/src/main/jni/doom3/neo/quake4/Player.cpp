@@ -11852,6 +11852,8 @@ void idPlayer::Event_RefillAmmo( void ) {
 			const char *weap = spawnArgs.GetString( va( "def_weapon%d", i ) );
 			if ( weap && *weap ) {
 				a = inventory.AmmoIndexForWeaponIndex( i );
+                
+                if(inventory.ammo[a]==0)
 				inventory.ammo[ a ] = inventory.MaxAmmoForAmmoClass( this, rvWeapon::GetAmmoNameForIndex( a ) );
 			}
 		}

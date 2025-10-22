@@ -35,8 +35,8 @@ public enum LauncherGame
     JA(Q3EGameConstants.GAME_ID_JA, Q3EGameConstants.GAME_JA, R.drawable.ja_icon, R.string.openja_base, R.color.theme_ja_main_color, R.string.openja),
     JO(Q3EGameConstants.GAME_ID_JO, Q3EGameConstants.GAME_JO, R.drawable.jo_icon, R.string.openjo_base, R.color.theme_jo_main_color, R.string.openjo),
 
-    SAMTFE(Q3EGameConstants.GAME_ID_SAMTFE, Q3EGameConstants.GAME_SAMTFE, R.drawable.samtfe_icon, R.string.samtfe_base, R.color.theme_samtfe_main_color, R.string.samtfe),
-    SAMTSE(Q3EGameConstants.GAME_ID_SAMTSE, Q3EGameConstants.GAME_SAMTSE, R.drawable.samtse_icon, R.string.samtse_base, R.color.theme_samtse_main_color, R.string.samtse),
+    //SAMTFE(Q3EGameConstants.GAME_ID_SAMTFE, Q3EGameConstants.GAME_SAMTFE, R.drawable.samtfe_icon, R.string.samtfe_base, R.color.theme_samtfe_main_color, R.string.samtfe),
+    //SAMTSE(Q3EGameConstants.GAME_ID_SAMTSE, Q3EGameConstants.GAME_SAMTSE, R.drawable.samtse_icon, R.string.samtse_base, R.color.theme_samtse_main_color, R.string.samtse),
 
     XASH3D(Q3EGameConstants.GAME_ID_XASH3D, Q3EGameConstants.GAME_XASH3D, R.drawable.xash3d_icon, R.string.xash3d_base, R.color.theme_xash3d_main_color, R.string.xash3d),
 

@@ -18,8 +18,8 @@ public final class Q3EGameConstants
     public static final String LIB_ENGINE_FTEQW     = "libfteqw.so"; // FTEQW
     public static final String LIB_ENGINE3_JA       = "libopenjk_sp.so"; // Jedi Academy
     public static final String LIB_ENGINE3_JO       = "libopenjo_sp.so"; // Jedi Outcast
-    public static final String LIB_ENGINE_SAMTFE    = "libSeriousSamTFE.so"; // Serious Sam First
-    public static final String LIB_ENGINE_SAMTSE    = "libSeriousSamTSE.so"; // Serious Sam Second
+    //public static final String LIB_ENGINE_SAMTFE    = "libSeriousSamTFE.so"; // Serious Sam First
+    //public static final String LIB_ENGINE_SAMTSE    = "libSeriousSamTSE.so"; // Serious Sam Second
     public static final String LIB_ENGINE_XASH3D    = "libxash3d.so"; // Xash3D
     public static final String LIB_ENGINE_SOURCE    = "libsource.so"; // Source Engine
     public static final String LIB_ENGINE3_URT      = "liburbanterror.so"; // Q3 Urban Terror
@@ -57,8 +57,8 @@ public final class Q3EGameConstants
     public static final String CONFIG_FILE_FTEQW    = "fte.cfg";
     public static final String CONFIG_FILE_JA       = "openjk_sp.cfg";
     public static final String CONFIG_FILE_JO       = "openjo_sp.cfg";
-    public static final String CONFIG_FILE_SAMTFE   = "";
-    public static final String CONFIG_FILE_SAMTSE   = "";
+    //public static final String CONFIG_FILE_SAMTFE   = "";
+    //public static final String CONFIG_FILE_SAMTSE   = "";
     public static final String CONFIG_FILE_XASH3D   = "config.cfg";
     public static final String CONFIG_FILE_SOURCE   = "cfg/config.cfg";
     public static final String CONFIG_FILE_URT      = "q3config.cfg";
@@ -80,8 +80,8 @@ public final class Q3EGameConstants
     public static final String GAME_FTEQW    = "fteqw";
     public static final String GAME_JA       = "openja";
     public static final String GAME_JO       = "openjo";
-    public static final String GAME_SAMTFE   = "samtfe";
-    public static final String GAME_SAMTSE   = "samtse";
+    //public static final String GAME_SAMTFE   = "samtfe";
+    //public static final String GAME_SAMTSE   = "samtse";
     public static final String GAME_XASH3D   = "xash3d";
     public static final String GAME_SOURCE   = "source";
     public static final String GAME_URT      = "urt";
@@ -103,8 +103,8 @@ public final class Q3EGameConstants
     public static final String GAME_NAME_FTEQW    = "FTEQW";
     public static final String GAME_NAME_JA       = "Jedi Academy";
     public static final String GAME_NAME_JO       = "Jedi Outcast";
-    public static final String GAME_NAME_SAMTFE   = "Serious Sam TFE";
-    public static final String GAME_NAME_SAMTSE   = "Serious Sam TSE";
+    //public static final String GAME_NAME_SAMTFE   = "Serious Sam TFE";
+    //public static final String GAME_NAME_SAMTSE   = "Serious Sam TSE";
     public static final String GAME_NAME_XASH3D   = "Xash3D";
     public static final String GAME_NAME_SOURCE   = "Source Engine";
     public static final String GAME_NAME_URT      = "Urban Terror";
@@ -128,8 +128,8 @@ public final class Q3EGameConstants
     public static final String GAME_BASE_FTEQW      = "";
     public static final String GAME_BASE_JA         = "base";
     public static final String GAME_BASE_JO         = "base";
-    public static final String GAME_BASE_SAMTFE     = "";
-    public static final String GAME_BASE_SAMTSE     = "";
+    //public static final String GAME_BASE_SAMTFE     = "";
+    //public static final String GAME_BASE_SAMTSE     = "";
     public static final String GAME_BASE_XASH3D     = "valve";
     public static final String GAME_BASE_SOURCE     = "hl2";
     public static final String GAME_BASE_URT        = "q3ut4";
@@ -151,8 +151,8 @@ public final class Q3EGameConstants
     public static final String GAME_SUBDIR_FTEQW    = "fteqw";
     public static final String GAME_SUBDIR_JA       = "openja";
     public static final String GAME_SUBDIR_JO       = "openjo";
-    public static final String GAME_SUBDIR_SAMTFE   = "serioussamtfe";
-    public static final String GAME_SUBDIR_SAMTSE   = "serioussamtse";
+    //public static final String GAME_SUBDIR_SAMTFE   = "serioussamtfe";
+    //public static final String GAME_SUBDIR_SAMTSE   = "serioussamtse";
     public static final String GAME_SUBDIR_XASH3D   = "xash";
     public static final String GAME_SUBDIR_SOURCE   = "srceng";
     public static final String GAME_SUBDIR_URT      = "urt";
@@ -174,8 +174,8 @@ public final class Q3EGameConstants
     public static final String GAME_VERSION_FTEQW    = "1.05"; // ???
     public static final String GAME_VERSION_JA       = "1.0.1.1";
     public static final String GAME_VERSION_JO       = "1.0.1.1";
-    public static final String GAME_VERSION_SAMTFE   = "1.10.7";
-    public static final String GAME_VERSION_SAMTSE   = "1.10.7";
+    //public static final String GAME_VERSION_SAMTFE   = "1.10.7";
+    //public static final String GAME_VERSION_SAMTSE   = "1.10.7";
     public static final String GAME_VERSION_XASH3D   = "0.21";
     public static final String GAME_VERSION_SOURCE   = "1.16";
     public static final String GAME_VERSION_URT      = "4.3.4";
@@ -197,12 +197,12 @@ public final class Q3EGameConstants
     public static final int GAME_ID_FTEQW    = 12;
     public static final int GAME_ID_JA       = 13;
     public static final int GAME_ID_JO       = 14;
-    public static final int GAME_ID_SAMTFE   = 15;
-    public static final int GAME_ID_SAMTSE   = 16;
-    public static final int GAME_ID_XASH3D   = 17;
-    public static final int GAME_ID_SOURCE   = 18;
-    public static final int GAME_ID_URT      = 19;
-    public static final int GAME_ID_MOHAA    = 20;
+    //public static final int GAME_ID_SAMTFE   = 15;
+    //public static final int GAME_ID_SAMTSE   = 16;
+    public static final int GAME_ID_XASH3D   = 15;
+    public static final int GAME_ID_SOURCE   = 16;
+    public static final int GAME_ID_URT      = 17;
+    public static final int GAME_ID_MOHAA    = 18;//20;
 
 
     public static final int NUM_SUPPORT_GAME = 21;
