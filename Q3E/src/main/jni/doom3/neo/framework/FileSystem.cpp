@@ -419,6 +419,8 @@ class idFileSystemLocal : public idFileSystem
 		static void				Path_f(const idCmdArgs &args);
 		static void				TouchFile_f(const idCmdArgs &args);
 		static void				TouchFileList_f(const idCmdArgs &args);
+        virtual void			RemoveDir(const char *relativePath);
+        virtual void			RemoveFolder(const char *relativePath);
 #ifdef _RAVEN
 		virtual void			SetIsFileLoadingAllowed(bool mode) { (void)mode; }
 		virtual idFile *		GetNewFileMemory( void );
@@ -510,6 +512,8 @@ class idFileSystemLocal : public idFileSystem
         void                    AddExtraGameDirectory(const char *path, const char *gameName);
         void                    AddExtraGameResource(const char *path);
         void                    AddExtraGame(const char *gameNames);
+
+        void                    RemoveDir_r(const char *OSPath, int type = 0);
 };
 
 idCVar	idFileSystemLocal::fs_restrict("fs_restrict", "", CVAR_SYSTEM | CVAR_INIT | CVAR_BOOL, "");
@@ -4901,6 +4905,108 @@ void idFileSystemLocal::AddExtraGame(const char *gameNames)
             SetupGameDirectories(games[i]);
         }
     }
+}
+
+/*
+=================
+idFileSystemLocal::RemoveDir_r
+=================
+*/
+void idFileSystemLocal::RemoveDir_r(const char *OSPath, int type)
+{
+    int st = Sys_Stat(OSPath);
+    if(st == FST_NONE)
+        return;
+
+    int mask;
+    if(type == 0)
+        mask = BIT(FST_FILE) | BIT(FST_DIRECTORY);
+    else
+        mask = 1 << type;
+
+    if(st == FST_DIRECTORY)
+    {
+        idStrList files;
+        int num = Sys_ListFiles(OSPath, "/", files);
+        for(int i = 0; i < num; i++)
+        {
+            if(files[i] == "." || files[i] == "..")
+                continue;
+            idStr strBase = OSPath;
+            strBase.StripTrailing('/');
+            strBase.StripTrailing('\\');
+            idStr newPath;
+            newPath.ReAllocate(MAX_OSPATH, false);
+            sprintf(newPath, "%s/%s", strBase.c_str(), files[i].c_str());
+            ReplaceSeparators(newPath);
+
+            RemoveDir_r(newPath, type);
+        }
+
+        if(mask & BIT(FST_FILE))
+        {
+            files.Clear();
+            num = Sys_ListFiles(OSPath, NULL, files);
+            for(int i = 0; i < num; i++)
+            {
+                idStr strBase = OSPath;
+                strBase.StripTrailing('/');
+                strBase.StripTrailing('\\');
+                idStr newPath;
+                newPath.ReAllocate(MAX_OSPATH, false);
+                sprintf(newPath, "%s/%s", strBase.c_str(), files[i].c_str());
+                ReplaceSeparators(newPath);
+
+                Sys_Printf("Remove file: %s\n", newPath.c_str());
+                remove(newPath);
+            }
+        }
+
+        if(mask & BIT(FST_DIRECTORY))
+        {
+            Sys_Printf("Remove dir: %s\n", OSPath);
+            Sys_Rmdir(OSPath);
+        }
+    }
+    else if(st == FST_FILE && (mask & BIT(FST_FILE)))
+    {
+        Sys_Printf("Remove file: %s\n", OSPath);
+        remove(OSPath);
+    }
+}
+
+void idFileSystemLocal::RemoveFolder(const char *relativePath)
+{
+    if(!relativePath || !relativePath[0] || !idStr::Cmp("/", relativePath))
+        return;
+
+    idStr OSPath;
+
+    if (fs_devpath.GetString()[0])
+        OSPath = BuildOSPath(fs_devpath.GetString(), gameFolder, relativePath);
+    else
+        OSPath = BuildOSPath(fs_savepath.GetString(), gameFolder, relativePath);
+
+    RemoveDir_r(OSPath);
+
+    ClearDirCache();
+}
+
+void idFileSystemLocal::RemoveDir(const char *relativePath)
+{
+    if(!relativePath || !relativePath[0] || !idStr::Cmp("/", relativePath))
+        return;
+
+    idStr OSPath;
+
+    if (fs_devpath.GetString()[0])
+        OSPath = BuildOSPath(fs_devpath.GetString(), gameFolder, relativePath);
+    else
+        OSPath = BuildOSPath(fs_savepath.GetString(), gameFolder, relativePath);
+
+    RemoveDir_r(OSPath, FST_DIRECTORY);
+
+    ClearDirCache();
 }
 
 #ifdef _RAVEN

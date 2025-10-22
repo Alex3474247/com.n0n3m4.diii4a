@@ -841,6 +841,7 @@ static const int	MAX_RENDER_CROPS = 8;
 #include "rb/RenderThread.h"
 void RB_SetupRenderTools(void);
 void R_ShowSurfaceInfo(void); // run on frontend instead of RB_ShowSurfaceInfo
+void R_ShowViewEntitys(const viewEntity_t *vModels);
 extern idCVar harm_r_renderToolsMultithread;
 #endif
 
@@ -2340,6 +2341,11 @@ public:
 void R_FreeEffectDefDerivedData(rvRenderEffectLocal *def);
 #endif
 #endif
+
+void GLSL_AddCommand(void);
+void R_Image_AddCommand(void);
+void Font_AddCommand(void);
+#include "model/Model_ext.h"
 
 extern bool GLimp_CheckGLInitialized(void); // Check GL context initialized, only for Android
 //extern volatile bool has_gl_context;

@@ -1419,9 +1419,6 @@ idWindow::DrawBackground
 */
 void idWindow::DrawBackground(const idRectangle &drawRect)
 {
-#ifdef _RAVENxxx //k: don't draw background color for main menu black screen.
-	if(parent && parent->parent) //k: only non-root directly children. for draw brackets
-#endif
 	if (backColor.w()) {
 		dc->DrawFilledRect(drawRect.x, drawRect.y, drawRect.w, drawRect.h, backColor);
 	}
@@ -2622,7 +2619,7 @@ bool idWindow::ParseInternalVar(const char *_name, idParser *src)
 // jmarshall - quake 4
     if (idStr::Icmp(_name, "textSpacing") == 0)
     {
-        src->ParseFloat(); //k: jmarshall is ParseInt
+        textspacing = src->ParseFloat(); //k: jmarshall is ParseInt
         return true;
     }
 // jmarshall end
@@ -2697,7 +2694,7 @@ bool idWindow::ParseInternalVar(const char *_name, idParser *src)
 // jmarshall - quake 4
     if (idStr::Icmp(_name, "textStyle") == 0)
     {
-        src->ParseInt();
+        textstyle = src->ParseInt();
         return true;
     }
 // jmarshall end
@@ -4857,12 +4854,6 @@ idWindow::IsSimple
 */
 bool idWindow::IsSimple()
 {
-#ifdef _RAVENxxx
-// jmarshall - quake 4 guis
-    return false;
-// jmarshall end
-#else
-
 	// dont do simple windows when in gui editor
 	if (com_editors & EDITOR_GUI) {
 		return false;
@@ -4893,9 +4884,12 @@ bool idWindow::IsSimple()
 	if (namedEvents.Num()) {
 		return false;
 	}
+#ifdef _RAVEN //karin: not simple when force size not equals full size
+	if(forceAspectWidth != 640.0f || forceAspectHeight != 480.0f)
+		return false;
+#endif
 
 	return true;
-#endif
 }
 
 /*

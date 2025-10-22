@@ -377,7 +377,6 @@ bind "Your key of drop" "_impulse25"
 <img src="https://github.com/glKarin/com.n0n3m4.diii4a/raw/package/screenshot/Screenshot_wolfenstein_enemy_territory.jpg" width="50%" alt="Wolfenstein: Enemy Territory"><img src="https://github.com/glKarin/com.n0n3m4.diii4a/raw/package/screenshot/Screenshot_realrtcw.jpg" width="50%" alt="RealRTCW">
 <img src="https://github.com/glKarin/com.n0n3m4.diii4a/raw/package/screenshot/Screenshot_openja.jpg" width="50%" alt="STAR WARS™ Jedi Knight - Jedi Academy™"><img src="https://github.com/glKarin/com.n0n3m4.diii4a/raw/package/screenshot/Screenshot_openjo.jpg" width="50%" alt="STAR WARS™ Jedi Knight II - Jedi Outcast™">
 <img src="https://github.com/glKarin/com.n0n3m4.diii4a/raw/package/screenshot/Screenshot_serious_sam_tfe.jpg" width="50%" alt="Serious Sam Classic: The First Encounter"><img src="https://github.com/glKarin/com.n0n3m4.diii4a/raw/package/screenshot/Screenshot_serious_sam_tse.jpg" width="50%" alt="Serious Sam Classic: The Second Encounter">
-<img src="https://github.com/glKarin/com.n0n3m4.diii4a/raw/package/screenshot/Screenshot_xash3d_halflife.jpg" width="50%" alt="Xash3D: HalfLife"><img src="https://github.com/glKarin/com.n0n3m4.diii4a/raw/package/screenshot/Screenshot_xash3d_cs16.jpg" width="50%" alt="Xash3D: Counter-Strike 1.6">
 
 ----------------------------------------------------------------------------------
 
@@ -516,9 +515,9 @@ finish();
 > ### Full-body-awareness on DOOM3/Quake4/Prey(2006)
 ##### cvars:
 * harm_pm_fullBodyAwareness: enables full-body awareness
-* harm_pm_fullBodyAwarenessOffset: full-body awareness offset, format is "<forward-offset> <side-offset> <up-offset>"
-* harm_pm_fullBodyAwarenessHeadJoint: head joint when without head model in full-body awareness
-* harm_pm_fullBodyAwarenessFixed: do not attach view position to head in full-body awareness
+* harm_pm_fullBodyAwarenessOffset: view origin offset in full-body awareness, format is "<forward-offset> <side-offset> <up-offset>"
+* harm_pm_fullBodyAwarenessHeadJoint: head joint of player model when without head model in full-body awareness
+* harm_pm_fullBodyAwarenessFixed: do not attach view origin to head in full-body awareness
 * harm_pm_fullBodyAwarenessHeadVisible: do not suppress head in full-body awareness
 
 ##### example:
@@ -587,13 +586,15 @@ entityDef player_viewbody { // default name is player_viewbody, or setup in play
     "body_usePlayerModel"		"0" // use player model and not use 'body_model': bool, default = 0
 	"body_weaponDepthHack"		"0" // override view weapon: bool, default = 0
 	"body_modelDepthHack"		"0.0" // near clip: float, default = 0
-    // "anim run_forward" 		"walk_forward" // override model animation name: string, "anim <model animation name>" "<replace animation name>"
+	
+	//  // override model animation name: string, "anim <model animation name>" "<replace animation name>"
+    //"anim run_forward" 		"walk_forward"
+    //"anim run_backwards" 		"walk_backwards"
 	
 	// Hide surface only for Quake4
-    "body_hidesurfaces" 		"shader_head,shader_toast" // hide surface names, separate by ',': string
-    "hidesurface1" 			"shader_arm" // hide surface name by entity property: string, hidesurfaceXXX
-    "hidesurface5" 			"shader_neck"
-    "hidesurface6" 			"shader_hand"
+    //"body_hidesurfaces" 		"shader_head,shader_toast" // 1. hide surface names, separate by ',': string
+    //"hidesurface1" 			"shader_arm" // 2. hide surface name by entity property: string, hidesurfaceXXX
+    //"hidesurface5" 			"shader_neck"
 }
 ```
 **2. Set player player_viewbody spawn argument**

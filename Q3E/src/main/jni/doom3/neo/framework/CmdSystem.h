@@ -137,6 +137,7 @@ class idCmdSystem
 };
 
 extern idCmdSystem 	*cmdSystem;
+const char * Com_GetCommandDescription(const char *name);
 
 
 ID_INLINE void idCmdSystem::ArgCompletion_Boolean(const idCmdArgs &args, void(*callback)(const char *s))
@@ -182,6 +183,9 @@ ID_INLINE void idCmdSystem::ArgCompletion_ModelName(const idCmdArgs &args, void(
 #endif
 #ifdef _MODEL_DAE
 											 , ".dae"
+#endif
+#ifdef _MODEL_PSK
+                                             , ".psk"
 #endif
 											 , NULL);
 }
