@@ -1215,6 +1215,7 @@ extern idCVar r_useEntityPortalCulling;		// 0 = none, 1 = box
 
 #ifdef _RAVEN
 extern idCVar r_skipSky;
+extern idCVar r_forceAmbient;
 #endif
 
 /*
@@ -2464,12 +2465,15 @@ void ModelLight_RenderFrame(int time);
 #endif
 
 extern idCVar harm_r_lightingModel;
-#define r_interactionLightingModel harm_r_lightingModel.GetInteger()
-#define HARM_INTERACTION_SHADER_NOLIGHTING 0
-#define HARM_INTERACTION_SHADER_PHONG 1
-#define HARM_INTERACTION_SHADER_BLINNPHONG 2
-#define HARM_INTERACTION_SHADER_PBR 3
-#define HARM_INTERACTION_SHADER_AMBIENT 4
+#define r_lightingModel harm_r_lightingModel.GetInteger()
+typedef enum lightingModel_e
+{
+    LM_NOLIGHTING = 0,
+    LM_PHONG      = 1,
+    LM_BLINNPHONG = 2,
+    LM_PBR        = 3,
+    LM_AMBIENT    = 4,
+} lightingModel_t;
 
 extern idCVar harm_r_useHighPrecision;
 
