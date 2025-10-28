@@ -5,51 +5,51 @@
 /* md5anim */
 namespace md5model
 {
-    idMD5AnimFile::idMD5AnimFile(void)
+    idMd5AnimFile::idMd5AnimFile(void)
             : version(MD5_VERSION)
     {}
 
-    ID_INLINE idList<md5animHierarchy_t> & idMD5AnimFile::Hierarchies()
+    ID_INLINE idList<md5animHierarchy_t> & idMd5AnimFile::Hierarchies()
     {
         return hierarchies;
     }
 
-    ID_INLINE idList<md5animBounds_t> & idMD5AnimFile::Bounds()
+    ID_INLINE idList<md5animBounds_t> & idMd5AnimFile::Bounds()
     {
         return bounds;
     }
 
-    ID_INLINE idList<md5animBaseframe_t> & idMD5AnimFile::Baseframe()
+    ID_INLINE idList<md5animBaseframe_t> & idMd5AnimFile::Baseframe()
     {
         return baseframe;
     }
 
-    ID_INLINE idList<md5animFrames_t> & idMD5AnimFile::Frames()
+    ID_INLINE idList<md5animFrames_t> & idMd5AnimFile::Frames()
     {
         return frames;
     }
 
-    ID_INLINE md5animFrames_t & idMD5AnimFile::Frame(int index)
+    ID_INLINE md5animFrames_t & idMd5AnimFile::Frame(int index)
     {
         return frames[index];
     }
 
-    ID_INLINE idStr & idMD5AnimFile::Commandline()
+    ID_INLINE idStr & idMd5AnimFile::Commandline()
     {
         return commandline;
     }
 
-    ID_INLINE int & idMD5AnimFile::FrameRate(void)
+    ID_INLINE int & idMd5AnimFile::FrameRate(void)
     {
         return frameRate;
     }
 
-    ID_INLINE int & idMD5AnimFile::NumAnimatedComponents(void)
+    ID_INLINE int & idMd5AnimFile::NumAnimatedComponents(void)
     {
         return numAnimatedComponents;
     }
 
-    void idMD5AnimFile::Clear(void)
+    void idMd5AnimFile::Clear(void)
     {
         version = MD5_VERSION;
         numAnimatedComponents = 0;
@@ -60,7 +60,7 @@ namespace md5model
         frames.SetNum(0);
     }
 
-    void idMD5AnimFile::Write(const char *path) const
+    void idMd5AnimFile::Write(const char *path) const
     {
         idFile *file = fileSystem->OpenFileWrite(path);
 
@@ -81,11 +81,13 @@ namespace md5model
             WriteIndent(file);
             const md5animHierarchy_t &joint = hierarchies[i];
             Writef(file, "\"%s\" %d %d %d", joint.boneName.c_str(), joint.parentIndex, joint.numComp, joint.frameIndex);
-            if(joint.parentIndex != -1 && 0)
+#if MD5_APPEND_COMMENT
+            if(joint.parentIndex != -1)
             {
                 const md5animHierarchy_t &parent = hierarchies[joint.parentIndex];
                 Writef(file, " // %d %s", i, parent.boneName.c_str());
             }
+#endif
             Writeln(file);
         }
         Writefln(file, "}");
@@ -98,6 +100,9 @@ namespace md5model
             WriteIndent(file);
             const md5animBounds_t &bound = bounds[i];
             Writef(file, "( %.10f %.10f %.10f ) ( %.10f %.10f %.10f )", bound[0].x, bound[0].y, bound[0].z, bound[1].x, bound[1].y, bound[1].z);
+#if MD5_APPEND_COMMENT
+			Writef(file, " // %d", i);
+#endif
             Writeln(file);
         }
         Writefln(file, "}");
@@ -110,11 +115,10 @@ namespace md5model
             WriteIndent(file);
             const md5animBaseframe_t &frame = baseframe[i];
             Writef(file, "( %.10f %.10f %.10f ) ( %.10f %.10f %.10f )", frame.xPos, frame.yPos, frame.zPos, frame.xOrient, frame.yOrient, frame.zOrient);
-            if(0)
-            {
+#if MD5_APPEND_COMMENT
                 const md5animHierarchy_t &bone = hierarchies[i];
                 Writef(file, " // %d %s", i, bone.boneName.c_str());
-            }
+#endif
             Writeln(file);
         }
         Writefln(file, "}");
@@ -130,11 +134,10 @@ namespace md5model
                 WriteIndent(file);
                 const md5animFrame_t &frame = frameTrans.joints[i];
                 Writef(file, "%.10f %.10f %.10f %.10f %.10f %.10f", frame.xPos, frame.yPos, frame.zPos, frame.xOrient, frame.yOrient, frame.zOrient);
-                if(0)
-                {
+#if MD5_APPEND_COMMENT
                     const md5animHierarchy_t &bone = hierarchies[i];
                     Writef(file, " // %d %s", i, bone.boneName.c_str());
-                }
+#endif
                 Writeln(file);
             }
             Writefln(file, "}");
@@ -144,7 +147,7 @@ namespace md5model
         fileSystem->CloseFile(file);
     }
 
-    bool idMD5AnimFile::Parse(const char *path)
+    bool idMd5AnimFile::Parse(const char *path)
     {
         idLexer	parser(LEXFL_ALLOWPATHNAMES | LEXFL_NOSTRINGESCAPECHARS | LEXFL_NOSTRINGCONCAT);
         idToken	token;
@@ -288,7 +291,7 @@ namespace md5model
         return true;
     }
 
-    void idMD5AnimFile::CalcFrameBounds(const idMD5MeshFile &md5mesh, const idMD5AnimFile &md5anim, int frameIndex, idBounds &md5Bounds)
+    void idMd5AnimFile::CalcFrameBounds(const idMd5MeshFile &md5mesh, const idMd5AnimFile &md5anim, int frameIndex, idBounds &md5Bounds)
     {
         int j;
         const md5animFrames_t &frame = md5anim.frames[frameIndex];
@@ -332,7 +335,7 @@ namespace md5model
         md5mesh.CalcBounds(frameTransforms, md5Bounds);
     }
 
-    void idMD5AnimFile::CalcBounds(const idMD5MeshFile &mesh)
+    void idMd5AnimFile::CalcBounds(const idMd5MeshFile &mesh)
     {
         for(int i = 0; i < frames.Num(); i++)
         {

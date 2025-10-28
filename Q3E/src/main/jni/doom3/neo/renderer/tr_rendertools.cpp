@@ -97,6 +97,8 @@ int				rb_debugPolygonTime = 0;
 #ifdef GL_ES_VERSION_2_0
 #include "glsl/gles2_compat.cpp"
 
+#define qglReadPixels_1(x, y, w, h, f, t, d) glrbReadPixels((x), (y), (w), (h), (f), (t), (d), 1)
+
 static void RB_DrawElementsWithCounters_polygon(const srfTriangles_t *tri)
 {
 	HARM_CHECK_SHADER("RB_DrawElementsWithCounters_polygon");
@@ -169,6 +171,8 @@ static void RB_T_RenderTriangleSurface_polygon(const drawSurf_t *surf)
 
 	RB_DrawElementsWithCounters_polygon(tri);
 }
+#else
+#define qglReadPixels_1 qglReadPixels
 #endif
 
 
@@ -504,7 +508,7 @@ void RB_ScanStencilBuffer(void)
 	memset(counts, 0, sizeof(counts));
 
 	stencilReadback = (byte *)R_StaticAlloc(glConfig.vidWidth * glConfig.vidHeight);
-	qglReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, stencilReadback);
+    qglReadPixels_1(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, stencilReadback);
 
 	for (i = 0; i < glConfig.vidWidth * glConfig.vidHeight; i++) {
 		counts[ stencilReadback[i] ]++;
@@ -544,7 +548,7 @@ void RB_CountStencilBuffer(void)
 
 
 	stencilReadback = (byte *)R_StaticAlloc(glConfig.vidWidth * glConfig.vidHeight);
-	qglReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, stencilReadback);
+    qglReadPixels_1(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, stencilReadback);
 
 	count = 0;
 
@@ -708,7 +712,7 @@ void RB_ShowIntensity(void)
 	}
 
 	colorReadback = (byte *)R_StaticAlloc(glConfig.vidWidth * glConfig.vidHeight * 4);
-	qglReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_RGBA, GL_UNSIGNED_BYTE, colorReadback);
+    qglReadPixels_1(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_RGBA, GL_UNSIGNED_BYTE, colorReadback);
 
 	c = glConfig.vidWidth * glConfig.vidHeight * 4;
 
@@ -754,6 +758,59 @@ void RB_ShowIntensity(void)
 }
 
 
+
+static void RB_ShowDepthBuffer_framebuffer(void)
+{
+    // using framebuffer and depth to color shader
+#if !defined(__ANDROID__)
+    if (USING_GL && r_showDepth.GetInteger() < 3) {
+        return;
+    }
+    if (!r_showDepth.GetBool()) {
+        return;
+    }
+    int base = USING_GL ? 2 : 0;
+#else
+    if (!r_showDepth.GetBool()) {
+		return;
+	}
+#endif
+
+    if(SHADER_NOT_VALID(depthToColorShader))
+        return;
+
+    if(!USING_GLES3 && !glConfig.depthTextureAvailable)
+        return;
+
+    byte	*colorReadback;
+
+    bool notPack;
+#if !defined(__ANDROID__) // using shader
+    notPack = r_showDepth.GetInteger() > base + 1;
+#else
+    notPack = r_showDepth.GetInteger() > 1;
+#endif
+    RB_RenderDepthToColor(notPack);
+    depthStencilRenderer.Begin();
+    colorReadback = (byte *)R_StaticAlloc(glConfig.vidWidth * glConfig.vidHeight * 4);
+    qglReadPixels_1(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_RGBA, GL_UNSIGNED_BYTE, colorReadback);
+    depthStencilRenderer.End();
+
+    // draw it back to the screen
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    GL_State(GLS_DEPTHFUNC_ALWAYS);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, 1, 0, 1, -1, 1);
+    glPopMatrix();
+    glColor3f(1, 1, 1);
+    globalImages->BindNull();
+    glMatrixMode(GL_MODELVIEW);
+
+    glDrawPixels(glConfig.vidWidth, glConfig.vidHeight, GL_RGBA , GL_UNSIGNED_BYTE, colorReadback);
+    R_StaticFree(colorReadback);
+}
 /*
 ===================
 RB_ShowDepthBuffer
@@ -765,15 +822,17 @@ void RB_ShowDepthBuffer(void)
 {
 //#if !defined(GL_ES_VERSION_2_0) // qglReadPixels(GL_DEPTH_COMPONENT)
 #if !defined(__ANDROID__)
-    if(!USING_GL)
+    if (!r_showDepth.GetBool()) {
         return;
+    }
+
+    if(USING_GL)
+    {
 	void	*depthReadback;
 
-	if (!r_showDepth.GetBool()) {
-		return;
-	}
-
+#if !defined(GL_ES_VERSION_2_0)
 	glPushMatrix();
+#endif
 	glLoadIdentity();
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -782,7 +841,9 @@ void RB_ShowDepthBuffer(void)
 	glRasterPos2f(0, 0);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
+#if !defined(GL_ES_VERSION_2_0)
 	glPopMatrix();
+#endif
 
 	GL_State(GLS_DEPTHFUNC_ALWAYS);
 	glColor3f(1, 1, 1);
@@ -791,23 +852,150 @@ void RB_ShowDepthBuffer(void)
 	depthReadback = R_StaticAlloc(glConfig.vidWidth * glConfig.vidHeight*4);
 	memset(depthReadback, 0, glConfig.vidWidth * glConfig.vidHeight*4);
 
-	qglReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_DEPTH_COMPONENT , GL_FLOAT, depthReadback);
+    qglReadPixels_1(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_DEPTH_COMPONENT , GL_FLOAT, depthReadback);
 
-#if 0
+#if 1
 
+    if(r_showDepth.GetInteger() == 2)
+    {
 	for (int i = 0 ; i < glConfig.vidWidth * glConfig.vidHeight ; i++) {
 		((byte *)depthReadback)[i*4] =
 		        ((byte *)depthReadback)[i*4+1] =
-		                ((byte *)depthReadback)[i*4+2] = 255 * ((float *)depthReadback)[i];
-		((byte *)depthReadback)[i*4+3] = 1;
+		                ((byte *)depthReadback)[i*4+2] = 255.0f * ((float *)depthReadback)[i];
+		((byte *)depthReadback)[i*4+3] = 255;
 	}
+    }
 
 #endif
 
 	glDrawPixels(glConfig.vidWidth, glConfig.vidHeight, GL_RGBA , GL_UNSIGNED_BYTE, depthReadback);
 	R_StaticFree(depthReadback);
+    }
 #endif
 //#endif
+
+    RB_ShowDepthBuffer_framebuffer();
+}
+
+static idCVar r_showStencil("r_showStencil", "0", CVAR_RENDERER | CVAR_INTEGER, "display the contents of the stencil index buffer");
+
+static void RB_ShowStencilBuffer_framebuffer(void)
+{
+    // using framebuffer and stencil to color shader
+#if !defined(__ANDROID__)
+    if (r_showStencil.GetInteger() < 16) {
+        return;
+    }
+#else
+    if (!r_showStencil.GetBool()) {
+		return;
+	}
+#endif
+
+    if(SHADER_NOT_VALID(stencilToColorShader))
+        return;
+
+    if(!USING_GLES31)
+        return;
+
+    byte	*colorReadback;
+
+    int comp = 0;
+#if !defined(__ANDROID__) // using shader
+    if(r_showStencil.GetInteger() == 16 || (r_showStencil.GetInteger() & 32))
+        comp |= 1;
+    if(r_showStencil.GetInteger() == 16 || (r_showStencil.GetInteger() & 64))
+        comp |= 2;
+    if(r_showStencil.GetInteger() == 16 || (r_showStencil.GetInteger() & 128))
+        comp |= 4;
+#else
+    if(r_showStencil.GetInteger() == 1 || (r_showStencil.GetInteger() & 2))
+        comp |= 1;
+    if(r_showStencil.GetInteger() == 1 || (r_showStencil.GetInteger() & 4))
+        comp |= 2;
+    if(r_showStencil.GetInteger() == 1 || (r_showStencil.GetInteger() & 8))
+        comp |= 4;
+#endif
+    RB_RenderStencilToColor(comp);
+    depthStencilRenderer.Begin();
+    colorReadback = (byte *)R_StaticAlloc(glConfig.vidWidth * glConfig.vidHeight * 4);
+    qglReadPixels_1(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_RGBA, GL_UNSIGNED_BYTE, colorReadback);
+    depthStencilRenderer.End();
+
+    // draw it back to the screen
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    GL_State(GLS_DEPTHFUNC_ALWAYS);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, 1, 0, 1, -1, 1);
+    glPopMatrix();
+    glColor3f(1, 1, 1);
+    globalImages->BindNull();
+    glMatrixMode(GL_MODELVIEW);
+
+    glDrawPixels(glConfig.vidWidth, glConfig.vidHeight, GL_RGBA , GL_UNSIGNED_BYTE, colorReadback);
+    R_StaticFree(colorReadback);
+}
+/*
+===================
+RB_ShowStencilBuffer
+
+Draw the stencil buffer as colors
+===================
+*/
+void RB_ShowStencilBuffer(void)
+{
+//#if !defined(GL_ES_VERSION_2_0) // qglReadPixels(GL_STENCIL_INDEX)
+#if !defined(__ANDROID__)
+    if (!r_showStencil.GetBool()) {
+        return;
+    }
+
+    if(USING_GL)
+    {
+    byte	*stencilReadback;
+    byte	*stencilColor;
+
+#if !defined(GL_ES_VERSION_2_0)
+    glPushMatrix();
+#endif
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, 1, 0, 1, -1, 1);
+    glRasterPos2f(0, 0);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+#if !defined(GL_ES_VERSION_2_0)
+    glPopMatrix();
+#endif
+
+    GL_State(GLS_DEPTHFUNC_ALWAYS);
+    glColor3f(1, 1, 1);
+    globalImages->BindNull();
+
+    stencilReadback = (byte *)R_StaticAlloc(glConfig.vidWidth * glConfig.vidHeight);
+    memset(stencilReadback, 0, glConfig.vidWidth * glConfig.vidHeight);
+
+    qglReadPixels_1(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, stencilReadback);
+    stencilColor = (byte *)R_StaticAlloc(glConfig.vidWidth * glConfig.vidHeight * 4);
+    for (int i = 0 ; i < glConfig.vidWidth * glConfig.vidHeight ; i++) {
+        stencilColor[i*4] = r_showStencil.GetInteger() == 1 || (r_showStencil.GetInteger() & 2) ? stencilReadback[i] : 0;
+        stencilColor[i*4+1] = r_showStencil.GetInteger() == 1 || (r_showStencil.GetInteger() & 4) ? stencilReadback[i] : 0;
+        stencilColor[i*4+2] = r_showStencil.GetInteger() == 1 || (r_showStencil.GetInteger() & 8) ? stencilReadback[i] : 0;
+        stencilColor[i*4+3] = 255;
+	}
+
+    glDrawPixels(glConfig.vidWidth, glConfig.vidHeight, GL_RGBA , GL_UNSIGNED_BYTE, stencilColor);
+    R_StaticFree(stencilReadback);
+    R_StaticFree(stencilColor);
+    }
+#endif
+//#endif
+
+    RB_ShowStencilBuffer_framebuffer();
 }
 
 /*
@@ -3107,6 +3295,7 @@ void RB_RenderDebugTools(drawSurf_t **drawSurfs, int numDrawSurfs)
 	RB_ShowPortals();
 	RB_ShowSilhouette();
 	RB_ShowDepthBuffer();
+    RB_ShowStencilBuffer();
 	RB_ShowIntensity();
 	RB_ShowDebugLines();
 	RB_ShowDebugText();
